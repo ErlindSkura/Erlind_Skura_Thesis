@@ -1,0 +1,118 @@
+\chapter{CONCLUSION AND FUTURE WORK}
+\label{ch:conclusion}
+
+% =====================================================================
+% STATUS: SCAFFOLD. The conclusion cannot be written before Chapter 5 has
+% real numbers in it. What follows is the structure plus the parts that
+% are already established and will not change.
+% =====================================================================
+
+\section{Conclusion}
+
+% TODO: write after Chapter 5. State what was found, in the order of the four
+% questions posed in Section 1.3, and give the headline numbers.
+
+This thesis addressed the automated quantification of bead defects in SEM
+micrographs of electrospun nanofibre mats, a measurement currently performed by hand
+and therefore slow and difficult to reproduce.
+
+The dataset work is complete and is reported in Chapter~\ref{ch:methodology}. Eleven
+micrographs of four specimens, imaged at three magnifications and carrying 606
+manually delineated beads, were characterised and placed on a physical scale by
+recovering the pixel size from each micrograph's burned-in scale bar. The
+calibration was validated against the data themselves: the median equivalent bead
+diameter agrees to within 15\% across the three magnifications, which is the expected
+result only if both the calibration and the annotation are consistent.
+
+The analysis also established two properties of the dataset that determine how it
+must be used. The 143 image--annotation pairs supplied are 11 originals and 132
+transformed copies, so the effective sample size is 11 and the copies cannot be
+allowed to cross a partition boundary. And the eleven micrographs derive from only
+four specimens, so the specimen rather than the image is the unit of partitioning.
+Both findings are reflected in the leave-one-specimen-out protocol adopted
+throughout.
+
+% TODO: the segmentation results paragraph goes here, once measured.
+
+\section{Research Contributions}
+
+% TODO: revise once results exist -- contributions 3 and 4 are currently claims
+% about work that is specified but not yet completed.
+
+\begin{enumerate}
+    \item A characterised and physically calibrated dataset of 606 bead defects
+    across 11 SEM micrographs of four electrospun specimens, with per-magnification
+    pixel sizes recovered from the instrument's own scale bars and validated for
+    internal consistency.
+
+    \item An evaluation protocol matched to the hierarchical structure of small
+    microscopy datasets, in which the specimen is the unit of partitioning, together
+    with a measurement of how much a naive split inflates apparent performance on
+    this data.
+
+    \item A controlled comparison of instance segmentation, semantic segmentation and
+    classical thresholding on identical micrographs under an identical protocol.
+
+    \item An open implementation covering annotation conversion, scale calibration,
+    training, evaluation, and the reporting of bead count, areal density and size
+    distribution in physical units.
+\end{enumerate}
+
+\section{Limitations}
+
+The limitations are set out in Section~5.9.3 and are summarised here: four specimens
+of a single material system; only 52 annotated beads at the highest magnification; a
+single annotator, so annotator bias cannot be separated from ground truth; and a
+single class, so the distinction between a bead and a locally thickened fibre segment
+rests on the annotator's implicit judgement rather than a stated criterion.
+
+\section{Future Work}
+\label{sec:futurework}
+
+\subsection{Short-term}
+
+\textbf{Extend the specimen count.} The single most valuable addition to this work is
+more specimens rather than more images of the same ones. Four specimens support four
+cross-validation folds; ten would support a materially stronger claim, and the
+annotation cost per specimen is already known from this work.
+
+\textbf{Measure inter-annotator agreement.} Having a second annotator re-delineate a
+subset would convert the largest stated limitation into a measured quantity, and
+would establish the ceiling against which any model should be judged. A model that
+matches inter-annotator agreement has reached the useful limit of the task.
+
+\textbf{Use the unannotated micrographs.} If further micrographs exist without
+annotations, they can be used for self-training or consistency-based
+semi-supervised learning, both of which are well suited to a regime with abundant
+images and scarce labels.
+
+\textbf{Shape-prior architectures.} Bead defects are approximately ellipsoidal and
+convex, which is exactly the assumption behind StarDist
+\cite{schmidt2018stardist} and the flow-based representation of Cellpose
+\cite{stringer2021cellpose}. Both are plausible alternatives to Mask R-CNN on this
+data and would be a natural extension of the comparison.
+
+\subsection{Long-term}
+
+\textbf{Joint fibre and bead analysis.} Bead quantification is one half of the
+morphological characterisation of a nanofibre mat; fibre diameter distribution is the
+other, and tools such as DiameterJ \cite{hotaling2015diameterj} address it
+separately. A single model reporting both from one micrograph would cover the
+characterisation a laboratory actually needs.
+
+\textbf{From measurement to process feedback.} If bead statistics could be linked to
+the spinning parameters that produced them, the pipeline would move from
+characterisation towards prediction -- estimating, from a micrograph, which parameter
+is out of range. This requires micrographs labelled with their process conditions,
+which the present dataset does not carry.
+
+\textbf{Annotation assistance from foundation models.} The Segment Anything Model
+\cite{kirillov2023segment} cannot recognise beads on its own, but prompted with a
+detector's boxes it could refine mask boundaries, or accelerate the annotation of
+new specimens by turning a click into a polygon. Given that annotation effort is the
+binding constraint on this problem, this is the intervention with the highest
+leverage.
+
+\section{Final Remarks}
+
+% TODO: write last, after everything else.

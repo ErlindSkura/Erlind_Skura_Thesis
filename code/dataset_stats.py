@@ -25,7 +25,7 @@ from PIL import Image, ImageDraw
 # --- paths -----------------------------------------------------------------
 
 DATA = Path(r"C:/Users/Erlind.Skura/Downloads/Segmentations_VB/Segmentations")
-FIGS = Path(__file__).resolve().parent.parent / "overleaf" / "figures"
+FIGS = Path(__file__).resolve().parent.parent / "figures"
 
 # The 11 original micrographs, keyed by specimen and magnification. The suffix
 # encodes magnification, not a repeat: -1 is 500x, -2 is 1kx, -3/-4 is 3kx.

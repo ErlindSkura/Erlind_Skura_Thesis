@@ -1,6 +1,3 @@
-# LaTeX sources live in Overleaf, not here — this repo tracks code only
-overleaf/
-
 # Local data — the SEM micrographs and annotations live outside the repo
 segmentations/
 Segmentations_VB/
@@ -23,9 +20,7 @@ CLAUDE.md
 *.idx
 *.ilg
 *.ind
-
-# Compiled output — uncomment to track the built PDF instead
-# overleaf/thesis.pdf
+thesis.pdf
 
 # ---- Python ----
 __pycache__/
