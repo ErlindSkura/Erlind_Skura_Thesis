@@ -67,5 +67,3 @@ partitioning instead.
 
 Chapters 1–3 are complete. Chapters 4–6 are scaffolds: the result tables are
 deliberately empty and are to be filled only from executed runs.
-
-Open questions for the supervisor are tracked in `pyetje_per_supervizorin.md`.
