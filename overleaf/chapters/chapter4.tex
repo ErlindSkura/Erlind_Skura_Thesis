@@ -1,0 +1,220 @@
+\chapter{IMPLEMENTATION}
+\label{ch:implementation}
+
+\section{Introduction}
+
+This chapter describes how the design of Chapter~\ref{ch:methodology} is realised in
+software: how the LabelMe annotations are converted into a trainable format, how the
+instrument banner and the physical calibration are handled, how augmentation is
+applied after partitioning, and how the three methods are configured and trained.
+
+% STATUS NOTE -- remove before submission.
+% Implemented and verified so far: annotation parsing, polygon area and equivalent
+% diameter computation, scale-bar calibration, banner detection, specimen-wise fold
+% assignment, and the descriptive statistics and figures of Chapter 3
+% (code/dataset_stats.py). The training and evaluation code described in
+% Sections 4.4 to 4.6 is specified here but not yet written; the numbers it produces
+% belong in Chapter 5 and must not be written until they have been measured.
+
+\section{System Architecture}
+
+The pipeline is organised as five stages, each independently runnable so that the
+expensive stage -- training -- does not have to be repeated when only reporting
+changes.
+
+\begin{enumerate}
+    \item \textbf{Ingest.} Read the LabelMe JSON files, recover specimen and
+    magnification for each micrograph, and extract the pixel calibration from the
+    instrument banner.
+    \item \textbf{Prepare.} Crop the banner, rasterise the polygons into instance
+    masks, and emit a COCO-format annotation file.
+    \item \textbf{Partition.} Assign micrographs to the four leave-one-specimen-out
+    folds.
+    \item \textbf{Train and predict.} Fit each method on each fold's training
+    partition and predict on its held-out specimen.
+    \item \textbf{Evaluate and report.} Compute segmentation metrics, counting and
+    merge/split statistics, and convert detections into physical units.
+\end{enumerate}
+
+\section{Data Preparation}
+
+\subsection{Annotation Parsing and Rasterisation}
+
+Each LabelMe file stores a list of shapes, each with a class label, a shape type and
+a list of vertices. All 606 shapes in this dataset are polygons carrying the label
+\texttt{bead}. Polygons are rasterised into per-instance binary masks at full
+resolution. Object area is computed analytically from the polygon vertices using the
+shoelace formula rather than by counting mask pixels, which avoids a rasterisation
+bias that would be significant for the smallest beads: at $500\times$ the median bead
+is only about 14 pixels across, so a one-pixel boundary error changes its area by
+roughly 15\%.
+
+Equivalent circular diameter is derived from the polygon area $A$ as
+$d = 2\sqrt{A/\pi}$, and converted to micrometres using the magnification-specific
+pixel size from Table~\ref{tab:calibration}.
+
+\subsection{Banner Handling and Calibration}
+
+The instrument banner occupies the bottom 32 rows of every micrograph. Calibration
+is performed before cropping: the scale bar is located as the longest run of
+saturated pixels in the lower-left region of the banner, and its pixel length divided
+by the physical length printed beside it gives the pixel size. The recovered values
+are cross-checked by verifying that field width scales inversely with magnification,
+as reported in Section~\ref{sec:calibration}.
+
+The banner rows are then removed, giving a $1024 \times 736$ working image. Polygon
+coordinates require no adjustment because the crop is taken from the bottom edge and
+no annotation extends into the banner region.
+
+\subsection{Fold Assignment}
+
+Fold membership is derived from the specimen prefix of the filename, so that all
+micrographs of one specimen move together. The four folds are Z2, Z4, Z5 and Z6. The
+assignment is written to disk as an explicit manifest rather than recomputed at
+training time, so that every method is guaranteed to see identical partitions and the
+comparison between them is exact.
+
+The deliberately flawed control configuration described in
+Section~\ref{sec:protocol} uses the same machinery with the specimen constraint
+disabled, splitting the 11 micrographs at random.
+
+\section{Augmentation}
+
+Augmentation is applied on the fly during training, after partitioning, for the
+reasons set out in Section~\ref{sec:supplied_aug}. The pre-computed copies shipped
+with the dataset are not used.
+
+The transformations are chosen to be label-preserving for this modality. Micrographs
+of a non-woven mat have no canonical orientation, so horizontal and vertical flips
+and rotations in multiples of $90^{\circ}$ are physically meaningful. Random scaling
+is included deliberately and with a wider range than would be usual, because scale
+robustness across the $500\times$ to $3000\times$ span is the central difficulty of
+the dataset. Brightness and contrast jitter model variation in detector gain between
+sessions. Elastic and shear deformations are excluded: they would distort bead shape,
+and bead shape is a measured output rather than an incidental property.
+
+Random cropping to fixed-size tiles is used both as augmentation and as a practical
+measure, since a $1024 \times 736$ micrograph containing up to 152 small beads is
+awkward to fit in memory at the batch sizes needed for stable training.
+
+\section{Model Configuration}
+
+\subsection{Mask R-CNN}
+
+The primary model uses a ResNet-50 backbone with a feature pyramid network,
+initialised from COCO-pretrained weights. Two departures from the defaults are
+required by the data.
+
+Anchor sizes are set from the empirical bead size distribution rather than left at
+their COCO values. The median bead occupies 0.04\% of the image area, far smaller
+than a typical COCO object, and default anchors would leave the smallest beads
+without a well-matched proposal.
+
+The maximum number of detections per image is raised well above the COCO default of
+100, because a single $500\times$ micrograph contains up to 152 beads and the default
+would silently truncate the count -- an error that would corrupt precisely the
+quantity being measured.
+
+\subsection{U-Net Baseline}
+
+The semantic baseline uses a ResNet encoder initialised from ImageNet weights and a
+symmetric decoder with skip connections, trained with a combined cross-entropy and
+Dice loss to counter the strong foreground/background imbalance, since bead pixels
+are a small fraction of every micrograph. Instances are recovered from the predicted
+mask by connected-component labelling, with no boundary-aware post-processing, so
+that the merge behaviour this baseline is included to demonstrate remains visible
+rather than masked.
+
+\subsection{Classical Baseline}
+
+The classical pipeline is implemented with scikit-image: CLAHE contrast
+normalisation, Otsu thresholding, morphological opening and closing, distance
+transform, local-maximum markers and watershed. Its three free parameters -- the
+morphological kernel size, the minimum accepted object area in $\mu$m$^2$ and the
+marker suppression distance -- are tuned by grid search on each fold's training
+partition and then held fixed for that fold's test specimen, so that it is subject to
+the same protocol as the learned methods.
+
+\section{Training Setup}
+
+% TODO: every value below is a planned setting, not a measured one. Update this
+% table to reflect the runs actually performed before submitting.
+Table~\ref{tab:training_config} lists the training configuration. Each of the four
+folds is trained independently from the same initialisation, and no fold's held-out
+specimen influences any choice made during its training.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Planned training configuration, to be confirmed against the runs
+    actually performed.}
+    \label{tab:training_config}
+    \begin{tabular}{lll}
+        \toprule
+        Setting & Mask R-CNN & U-Net \\
+        \midrule
+        Backbone        & ResNet-50 + FPN   & ResNet-34 encoder \\
+        Initialisation  & COCO              & ImageNet \\
+        Optimiser       & SGD, momentum 0.9 & Adam \cite{kingma2015adam} \\
+        Learning rate   & \textit{TBD}      & \textit{TBD} \\
+        Batch size      & \textit{TBD}      & \textit{TBD} \\
+        Epochs          & \textit{TBD}      & \textit{TBD} \\
+        Loss            & RPN + box + mask  & Cross-entropy + Dice \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{Development Environment}
+
+% TODO: record the actual hardware used, once GPU access is confirmed (question 22).
+Development is in Python~3.11 with PyTorch. Descriptive statistics and figures use
+NumPy, Matplotlib and Pillow; the classical baseline uses scikit-image and OpenCV.
+
+\section{Challenges and Solutions}
+
+Three problems were encountered during data preparation. Each is recorded here
+because each changed a design decision.
+
+\textbf{The augmented copies could not be used as supplied.} The dataset arrives as
+143 image--annotation pairs, which initially appears to be a usable sample size. The
+filenames reveal that these are 11 originals with 12 transformed copies each.
+Verifying the copies by overlaying their polygons on their images confirmed that the
+transformations are correctly applied, so the copies are not defective -- but they
+are not independent either, and allowing them to cross a partition boundary would
+have produced optimistic results. The resolution was to discard them and augment
+after partitioning.
+
+\textbf{The banner is augmented along with the image.} Inspecting the flipped copies
+showed the instrument banner mirrored, with the burned-in text reversed, and the
+translated copies contain black padding where the image was shifted away from the
+edge. This confirmed that the banner had not been accounted for during augmentation,
+and reinforced the decision to crop it before any processing.
+
+\textbf{Object size varies sixfold across the dataset.} The median bead is 14 pixels
+across at $500\times$ and 76 at $3000\times$. This drove the choice of a feature
+pyramid backbone, the resetting of anchor scales, and the wide random-scaling range
+in the augmentation policy.
+
+\section{Code Organization}
+
+\begin{itemize}
+    \item \texttt{code/dataset\_stats.py} -- annotation parsing, calibration,
+    descriptive statistics and the dataset figures of Chapter~\ref{ch:methodology}.
+    \item \texttt{code/prepare\_data.py} -- banner cropping, mask rasterisation and
+    COCO conversion. \textit{(to be written)}
+    \item \texttt{code/folds.py} -- specimen-wise fold manifest generation.
+    \textit{(to be written)}
+    \item \texttt{code/train\_maskrcnn.py}, \texttt{code/train\_unet.py} and
+    \texttt{code/classical.py} -- the three methods. \textit{(to be written)}
+    \item \texttt{code/evaluate.py} -- segmentation metrics, counting and merge/split
+    statistics, and physical quantification. \textit{(to be written)}
+\end{itemize}
+
+\section{Summary}
+
+The pipeline separates ingest, preparation, partitioning, training and evaluation so
+that the partitioning guarantee of Chapter~\ref{ch:methodology} is enforced in one
+place and inherited by every method. The two decisions that most affect the validity
+of the results -- discarding the pre-computed augmentations and cropping the
+instrument banner -- both follow from properties of the data discovered during
+preparation rather than from convention. The next chapter reports what the pipeline
+produces.

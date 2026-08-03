@@ -1,0 +1,214 @@
+\chapter{LITERATURE REVIEW}
+\label{ch:literature}
+
+\section{Introduction}
+
+This chapter reviews the three bodies of work that the thesis draws on: the
+materials-science literature on electrospinning and bead formation, which defines
+what is being measured and why; the image-analysis literature on fibrous
+microscopy, which describes how the measurement is currently made; and the
+computer-vision literature on segmentation, which supplies the methods used here.
+The chapter closes by stating the gap between them.
+
+\section{Theoretical Background}
+
+\subsection{Electrospinning and the Formation of Bead Defects}
+
+In electrospinning, a polymer solution is fed through a spinneret held at a high
+potential relative to a collector. Above a threshold voltage the electrostatic
+repulsion of surface charge overcomes the surface tension of the pendant droplet,
+which deforms into a Taylor cone and emits a charged jet. The jet undergoes bending
+instability, stretches by orders of magnitude, and the solvent evaporates, leaving a
+solid fibre deposited as a randomly oriented non-woven mat
+\cite{doshi1995electrospinning, huang2003review}.
+
+The morphology of the deposit depends on a balance of forces. Surface tension acts
+to minimise the surface area of the jet and therefore favours the break-up of a
+cylindrical thread into droplets; viscoelastic stress and charge repulsion oppose
+this. When the solution has low viscosity, low charge density or high surface
+tension, the instability is not fully suppressed and the jet partially collapses,
+producing ellipsoidal swellings distributed along the fibres. Fong, Chun and Reneker
+\cite{fong1999beaded} established the now-standard account of this behaviour,
+showing that higher solution viscosity and higher net charge density produce fewer
+and more elongated beads, and that increasing surface tension has the opposite
+effect. Bhardwaj and Kundu \cite{bhardwaj2010electrospinning} review how the same
+parameters -- concentration, conductivity, applied voltage, flow rate and
+tip-to-collector distance -- interact in practice.
+
+Because bead content responds so directly to these parameters, bead count and bead
+size are used as the diagnostic output of a parameter sweep: a recipe is refined
+until the mat is bead-free, or until the bead population is acceptably small.
+Beads matter physically as well as diagnostically. They reduce the specific surface
+area that makes nanofibre mats useful for filtration and catalysis, they perturb the
+pore-size distribution that governs permeability, and they act as stress
+concentrators that lower tensile strength.
+
+\subsection{Scanning Electron Microscopy of Nanofibre Mats}
+
+SEM is the standard characterisation tool for these materials. It resolves features
+well below the diffraction limit of light microscopy and produces images whose
+contrast derives largely from surface topography, which suits the assessment of
+fibre morphology. Micrographs are typically acquired at several magnifications: a
+low magnification to sample enough fibres for a representative measurement, and a
+higher one to resolve individual features. Instrument software burns an information
+banner into the image, recording the scale bar, accelerating voltage, working
+distance and magnification. The banner is convenient for a human reader and is the
+means by which pixel measurements can be converted to physical units, but it is not
+part of the specimen and must be excluded before any automated analysis.
+
+\subsection{Semantic and Instance Segmentation}
+
+Semantic segmentation assigns a class label to every pixel; instance segmentation
+additionally separates the pixels belonging to distinct objects of the same class.
+The distinction is decisive here. A semantic model that labels every bead pixel
+correctly still yields a single connected component for a cluster of touching
+beads, so the derived count is too low and the derived size distribution contains a
+spurious large object. Since the laboratory endpoint is a count and a size
+distribution rather than an area fraction, instance-level output is required.
+
+\section{Related Work}
+
+\subsection{Classical Image Analysis for Fibrous Microscopy}
+
+The established approach in the materials literature is a sequence of hand-designed
+operations: contrast normalisation, thresholding, morphological cleaning and a
+splitting step. Otsu's method \cite{otsu1979threshold} chooses a global threshold by
+maximising between-class variance and remains the default in tools such as Fiji
+\cite{schindelin2012fiji}. Touching objects are then separated by the watershed
+transform \cite{vincent1991watersheds}, usually applied to the distance transform of
+the binary mask.
+
+For electrospun materials specifically, DiameterJ \cite{hotaling2015diameterj}
+provides a validated open-source pipeline for fibre diameter and porosity from SEM
+micrographs, and is widely used. Its scope, however, is the fibre network: it
+characterises diameters and intersections rather than isolating discrete defects.
+
+These pipelines have real advantages -- they are transparent, they require no
+training data and their failure modes are interpretable -- but they depend on the
+foreground being separable by intensity. In micrographs of a dense fibre mat this
+assumption does not hold: bright fibres cross the field at every angle and occupy
+the same grey levels as bead surfaces, so a global threshold cannot isolate the
+beads. Watershed splitting also has a well-known tendency to over-segment on noisy
+distance transforms, which is the failure that most directly corrupts a count.
+
+\subsection{Encoder--Decoder Networks for Semantic Segmentation}
+
+U-Net \cite{ronneberger2015unet} introduced the encoder--decoder architecture with
+skip connections that has dominated biomedical segmentation since. The contracting
+path captures context while the expanding path recovers spatial resolution, and the
+skip connections restore the high-frequency detail lost to pooling. It was designed
+explicitly for the regime of interest here, having been demonstrated on training
+sets of a few dozen annotated images with heavy augmentation. Falk et al.
+\cite{falk2019unet} later packaged it for cell counting and morphometry, confirming
+that the architecture transfers to quantification tasks.
+
+U-Net remains a semantic model, and the standard remedy for instance separation --
+predicting object boundaries as an auxiliary class and using them to split the
+foreground -- is effective but indirect, and its accuracy depends on how reliably
+thin boundaries can be predicted.
+
+\subsection{Instance Segmentation}
+
+Faster R-CNN \cite{ren2015faster} established the two-stage detection paradigm: a
+region proposal network scores candidate boxes, and a second stage classifies and
+refines them. Mask R-CNN \cite{he2017mask} extends it with a parallel branch that
+predicts a binary mask inside each proposal, and replaces the coarse RoI pooling
+with RoIAlign to preserve spatial correspondence. Because each object is handled in
+its own region, touching objects are separated by construction rather than by
+post-processing -- the property that makes it the natural choice for counting tasks.
+Feature pyramid networks \cite{lin2017feature} supply the multi-scale representation
+that lets a single model handle objects of very different apparent size, which is
+directly relevant to a dataset spanning a sixfold magnification range.
+
+In microscopy, several methods exploit the shape regularity of the targets.
+StarDist \cite{schmidt2018stardist} represents each object as a star-convex polygon,
+which is well matched to roundish, convex objects and degrades gracefully when they
+touch. Cellpose \cite{stringer2021cellpose} learns spatial gradient flows towards
+object centres and follows them to recover instances, and generalises across cell
+types without retraining. Bead defects are approximately ellipsoidal and convex, so
+these shape priors are a plausible fit and are noted here as alternatives.
+
+\subsection{Segmentation from Few Annotated Images}
+
+Training on a handful of annotated micrographs is standard in microscopy, and the
+countermeasures are well established: transfer learning from large natural-image
+corpora such as ImageNet \cite{deng2009imagenet} or COCO \cite{lin2014microsoft},
+and aggressive geometric and photometric augmentation \cite{shorten2019survey}.
+Microscopy is more forgiving than most domains in this respect, because flips and
+rotations are genuinely label-preserving: unlike photographs of natural scenes, a
+micrograph has no canonical orientation.
+
+Augmentation also introduces a hazard that is easy to overlook. If augmented copies
+are generated before the data are partitioned, transformed versions of the same
+source image can appear in both the training and the test set. The test set then
+measures memorisation rather than generalisation. The same concern applies more
+broadly to any hierarchical dataset in which several images derive from one physical
+specimen, a point returned to in Chapter~\ref{ch:methodology}.
+
+\subsection{Foundation Models for Segmentation}
+
+The Segment Anything Model \cite{kirillov2023segment} is trained on a very large
+mask corpus and produces class-agnostic masks from point or box prompts, with strong
+zero-shot transfer. For a domain with only 11 annotated images this is attractive,
+but SAM has no notion of what a bead is: prompted densely on a fibre mat it will
+segment fibres, inter-fibre voids and beads indiscriminately. Its realistic role
+here is as an annotation aid or as a mask proposal generator, not as a standalone
+detector.
+
+\section{Evaluation of Instance Segmentation}
+
+Detection quality is conventionally summarised by average precision computed over
+intersection-over-union thresholds, following the COCO protocol
+\cite{lin2014microsoft}. For microscopy, metrics that penalise merges and splits
+explicitly are more informative: the aggregated Jaccard index
+\cite{kumar2017dataset} accumulates intersection and union over matched objects and
+charges unmatched ones to the denominator, and panoptic quality
+\cite{kirillov2019panoptic} factors performance into a recognition and a
+segmentation term. Since the laboratory endpoint is a count and a size distribution,
+these segmentation metrics are reported here alongside the counting error and a
+direct comparison of the predicted and manual size distributions.
+
+\section{Research Gap}
+
+Three gaps emerge from the above.
+
+First, the image-analysis tooling available to the electrospinning community is
+aimed at the fibre network -- diameter, orientation, porosity -- rather than at
+discrete defects. DiameterJ and comparable tools do not count beads, and the
+quantification of bead defects is consequently still performed by hand.
+
+Second, where deep segmentation has been applied to fibrous microscopy it has
+usually been semantic, reporting pixel-level overlap. For a task whose output is a
+count, pixel overlap is the wrong figure of merit: it does not distinguish a model
+that separates two touching beads from one that merges them, even though only the
+former produces a usable count. Studies that report counting error against a manual
+ground truth, and that compare instance-level against semantic-level modelling on
+the same images, are scarce.
+
+Third, and most consequential for the credibility of any result in this area,
+evaluation protocols are frequently not matched to the structure of the data. Small
+microscopy datasets are hierarchical -- many images per specimen, many augmented
+copies per image -- and a partition that ignores this structure allows the same
+specimen, or the same source image, to appear on both sides of the split. Reported
+scores are then optimistic by an unknown margin.
+
+This thesis addresses these gaps by treating bead quantification as an instance
+segmentation problem, by evaluating it with the counting and sizing errors that
+determine laboratory usefulness alongside conventional segmentation metrics, and by
+adopting a specimen-wise protocol whose effect relative to the naive alternative is
+measured rather than assumed.
+
+% TODO(supervisor): question 11 and the framing of this chapter.
+% Add the supervisor's own publications on electrospun nanofibre image analysis
+% here -- ask him directly which papers he wants cited, and do not guess.
+
+\section{Summary}
+
+Bead defects are the standard diagnostic of a misconfigured electrospinning process,
+and they are currently quantified by hand because existing automated tools target
+the fibre network instead. Classical thresholding fails on these micrographs because
+beads and fibres are not separable by intensity. Encoder--decoder networks segment
+the bead class well but merge touching instances, which corrupts precisely the
+quantity of interest. Region-based instance segmentation separates instances by
+construction and is the approach adopted here. The following chapter sets out the
+dataset, the calibration and the evaluation protocol in detail.

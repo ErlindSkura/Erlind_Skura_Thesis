@@ -1,0 +1,31 @@
+# Local data — the SEM micrographs and annotations live outside the repo
+segmentations/
+Segmentations_VB/
+
+# Claude Code project instructions
+CLAUDE.md
+
+# ---- LaTeX build artefacts (the .tex sources ARE tracked) ----
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.out
+*.synctex.gz
+*.toc
+*.idx
+*.ilg
+*.ind
+
+# Compiled output — uncomment to track the built PDF instead
+# overleaf/thesis.pdf
+
+# ---- Python ----
+__pycache__/
+*.pyc
+.venv/
+venv/
