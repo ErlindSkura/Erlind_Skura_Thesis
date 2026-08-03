@@ -1,3 +1,6 @@
+# LaTeX sources live in Overleaf, not here — this repo tracks code only
+overleaf/
+
 # Local data — the SEM micrographs and annotations live outside the repo
 segmentations/
 Segmentations_VB/
