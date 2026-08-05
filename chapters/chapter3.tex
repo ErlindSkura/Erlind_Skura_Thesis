@@ -98,8 +98,8 @@ model is required.
 
 Annotations were produced in LabelMe (version 5.4.1) and are supplied as one JSON
 file per micrograph. Every annotated object is a closed polygon carrying the single
-class label \texttt{bead}; polygons contain between 12 and 33 vertices, with a median
-of 20. Across the 11 micrographs there are 606 annotated beads. No annotation
+class label \texttt{bead}; polygons contain between 8 and 40 vertices, with a median
+of 16. Across the 11 micrographs there are 606 annotated beads. No annotation
 intersects the instrument banner region described in
 Section~\ref{sec:banner}.
 
@@ -144,8 +144,9 @@ that measured at another, since all three views image the same specimens. Conver
 every annotated polygon to an equivalent circular diameter and grouping by
 magnification gives median diameters of 7.92, 7.34 and 6.75\,$\mu$m at $500\times$,
 $1000\times$ and $3000\times$ respectively -- agreement to within 15\%, which
-satisfies the criterion set in Section~1.4 and confirms both the calibration and the
-internal consistency of the annotation.
+satisfies the criterion set in Section~\ref{sec:objectives} and confirms both the
+calibration and the internal consistency of the annotation. The three distributions
+are compared in Figure~\ref{fig:bead_statistics}.
 
 \begin{figure}[htbp]
     \centering
@@ -223,7 +224,8 @@ dataset. Micrographs Z2-1, Z2-2 and Z2-3 are three views of the same physical
 material: they share its polymer, its spinning parameters and its particular
 population of beads. A partition that places Z2-1 in training and Z2-3 in testing is
 not measuring generalisation to a new specimen but generalisation to a new
-magnification of a specimen already seen.
+magnification of a specimen already seen. Figure~\ref{fig:split_protocol} shows the
+resulting structure and the axis along which it must be divided.
 
 \begin{figure}[htbp]
     \centering

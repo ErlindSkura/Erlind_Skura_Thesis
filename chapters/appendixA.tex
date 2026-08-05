@@ -17,7 +17,7 @@ The following module parses the LabelMe annotations, recovers the physical pixel
 size from each micrograph's burned-in scale bar, and produces the descriptive
 statistics and figures reported in Chapter~\ref{ch:methodology}. Object area is
 computed analytically from the polygon vertices rather than from a rasterised mask,
-for the reason given in Section~4.3.1.
+for the reason given in Section~\ref{sec:parsing}.
 
 \begin{lstlisting}[language=Python, caption={Polygon area and physical calibration (\texttt{code/dataset\_stats.py})}]
 # The 11 original micrographs, keyed by specimen and magnification. The
