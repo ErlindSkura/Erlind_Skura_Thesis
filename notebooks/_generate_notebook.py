@@ -1,4 +1,10 @@
-"""Generate the Colab notebook."""
+"""Generate Thesis_Colab.ipynb.
+
+The notebook is generated rather than hand-edited: a 28-cell .ipynb is painful to
+diff and easy to corrupt by hand. Edit this file and re-run it instead.
+
+    python notebooks/_generate_notebook.py
+"""
 import json
 from pathlib import Path
 
@@ -252,7 +258,7 @@ for c in cells:
     c["source"] = [l + "\n" for l in src[:-1]] + [src[-1]]
     nb["cells"].append(c)
 
-dest = Path(r"C:\Users\Erlind.Skura\Desktop\thesis\notebooks\Thesis_Colab.ipynb")
+dest = Path(__file__).resolve().parent / "Thesis_Colab.ipynb"
 dest.parent.mkdir(parents=True, exist_ok=True)
 dest.write_text(json.dumps(nb, indent=1), encoding="utf-8")
 print("wrote", dest, len(nb["cells"]), "cells")
