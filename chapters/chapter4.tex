@@ -9,12 +9,11 @@ instrument banner and the physical calibration are handled, how augmentation is
 applied after partitioning, and how the three methods are configured and trained.
 
 % STATUS NOTE -- remove before submission.
-% Implemented and verified so far: annotation parsing, polygon area and equivalent
-% diameter computation, scale-bar calibration, banner detection, specimen-wise fold
-% assignment, and the descriptive statistics and figures of Chapter 3
-% (code/dataset_stats.py). The training and evaluation code described in
-% Sections 4.4 to 4.6 is specified here but not yet written; the numbers it produces
-% belong in Chapter 5 and must not be written until they have been measured.
+% The whole pipeline is now implemented (see Section 4.9 for the file list) and
+% the data-preparation, fold-generation, augmentation-geometry and classical
+% stages have been executed and verified. The training runs themselves are
+% pending GPU time; until they have been executed, no number produced by them
+% may appear in Chapter 5.
 
 \section{System Architecture}
 
@@ -53,6 +52,14 @@ roughly 15\%.
 Equivalent circular diameter is derived from the polygon area $A$ as
 $d = 2\sqrt{A/\pi}$, and converted to micrometres using the magnification-specific
 pixel size from Table~\ref{tab:calibration}.
+
+The polygons are kept as polygons throughout rather than being flattened into a
+single label map. Measuring the annotation shows that 8.8\% of all annotated bead
+pixels are claimed by more than one polygon: beads in these micrographs touch and
+overlap. A label map assigns each pixel to exactly one object and would discard
+that overlap silently, and it would do so precisely in the regions where merge and
+split errors are decided. Instance masks are therefore rasterised on demand, one
+plane per object, and the overlap is preserved.
 
 \subsection{Banner Handling and Calibration}
 
@@ -166,9 +173,20 @@ specimen influences any choice made during its training.
 
 \section{Development Environment}
 
-% TODO: record the actual hardware used, once GPU access is confirmed (question 22).
-Development is in Python~3.11 with PyTorch. Descriptive statistics and figures use
-NumPy, Matplotlib and Pillow; the classical baseline uses scikit-image and OpenCV.
+Development is in Python with PyTorch and torchvision. Annotation handling and
+figures use NumPy, Pillow and Matplotlib; the classical baseline uses scikit-image
+and SciPy; average precision is computed with the reference COCO implementation.
+
+No local GPU was available, so the training stages run on Google Colab with an
+NVIDIA T4. This constrains the design in two ways that are worth stating rather
+than hiding. First, a session can be interrupted, so each stage writes its
+predictions to persistent storage and can be resumed independently instead of the
+pipeline being one long run. Second, the total budget is limited, which is why the
+comparison is between three methods under one protocol rather than a wider
+hyperparameter search: the leave-one-specimen-out protocol already multiplies every
+configuration by four.
+% TODO: record the exact number of training iterations and the wall-clock time of
+% the runs actually performed; make_tables.py emits these into tab:training_config.
 
 \section{Challenges and Solutions}
 
@@ -195,20 +213,54 @@ across at $500\times$ and 76 at $3000\times$. This drove the choice of a feature
 pyramid backbone, the resetting of anchor scales, and the wide random-scaling range
 in the augmentation policy.
 
+\textbf{Augmentation initially shifted every mask by one pixel.} Reflections were
+first implemented as $x \mapsto W - 1 - x$, which is the correct transformation for
+an integer pixel index. Polygon vertices are not indices but continuous
+coordinates, for which the correct reflection is $x \mapsto W - x$. The error is
+half a pixel at each edge and would be invisible on a large object. Here it is not:
+the mean bead is 17 pixels across, so a one-pixel boundary shift moves roughly 13\%
+of its area, and it would have been applied to every horizontally or vertically
+flipped training sample. The fault was found by rasterising the transformed
+polygons and comparing them against the directly transformed raster mask, which
+agree to an intersection over union of 0.9995 under the correct convention and only
+0.87 under the incorrect one. That check is now a permanent part of the test suite,
+because the failure produced no error message and no visibly wrong image -- only
+slightly wrong labels.
+
 \section{Code Organization}
 
 \begin{itemize}
-    \item \texttt{code/dataset\_stats.py} -- annotation parsing, calibration,
-    descriptive statistics and the dataset figures of Chapter~\ref{ch:methodology}.
-    \item \texttt{code/prepare\_data.py} -- banner cropping, mask rasterisation and
-    COCO conversion. \textit{(to be written)}
-    \item \texttt{code/folds.py} -- specimen-wise fold manifest generation.
-    \textit{(to be written)}
-    \item \texttt{code/train\_maskrcnn.py}, \texttt{code/train\_unet.py} and
-    \texttt{code/classical.py} -- the three methods. \textit{(to be written)}
-    \item \texttt{code/evaluate.py} -- segmentation metrics, counting and merge/split
-    statistics, and physical quantification. \textit{(to be written)}
+    \item \texttt{config.py} -- dataset facts, calibration constants and paths, in
+    one place so that no constant is defined twice.
+    \item \texttt{dataset\_stats.py} -- descriptive statistics and the dataset
+    figures of Chapter~\ref{ch:methodology}.
+    \item \texttt{prepare\_data.py} -- banner cropping and COCO conversion.
+    \item \texttt{folds.py} -- the fold manifests for both protocols.
+    \item \texttt{data\_io.py} -- annotation loading, polygon rasterisation and the
+    augmentation geometry. Deliberately free of any deep-learning dependency, so
+    that the classical baseline and the evaluation code run without PyTorch and the
+    geometry can be tested on its own.
+    \item \texttt{datasets.py}, \texttt{models.py} -- the PyTorch dataset, the
+    Mask R-CNN configuration and the U-Net definition.
+    \item \texttt{train\_maskrcnn.py}, \texttt{train\_unet.py},
+    \texttt{classical.py} -- the three methods.
+    \item \texttt{predio.py} -- the shared prediction format. All three methods
+    write run-length-encoded masks in COCO results format, so the evaluation code
+    cannot treat them differently.
+    \item \texttt{metrics.py}, \texttt{evaluate.py} -- segmentation metrics,
+    counting and merge/split statistics, and physical quantification.
+    \item \texttt{make\_tables.py} -- generates the tables and figures of
+    Chapter~\ref{ch:results} directly from the measured metrics.
+    \item \texttt{run\_all.py} -- runs the pipeline end to end, with a
+    \texttt{-{}-smoke} mode that executes a few iterations to verify that nothing
+    crashes before committing hours of GPU time.
+    \item \texttt{notebooks/Thesis\_Colab.ipynb} -- the Google Colab notebook used
+    to run the training stages.
 \end{itemize}
+
+Chapter~\ref{ch:results} is populated by \texttt{make\_tables.py} rather than by
+hand. Generating the tables from the stored metrics means no number can reach the
+thesis without a run having produced it.
 
 \section{Summary}
 

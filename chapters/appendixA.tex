@@ -1,25 +1,21 @@
 \chapter{SOURCE CODE}
 \label{app:code}
 
-This appendix lists the core implementation. The complete repository, including the
-training and evaluation scripts, is available at
-% TODO: insert the repository URL once it is published.
-\texttt{[repository URL]}.
+This appendix lists the parts of the implementation where a design decision is
+embedded in the code rather than in prose. The complete repository, including the
+training, evaluation and reporting scripts and the Colab notebook used to run
+them, is available at
+\texttt{https://github.com/ErlindSkura/Erlind\_Skura\_Thesis}.
 
-% TODO: as each script in Section 4.8 is written, add it here as a further section,
-% following the structure used for dataset_stats.py below. Keep the listings to the
-% substantive parts -- imports and argument parsing add pages without adding
-% information.
+Listings are trimmed to the substantive parts; imports and argument parsing add
+pages without adding information.
 
-\section*{A.1 \quad Dataset Characterisation and Calibration}
+\section*{A.1 \quad Polygon Area and Physical Calibration}
 
-The following module parses the LabelMe annotations, recovers the physical pixel
-size from each micrograph's burned-in scale bar, and produces the descriptive
-statistics and figures reported in Chapter~\ref{ch:methodology}. Object area is
-computed analytically from the polygon vertices rather than from a rasterised mask,
-for the reason given in Section~\ref{sec:parsing}.
+Object area is computed analytically from the polygon vertices rather than from a
+rasterised mask, for the reason given in Section~\ref{sec:parsing}.
 
-\begin{lstlisting}[language=Python, caption={Polygon area and physical calibration (\texttt{code/dataset\_stats.py})}]
+\begin{lstlisting}[language=Python, caption={Calibration constants and shoelace area (\texttt{code/config.py}, \texttt{code/prepare\_data.py})}]
 # The 11 original micrographs, keyed by specimen and magnification. The
 # suffix encodes magnification, not a repeat: -1 is 500x, -2 is 1kx,
 # -3/-4 is 3kx.
@@ -47,43 +43,134 @@ def polygon_area(points):
             for i in range(n)
         )
     ) / 2.0
-
-
-def collect():
-    """Per-image bead areas, equivalent diameters and physical sizes."""
-    out = {}
-    for name, (specimen, mag) in IMAGES.items():
-        ann = json.loads((DATA / "Labels" / f"{name}.json").read_text())
-        areas_px = [polygon_area(s["points"]) for s in ann["shapes"]]
-        diam_px = [2 * math.sqrt(a / math.pi) for a in areas_px]
-        scale = NM_PER_PX[mag] / 1000.0  # um per px
-        out[name] = {
-            "specimen": specimen,
-            "mag": mag,
-            "n": len(areas_px),
-            "diam_px": np.array(diam_px),
-            "diam_um": np.array(diam_px) * scale,
-            "area_um2": np.array(areas_px) * scale**2,
-        }
-    return out
 \end{lstlisting}
 
-\section*{A.2 \quad Verification of the Supplied Augmentations}
+\section*{A.2 \quad Augmentation Geometry}
 
-The check reported in Section~\ref{sec:supplied_aug}, confirming that the polygons of
-the pre-computed augmented copies remain correctly registered to their transformed
-images. The copies are correct but are not independent samples, and are therefore
-excluded from the analysis.
+Augmentation transforms the polygon vertices and the image together and
+rasterises only afterwards, so that overlapping beads stay separable. The
+reflection convention below is the one described in Section~4.8: vertices are
+continuous coordinates, so a reflection is $x \mapsto W - x$.
 
-\begin{lstlisting}[language=Python, caption={Overlaying annotations on augmented copies}]
-for name in ["Z2-1", "Z2-1_shift-150-0", "Z2-1_stretch-h-0.2", "Z2-1_flip-h"]:
-    im = Image.open(f"Images/{name}.jpg").convert("RGB")
-    ann = json.loads(open(f"Labels/{name}.json").read())
-    draw = ImageDraw.Draw(im)
-    for s in ann["shapes"]:
-        draw.line(
-            [tuple(p) for p in s["points"]] + [tuple(s["points"][0])],
-            fill=(255, 0, 0), width=3,
-        )
-    im.save(f"check_{name}.png")
+\begin{lstlisting}[language=Python, caption={Vertex-space transforms (\texttt{code/data\_io.py})}]
+def flip_h(img, polys):
+    w = img.size[0]
+    return (img.transpose(Image.FLIP_LEFT_RIGHT),
+            [np.column_stack([w - p[:, 0], p[:, 1]]) for p in polys])
+
+
+def rot90(img, polys):
+    """One 90-degree counter-clockwise rotation; (x, y) -> (y, W - x)."""
+    w = img.size[0]
+    return (img.transpose(Image.ROTATE_90),
+            [np.column_stack([p[:, 1], w - p[:, 0]]) for p in polys])
+
+
+def augment(img, polys, rng, *, crop_size, scale_range):
+    img, polys = scale(img, polys, rng.uniform(*scale_range))
+    if rng.random() < 0.5:
+        img, polys = flip_h(img, polys)
+    if rng.random() < 0.5:
+        img, polys = flip_v(img, polys)
+    for _ in range(int(rng.integers(4))):
+        img, polys = rot90(img, polys)
+
+    w, h = img.size
+    ox = int(rng.integers(0, max(1, w - crop_size + 1)))
+    oy = int(rng.integers(0, max(1, h - crop_size + 1)))
+    img, polys = crop(img, polys, ox, oy, crop_size)
+    return photometric(img, rng), polys
+\end{lstlisting}
+
+The check that found the one-pixel error described in Section~4.8. It rasterises
+the transformed polygons and compares them against the directly transformed
+raster mask; the two agree to an intersection over union of 0.9995 under the
+correct convention and only 0.87 under the incorrect one.
+
+\begin{lstlisting}[language=Python, caption={Verifying that vertex transforms match image transforms}]
+for name, transform in [("flip_h", flip_h), ("flip_v", flip_v),
+                        ("rot90", rot90)]:
+    moved_img, moved_polys = transform(image, record.polys)
+    from_vertices = rasterise(moved_polys, *moved_img.size).any(0)
+    from_raster = np.asarray(
+        transform(mask_as_image, [])[0].convert("L")) > 127
+    print(name, iou(from_vertices, from_raster))
+\end{lstlisting}
+
+\section*{A.3 \quad Instance-Level Agreement}
+
+The Aggregated Jaccard Index, and the merge and split rates that make the
+counting failure modes explicit. Intersections are computed only for pairs whose
+bounding boxes overlap: a micrograph can hold 152 annotated beads and several
+hundred predictions, and evaluating every pair over the full frame would be
+prohibitive while almost every pair is disjoint.
+
+\begin{lstlisting}[language=Python, caption={AJI and merge/split rates (\texttt{code/metrics.py})}]
+def aji(gts, preds):
+    """Aggregated Jaccard Index (Kumar et al., 2017)."""
+    inter, iou, ga, pa = iou_matrix(gts, preds)
+    union = ga[:, None] + pa[None, :] - inter
+    c = u = 0.0
+    used = set()
+    for i in range(len(gts)):
+        j = int(iou[i].argmax())
+        if iou[i, j] > 0:
+            c += inter[i, j]
+            u += union[i, j]
+            used.add(j)
+        else:
+            u += ga[i]
+    u += sum(pa[j] for j in range(len(preds)) if j not in used)
+    return float(c / u)
+
+
+def merge_split(gts, preds, thr=0.5):
+    """A merge is one prediction holding half or more of two or more
+    ground-truth beads; a split is one ground-truth bead holding half or
+    more of two or more predictions."""
+    inter, _, ga, pa = iou_matrix(gts, preds)
+    cov_gt = inter / np.maximum(ga[:, None], 1.0)
+    cov_pr = inter / np.maximum(pa[None, :], 1.0)
+
+    merged = set()
+    for j in range(len(preds)):
+        absorbed = np.nonzero(cov_gt[:, j] >= thr)[0]
+        if len(absorbed) >= 2:
+            merged.update(absorbed.tolist())
+
+    n_split = sum(1 for i in range(len(gts))
+                  if np.count_nonzero(cov_pr[i] >= thr) >= 2)
+    return {"merge_rate": 100.0 * len(merged) / len(gts),
+            "split_rate": 100.0 * n_split / len(gts)}
+\end{lstlisting}
+
+\section*{A.4 \quad Partitioning}
+
+Fold membership derives from the specimen prefix, so that all micrographs of one
+specimen move together. The random control uses the same four test-set sizes, so
+that the two protocols differ only in what the split respects.
+
+\begin{lstlisting}[language=Python, caption={Both partitioning protocols (\texttt{code/folds.py})}]
+def loso_folds():
+    folds = []
+    for sp in SPECIMENS:
+        test = [n for n, (s, _) in IMAGES.items() if s == sp]
+        folds.append({"name": sp, "held_out_specimen": sp,
+                      "test": sorted(test),
+                      "train": sorted(n for n in IMAGES if n not in test)})
+    return folds
+
+
+def random_folds(seed=SEED):
+    names = sorted(IMAGES)
+    random.Random(seed).shuffle(names)
+    sizes = [len(f["test"]) for f in loso_folds()]   # 3, 2, 3, 3
+    folds, cut = [], 0
+    for i, k in enumerate(sizes, start=1):
+        test = sorted(names[cut:cut + k])
+        cut += k
+        folds.append({"name": f"R{i}", "held_out_specimen": None,
+                      "test": test,
+                      "train": sorted(n for n in IMAGES if n not in test)})
+    return folds
 \end{lstlisting}

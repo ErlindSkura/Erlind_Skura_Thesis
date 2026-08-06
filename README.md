@@ -1,69 +1,107 @@
-# Bead-Defect Segmentation in SEM Images of Electrospun Nanofibre Mats
+# Deep Learning for Instance Segmentation and Quantification of Bead Defects in SEM Images of Electrospun Nanofibre Mats
 
-MSc thesis, Department of Computer Engineering, Epoka University.
+MSc thesis, Epoka University, Department of Computer Engineering.
+Supervisor: Assoc. Prof. Dr. Arban Uka. Defence: September 2026.
 
-**Author:** Erlind Skura
-**Supervisor:** Assoc. Prof. Dr. Arban Uka
-**Defence:** September 2026
+## What this is
 
-Instance segmentation and quantification of bead defects in scanning electron
-microscopy micrographs of electrospun nanofibre mats. The aim is to replace the
-manual ImageJ workflow currently used to count and measure beads with an automated
-pipeline that reports bead count, areal density and size distribution in physical
-units.
+Bead defects in electrospun nanofibre mats are currently quantified by hand: an
+operator outlines each bead in ImageJ. This work automates that measurement and
+reports the quantities the laboratory actually uses — bead count, areal density and
+the size distribution in micrometres — rather than detection scores alone.
+
+## The dataset
+
+11 SEM micrographs of 4 specimens (Z2, Z4, Z5, Z6) at 500×, 1000× and 3000×,
+carrying **606 manually delineated beads**. Z4 has no 500× micrograph.
+
+| Magnification | nm/px | Field width | Micrographs | Beads |
+|---|---|---|---|---|
+| 500× | 555.6 | 568.9 µm | 3 | 325 |
+| 1000× | 277.8 | 284.4 µm | 4 | 229 |
+| 3000× | 92.6 | 94.8 µm | 4 | 52 |
+
+The images themselves are not in this repository.
+
+### Two decisions that shape everything downstream
+
+**The 143 supplied pairs are 11 originals and 132 pre-computed augmented copies.**
+The copies are correctly transformed, but they are not independent samples. Letting
+one cross a partition boundary would put a transformed version of a test image into
+training. They are discarded, and augmentation is applied on the fly after
+partitioning instead.
+
+**The 11 micrographs come from only 4 specimens.** The specimen, not the image, is
+the unit of partitioning, so evaluation uses leave-one-specimen-out
+cross-validation. A random split over images is also run as a deliberate control,
+with identical fold sizes, to measure how much a naive protocol would overstate
+performance.
 
 ## Layout
 
 ```
-chapters/        thesis chapters (chapter1-6, appendixA)
-figures/         figures generated from the dataset
-code/            analysis code
-epoka.cls        Epoka University thesis class
-metadata.tex     title, abstracts, committee, abbreviations
-references.bib   bibliography
-thesis.tex       main document
+thesis.tex, metadata.tex, epoka.cls   LaTeX entry point (Overleaf-compatible, flat)
+chapters/                             chapters 1-6 and appendix A
+figures/                              generated figures
+references.bib                        23 references
+code/                                 the pipeline (see below)
+notebooks/Thesis_Colab.ipynb          runs the training stages on Colab
 ```
 
-The repository root is a valid Overleaf project: zip it and upload, or compile
-locally.
+## The pipeline
 
-## Building
+| File | Role |
+|---|---|
+| `config.py` | dataset facts, calibration constants, paths (all overridable by env var) |
+| `prepare_data.py` | banner cropping, LabelMe → COCO |
+| `folds.py` | fold manifests for both protocols |
+| `data_io.py` | annotation loading, rasterisation, augmentation geometry — **no torch** |
+| `datasets.py`, `models.py` | PyTorch dataset; Mask R-CNN config and U-Net |
+| `train_maskrcnn.py`, `train_unet.py`, `classical.py` | the three methods |
+| `predio.py` | shared prediction format (COCO RLE) for all three methods |
+| `metrics.py`, `evaluate.py` | AP, AJI, PQ, counting, merge/split, physical units |
+| `make_tables.py` | generates the Chapter 5 tables and figures from the metrics |
+| `run_all.py` | end to end, with `--smoke` for a fast correctness check |
+| `dataset_stats.py` | the descriptive figures of Chapter 3 |
+| `make_colab_bundle.py` | packages the 11 originals for upload |
+
+### Running it
+
+No GPU is available locally, so the training stages run on Google Colab:
 
 ```bash
-pdflatex thesis && bibtex thesis && pdflatex thesis && pdflatex thesis
+python code/make_colab_bundle.py     # -> bead_data.zip, upload to Drive
 ```
 
-Produces a 54-page PDF. Build artefacts are gitignored.
+then open `notebooks/Thesis_Colab.ipynb` in Colab, select a T4 GPU, and run the
+cells in order. Each stage writes its predictions to Drive and can be resumed on
+its own, so a disconnect costs one stage rather than the whole run.
 
-## Dataset
+Locally, without a GPU, the parts that do not train still run:
 
-Not included in this repository — the micrographs are held separately.
+```bash
+cd code
+python prepare_data.py && python folds.py
+python classical.py --protocol loso
+python evaluate.py && python make_tables.py
+```
 
-| | |
-|---|---|
-| Micrographs | 11 originals (the 143 supplied files are 11 × 13 augmented variants) |
-| Specimens | 4 (Z2, Z4, Z5, Z6) × 3 magnifications (500×, 1000×, 3000×); Z4-1 absent |
-| Annotations | 606 LabelMe polygons, single class `bead` |
-| Image size | 1024 × 768, 8-bit greyscale; bottom 32 px are a burned-in instrument banner |
-| Pixel size | 555.6 / 277.8 / 92.6 nm per pixel at 500× / 1000× / 3000× |
+## Two things worth knowing about the implementation
 
-Run `python code/dataset_stats.py` to regenerate the statistics and the dataset
-figures.
+**Overlap is preserved.** 8.8% of annotated bead pixels are claimed by more than
+one polygon — beads touch. Instances are therefore never flattened into a label
+map, which would discard the overlap exactly where merge and split errors are
+decided.
 
-## Notes on method
+**Augmentation transforms vertices, not rasters.** Reflection of a continuous
+coordinate is `x → W - x`, not the `x → W - 1 - x` that is correct for a pixel
+index. Half a pixel is nothing on a large object; on a 17-pixel bead it is 13% of
+its area. The two conventions are distinguished by a check that compares the
+rasterised transformed polygon against the directly transformed raster mask:
+IoU 0.9995 against 0.87.
 
-Two decisions follow from the structure of the data rather than from convention:
+## Results
 
-**The specimen is the unit of partitioning.** Eleven micrographs derive from four
-specimens, so evaluation uses leave-one-specimen-out cross-validation. A split over
-images would place different magnifications of the same specimen on both sides.
-
-**The supplied augmentations are not used.** They were generated before
-partitioning, so a random split over the 143 files would put transformed copies of
-one micrograph in both training and test. Augmentation is applied on the fly after
-partitioning instead.
-
-## Status
-
-Chapters 1–3 are complete. Chapters 4–6 are scaffolds: the result tables are
-deliberately empty and are to be filled only from executed runs.
+Chapter 5 is generated by `make_tables.py` from `results/metrics.json`. No number
+enters the thesis without a run having produced it; the tables ship empty until
+then.
