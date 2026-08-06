@@ -1,0 +1,258 @@
+"""Generate the Colab notebook."""
+import json
+from pathlib import Path
+
+REPO = "https://github.com/ErlindSkura/Erlind_Skura_Thesis.git"
+
+cells = []
+
+
+def md(text):
+    cells.append({"cell_type": "markdown", "metadata": {}, "source": text.strip("\n")})
+
+
+def code(text, meta=None):
+    cells.append({"cell_type": "code", "execution_count": None,
+                  "metadata": meta or {}, "outputs": [], "source": text.strip("\n")})
+
+
+md(r"""
+# Bead segmentation in SEM micrographs — training and evaluation
+
+Runs the full pipeline for the MSc thesis *Deep Learning for Instance Segmentation and
+Quantification of Bead Defects in SEM Images of Electrospun Nanofibre Mats*.
+
+**Before you start:** `Runtime → Change runtime type → T4 GPU`.
+
+Each stage writes its output to disk, so if Colab disconnects you can re-run only the
+stage that was interrupted. Run the cells in order.
+
+| Stage | Roughly |
+|---|---|
+| Setup and data preparation | 2 min |
+| Classical baseline (no GPU needed) | 5 min |
+| U-Net, 4 folds | 25 min |
+| Mask R-CNN, 4 folds | 40 min |
+| Mask R-CNN naive-split control | 40 min |
+| Evaluation and tables | 3 min |
+""")
+
+md("## 1 · Check the GPU")
+code(r"""
+import subprocess
+print(subprocess.run(["nvidia-smi", "--query-gpu=name,memory.total",
+                      "--format=csv,noheader"], capture_output=True, text=True).stdout
+      or "NO GPU - set Runtime > Change runtime type > T4 GPU, then rerun this cell.")
+""")
+
+md(r"""
+## 2 · Mount Drive and locate the data
+
+Upload `bead_data.zip` to the top level of your Google Drive first (My Drive).
+
+Mounting Drive also means the results survive a disconnect: everything is written to
+`MyDrive/thesis_work`, so a re-run picks up where it stopped.
+""")
+code(r"""
+import os, zipfile
+from pathlib import Path
+
+try:
+    from google.colab import drive
+    drive.mount("/content/drive")
+    ROOT = Path("/content/drive/MyDrive/thesis_work")
+except Exception as e:
+    print(f"Drive not mounted ({e}); results will be lost on disconnect.")
+    ROOT = Path("/content/thesis_work")
+
+ROOT.mkdir(parents=True, exist_ok=True)
+DATA = Path("/content/data")
+
+zips = list(Path("/content/drive/MyDrive").glob("bead_data.zip")) if Path("/content/drive").exists() else []
+if not zips:
+    from google.colab import files
+    print("bead_data.zip not found in My Drive — upload it now.")
+    up = files.upload()
+    zips = [Path(next(iter(up)))]
+
+with zipfile.ZipFile(zips[0]) as z:
+    z.extractall(DATA)
+print("data:", sorted(p.name for p in (DATA / "Segmentations").iterdir()))
+print("images:", len(list((DATA / "Segmentations" / "Images").glob("*.jpg"))))
+""")
+
+md("## 3 · Get the code")
+code(rf"""
+import os, subprocess
+from pathlib import Path
+
+CODE = Path("/content/thesis")
+if CODE.exists():
+    subprocess.run(["git", "-C", str(CODE), "pull", "--ff-only"], check=False)
+else:
+    subprocess.run(["git", "clone", "--depth", "1", "{REPO}", str(CODE)], check=True)
+
+os.environ["BEAD_DATA"] = str(DATA / "Segmentations")
+os.environ["BEAD_WORK"] = str(ROOT / "work")
+os.environ["BEAD_RESULTS"] = str(ROOT / "results")
+os.chdir(CODE / "code")
+print("cwd:", Path.cwd())
+print("work:", os.environ["BEAD_WORK"])
+""")
+
+md("## 4 · Verify the environment")
+code(r"""
+import importlib, subprocess, sys
+
+# Import name -> pip name, which differ for two of these.
+NEEDED = {"torch": "torch", "torchvision": "torchvision",
+          "pycocotools": "pycocotools", "skimage": "scikit-image",
+          "scipy": "scipy"}
+
+for mod_name, pip_name in NEEDED.items():
+    try:
+        mod = importlib.import_module(mod_name)
+        print(f"{mod_name:14} {getattr(mod, '__version__', 'ok')}")
+    except ImportError:
+        print(f"{mod_name:14} missing - installing {pip_name}")
+        subprocess.run([sys.executable, "-m", "pip", "-q", "install", pip_name],
+                       check=True)
+
+import torch
+print("\ncuda available:", torch.cuda.is_available(),
+      "|", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu only")
+""")
+
+md(r"""
+## 5 · Prepare the data
+
+Crops the instrument banner, converts the LabelMe polygons to COCO, and writes the
+fold manifests. Expect **11 images and 606 beads** — if you see anything else, stop
+and check the upload.
+""")
+code(r"""
+!python prepare_data.py
+!python folds.py
+""")
+
+md(r"""
+## 6 · Smoke test
+
+Eight training iterations per fold. The numbers this produces are meaningless — the
+point is to find out in two minutes, rather than after two hours, whether anything
+crashes.
+""")
+code(r"""
+!python run_all.py --smoke
+""")
+
+md(r"""
+## 7 · The real run
+
+From here the stages are separate cells. Each saves its predictions to Drive, so a
+disconnect costs you one stage and not the whole run.
+
+### 7a · Classical baseline (Otsu + watershed)
+""")
+code(r"""
+!python classical.py --protocol loso
+""")
+
+md("### 7b · U-Net semantic baseline")
+code(r"""
+!python train_unet.py --protocol loso --iters 1500 --batch 8
+""")
+
+md("### 7c · Mask R-CNN, leave-one-specimen-out")
+code(r"""
+!python train_maskrcnn.py --protocol loso --iters 1500 --batch 4
+""")
+
+md(r"""
+### 7d · Mask R-CNN under the naive random split
+
+This is the control for the data-leakage contribution: the same model and the same
+fold sizes, but the split ignores specimen identity. The gap between this and 7c is
+the amount a naive protocol would have overstated performance.
+""")
+code(r"""
+!python train_maskrcnn.py --protocol random --iters 1500 --batch 4
+""")
+
+md("## 8 · Evaluate and build the Chapter 5 tables")
+code(r"""
+!python evaluate.py
+!python make_tables.py
+""")
+
+md("## 9 · Look at the results")
+code(r"""
+import json
+from pathlib import Path
+
+RES = Path(os.environ["BEAD_RESULTS"])
+m = json.loads((RES / "metrics.json").read_text())
+
+g = m["ground_truth"]
+print(f"ground truth: {g['n']} beads, median diameter {g['median']:.2f} um, "
+      f"IQR [{g['iqr'][0]:.2f}, {g['iqr'][1]:.2f}]")
+
+for protocol, methods in m.items():
+    if protocol == "ground_truth":
+        continue
+    print(f"\n=== {protocol} ===")
+    for name, r in methods.items():
+        o = r["overall"]
+        print(f"{name:11s} AP50 {o['ap50']['mean']:.3f}+-{o['ap50']['std']:.3f}   "
+              f"AP {o['ap']['mean']:.3f}   AJI {o['aji']['mean']:.3f}   "
+              f"PQ {o['pq']['mean']:.3f}   "
+              f"|count err| {o['abs_counting_error']['mean']:5.1f}%   "
+              f"merge {o['merge_rate']['mean']:4.1f}%   "
+              f"split {o['split_rate']['mean']:4.1f}%")
+""")
+
+code(r"""
+print((RES / "chapter5_tables.tex").read_text())
+""")
+
+md("""
+## 10 · Download everything
+
+`thesis_results.zip` contains `metrics.json`, the generated LaTeX tables and the
+figures. Send this file back — it is everything needed to write Chapter 5.
+""")
+code(r"""
+import shutil
+from google.colab import files
+
+out = Path("/content/thesis_results")
+shutil.rmtree(out, ignore_errors=True)
+out.mkdir()
+shutil.copytree(RES, out / "results", dirs_exist_ok=True)
+figs = Path(os.environ["BEAD_RESULTS"]).parent / "figures"
+if figs.exists():
+    shutil.copytree(figs, out / "figures", dirs_exist_ok=True)
+shutil.make_archive("/content/thesis_results", "zip", out)
+files.download("/content/thesis_results.zip")
+""")
+
+nb = {
+    "nbformat": 4,
+    "nbformat_minor": 0,
+    "metadata": {
+        "colab": {"provenance": [], "gpuType": "T4", "toc_visible": True},
+        "kernelspec": {"name": "python3", "display_name": "Python 3"},
+        "language_info": {"name": "python"},
+        "accelerator": "GPU",
+    },
+    "cells": [],
+}
+for c in cells:
+    src = c["source"].split("\n")
+    c["source"] = [l + "\n" for l in src[:-1]] + [src[-1]]
+    nb["cells"].append(c)
+
+dest = Path(r"C:\Users\Erlind.Skura\Desktop\thesis\notebooks\Thesis_Colab.ipynb")
+dest.parent.mkdir(parents=True, exist_ok=True)
+dest.write_text(json.dumps(nb, indent=1), encoding="utf-8")
+print("wrote", dest, len(nb["cells"]), "cells")
