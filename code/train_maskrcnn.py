@@ -45,7 +45,13 @@ def infer(model, records, names, device, score_thresh: float, mask_thresh: float
             pred = model([image.to(device)])[0]
         keep = pred["scores"] >= score_thresh
         masks = (pred["masks"][keep, 0] > mask_thresh).cpu().numpy().astype(bool)
-        out[target["name"]] = (list(masks), pred["scores"][keep].cpu().numpy().tolist())
+        scores = pred["scores"][keep].cpu().numpy().tolist()
+
+        # A soft mask can threshold away to nothing even when its box scored
+        # well. Such a detection has no area, so it cannot be matched or scored;
+        # dropping it here keeps masks and scores aligned everywhere downstream.
+        kept = [(m, s) for m, s in zip(masks, scores) if m.any()]
+        out[target["name"]] = ([m for m, _ in kept], [s for _, s in kept])
     return out
 
 

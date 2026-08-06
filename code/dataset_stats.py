@@ -1,7 +1,7 @@
 """Descriptive statistics and thesis figures for the electrospun-fibre bead dataset.
 
 Reads the LabelMe annotations shipped in ``Segmentations_VB`` and writes the
-dataset figures used in Chapters 3 into ``overleaf/figures``.
+dataset figures used in Chapter 3 into ``figures/``.
 
 Only the 11 original micrographs are analysed. The 132 augmented copies are
 deliberately excluded: they carry no additional information and counting them

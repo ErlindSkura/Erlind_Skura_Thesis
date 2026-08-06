@@ -58,7 +58,14 @@ class Instance:
 
 
 def as_instances(masks) -> list[Instance]:
-    """Accept full-frame masks or ``Instance`` objects; always return the latter."""
+    """Accept full-frame masks or ``Instance`` objects; always return the latter.
+
+    Empty masks are dropped, since an object with no area can neither be matched
+    nor scored. Callers holding a parallel list of scores must therefore filter
+    both together rather than calling this on the masks alone -- see
+    ``train_maskrcnn.infer``, which drops empty predictions at source so that the
+    two lists can never drift apart.
+    """
     out = []
     for m in masks:
         if isinstance(m, Instance):
