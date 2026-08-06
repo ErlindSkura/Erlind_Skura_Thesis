@@ -45,7 +45,7 @@ def main() -> None:
         print(f"     {protocol}: {[x['name'] for x in f]}")
 
     print("=" * 70, "\n3/6  classical baseline (leave-one-specimen-out)", flush=True)
-    classical.run("loso")
+    classical.run("loso", quick=a.smoke)
 
     print("=" * 70, "\n4/6  U-Net baseline (leave-one-specimen-out)", flush=True)
     train_unet.run("loso", iters=iters, batch=a.unet_batch, lr=3e-4)

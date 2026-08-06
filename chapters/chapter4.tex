@@ -129,9 +129,11 @@ The semantic baseline uses a ResNet encoder initialised from ImageNet weights an
 symmetric decoder with skip connections, trained with a combined cross-entropy and
 Dice loss to counter the strong foreground/background imbalance, since bead pixels
 are a small fraction of every micrograph. Instances are recovered from the predicted
-mask by connected-component labelling, with no boundary-aware post-processing, so
-that the merge behaviour this baseline is included to demonstrate remains visible
-rather than masked.
+mask by connected-component labelling, with no boundary-aware post-processing. The
+omission is deliberate: connected components cannot separate two beads whose
+predicted regions touch, and adding a boundary-aware correction would hide that
+limitation rather than measure it. Whether it costs anything on this data is
+reported as the merge rate in Chapter~\ref{ch:results}.
 
 \subsection{Classical Baseline}
 

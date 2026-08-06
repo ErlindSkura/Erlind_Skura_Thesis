@@ -33,7 +33,11 @@ from metrics import Instance, aji, as_instances
 
 CLAHE_CLIP = 0.02
 OPENING_RADII = (1, 2)
-MIN_AREA_UM2 = (2.0, 10.0, 30.0)
+# The median annotated bead is about 38 um^2, so the grid brackets it from well
+# below to well above. The upper values matter: an earlier, shorter grid put the
+# optimum for one fold on its boundary, which would have left the baseline open
+# to the objection that it was simply not searched far enough.
+MIN_AREA_UM2 = (2.0, 10.0, 30.0, 60.0, 120.0)
 MIN_DISTANCE_PX = (5, 10, 20)
 
 
@@ -95,14 +99,15 @@ def segment(record, cache: dict, opening_radius: int, min_area_um2: float,
     return instances, scores
 
 
-def tune(records, train_names, cache):
+def tune(records, train_names, cache, quick: bool = False):
     # Converted to sparse instances once, not on every one of the 144 scorings.
     gt = {n: as_instances(rasterise(records[n].polys, records[n].width,
                                     records[n].height))
           for n in train_names}
+    grids = ((OPENING_RADII[:1], MIN_AREA_UM2[1:2], MIN_DISTANCE_PX[1:2]) if quick
+             else (OPENING_RADII, MIN_AREA_UM2, MIN_DISTANCE_PX))
     best, best_score = None, -1.0
-    for radius, min_area, min_dist in itertools.product(
-            OPENING_RADII, MIN_AREA_UM2, MIN_DISTANCE_PX):
+    for radius, min_area, min_dist in itertools.product(*grids):
         scores = []
         for n in train_names:
             masks, _ = segment(records[n], cache, radius, min_area, min_dist)
@@ -113,15 +118,17 @@ def tune(records, train_names, cache):
     return best, best_score
 
 
-def run(protocol: str) -> None:
+def run(protocol: str, quick: bool = False) -> None:
     ensure_dirs()
     records = load_records()
     cache: dict[str, np.ndarray] = {}
-    all_dets, meta = [], {"protocol": protocol, "method": "classical", "params": {}}
+    all_dets, meta = [], {"protocol": protocol, "method": "classical",
+                          "quick": quick, "params": {}}
 
     for fold in folds_mod.load(protocol):
         t0 = time.time()
-        (radius, min_area, min_dist), train_aji = tune(records, fold["train"], cache)
+        (radius, min_area, min_dist), train_aji = tune(records, fold["train"],
+                                                       cache, quick)
         meta["params"][fold["name"]] = {"opening_radius": radius,
                                         "min_area_um2": min_area,
                                         "min_distance_px": min_dist}
@@ -142,5 +149,7 @@ def run(protocol: str) -> None:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--protocol", default="loso", choices=["loso", "random"])
+    ap.add_argument("--quick", action="store_true",
+                    help="one parameter combination instead of the full grid")
     a = ap.parse_args()
-    run(a.protocol)
+    run(a.protocol, a.quick)

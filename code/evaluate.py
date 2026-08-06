@@ -40,12 +40,13 @@ def evaluate_method(coco_gt, records, gt_masks, protocol: str, method: str) -> d
         return None
     detections, meta = predio.load(path)
     by_image = predio.group_by_image(detections)
-    id_to_name = {r.image_id: n for n, r in records.items()}
 
+    # Every micrograph is scored, including any for which the method produced no
+    # detection at all. Iterating over the predictions instead would drop such an
+    # image from the totals, turning a complete failure into a missing row.
     per_image, gt_pool, pred_pool = {}, [], []
-    for image_id, dets in by_image.items():
-        name = id_to_name[image_id]
-        rec = records[name]
+    for name, rec in records.items():
+        dets = by_image.get(rec.image_id, [])
         # Converted once here; every metric below then reuses the same objects.
         pred_masks = as_instances(predio.to_masks(dets)[0])
         gts = gt_masks[name]
@@ -120,9 +121,10 @@ def evaluate_method(coco_gt, records, gt_masks, protocol: str, method: str) -> d
             "ks_statistic": float(ks.statistic), "ks_pvalue": float(ks.pvalue),
         })
 
+    all_ids = sorted(r.image_id for r in records.values())
     return {"meta": meta, "per_image": per_image, "per_fold": per_fold,
-            "overall": overall, "pooled_ap": coco_ap(
-                coco_gt, detections, sorted(by_image)),
+            "overall": overall,
+            "pooled_ap": coco_ap(coco_gt, detections, all_ids),
             "by_magnification": by_mag, "size_agreement": size}
 
 
