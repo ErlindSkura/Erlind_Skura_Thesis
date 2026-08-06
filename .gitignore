@@ -7,6 +7,11 @@ bead_data.zip
 # All regenerable from the raw data by code/prepare_data.py.
 work/
 
+# Measured metrics and the tables generated from them. Untracked on purpose:
+# a partial run left in the repository is indistinguishable from a final one.
+# The definitive numbers are the tables pasted into chapters/chapter5.tex.
+results/
+
 # Claude Code project instructions
 CLAUDE.md
 
