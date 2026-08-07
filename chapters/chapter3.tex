@@ -142,11 +142,32 @@ calibration is given in Table~\ref{tab:calibration}.
     \end{tabular}
 \end{table}
 
+Bead size is expressed as an equivalent circular diameter, the diameter of the
+circle having the same area as the outlined bead. Area is computed analytically
+from the polygon vertices $(x_1, y_1), \dots, (x_N, y_N)$ by the shoelace
+formula, with indices taken modulo $N$,
+%
+\begin{equation}
+    A = \frac{1}{2}
+        \left| \sum_{i=1}^{N} \bigl( x_i \, y_{i+1} - x_{i+1} \, y_i \bigr) \right|,
+    \label{eq:shoelace}
+\end{equation}
+%
+rather than by counting the pixels of a rasterised mask. The distinction is not
+pedantic here: at $500\times$ the median bead is only about 14 pixels across, so a
+one-pixel error along its boundary changes the area by roughly 15\%. The
+equivalent diameter in micrometres then follows from the pixel size $s$ of
+Table~\ref{tab:calibration},
+%
+\begin{equation}
+    d = 2 s \sqrt{\frac{A}{\pi}}.
+    \label{eq:equivalent_diameter}
+\end{equation}
+
 The calibration can be validated independently of the scale bars. If it is correct,
 the physical bead size distribution measured at one magnification should agree with
-that measured at another, since all three views image the same specimens. Converting
-every annotated polygon to an equivalent circular diameter and grouping by
-magnification gives median diameters of 7.92, 7.34 and 6.75\,$\mu$m at $500\times$,
+that measured at another, since all three views image the same specimens. Grouping
+every annotated polygon by magnification gives median diameters of 7.92, 7.34 and 6.75\,$\mu$m at $500\times$,
 $1000\times$ and $3000\times$ respectively -- agreement to within 15\%, which
 satisfies the criterion set in Section~\ref{sec:objectives} and confirms both the
 calibration and the internal consistency of the annotation. The three distributions
@@ -306,41 +327,135 @@ typical COCO objects -- the median bead occupies 0.04\% of the image area.
 
 \subsection{Segmentation and Detection Metrics}
 
+Throughout this section, $G = \{g_1, \dots, g_n\}$ denotes the set of annotated
+bead masks in a micrograph and $P = \{p_1, \dots, p_m\}$ the set of predicted
+masks, with $|\cdot|$ the area of a mask in pixels. Overlap between two masks is
+measured by the intersection over union,
+%
+\begin{equation}
+    \mathrm{IoU}(g, p) = \frac{|g \cap p|}{|g \cup p|}.
+    \label{eq:iou}
+\end{equation}
+
 Detection and mask quality are reported as average precision at an
 intersection-over-union threshold of 0.5 ($\mathrm{AP}_{50}$), at 0.75
 ($\mathrm{AP}_{75}$), and averaged over thresholds from 0.5 to 0.95 following the
 COCO protocol \cite{lin2014microsoft}. Average precision at a fixed overlap
 threshold originates with the Pascal VOC challenge \cite{everingham2010pascal};
 the COCO variant averages it over a range of thresholds so that boundary accuracy
-is rewarded rather than only detection. The aggregated Jaccard index
-\cite{kumar2017dataset} is reported additionally, because it penalises merges and
-splits explicitly rather than treating each object independently, and panoptic
-quality \cite{kirillov2019panoptic} is reported to separate recognition from
-delineation quality.
+is rewarded rather than only detection.
+
+The aggregated Jaccard index \cite{kumar2017dataset} is reported additionally,
+because it penalises merges and splits explicitly rather than treating each
+object independently. Each annotated bead $g_i$ is assigned the prediction it
+overlaps most,
+%
+\begin{equation}
+    j^{*}(i) = \arg\max_{j} \; \mathrm{IoU}(g_i, p_j),
+    \label{eq:aji_match}
+\end{equation}
+%
+and writing $M$ for the beads whose best overlap is non-zero, $\bar{M}$ for those
+with none, and $U$ for the predictions never selected by any bead,
+%
+\begin{equation}
+    \mathrm{AJI} =
+    \frac{\displaystyle\sum_{i \in M} \bigl|g_i \cap p_{j^{*}(i)}\bigr|}
+         {\displaystyle\sum_{i \in M} \bigl|g_i \cup p_{j^{*}(i)}\bigr|
+          \;+\; \sum_{i \in \bar{M}} |g_i|
+          \;+\; \sum_{k \in U} |p_k|}.
+    \label{eq:aji}
+\end{equation}
+%
+Every predicted object that matches nothing, and every bead that is matched by
+nothing, therefore enters the denominator and lowers the score. This is what
+makes the index sensitive to over-segmentation, which a per-object average is
+not.
+
+Panoptic quality \cite{kirillov2019panoptic} is reported to separate recognition
+from delineation. A predicted and an annotated mask are matched when
+$\mathrm{IoU}(g, p) > 0.5$; since no mask can exceed that overlap with more than
+one partner, the matching is unique and requires no assignment solver. Writing
+$\mathit{TP}$ for the matched pairs and $\mathit{FP}$, $\mathit{FN}$ for the
+unmatched predictions and beads,
+%
+\begin{equation}
+    \mathrm{PQ} =
+    \underbrace{\frac{\sum_{(g,p) \in \mathit{TP}} \mathrm{IoU}(g,p)}
+                     {|\mathit{TP}|}}_{\textstyle \mathrm{SQ}}
+    \times
+    \underbrace{\frac{|\mathit{TP}|}
+                     {|\mathit{TP}| + \tfrac{1}{2}|\mathit{FP}|
+                      + \tfrac{1}{2}|\mathit{FN}|}}_{\textstyle \mathrm{RQ}}.
+    \label{eq:pq}
+\end{equation}
+%
+The two factors are reported separately as well as combined, because they answer
+different questions: segmentation quality $\mathrm{SQ}$ measures how well the
+found beads are outlined, and recognition quality $\mathrm{RQ}$ measures how many
+were found at all. A method can be strong on one and weak on the other, and
+Chapter~\ref{ch:results} shows that the distinction matters here.
 
 \subsection{Laboratory Metrics}
 
 Segmentation metrics do not by themselves establish that a method is usable. The
 following are therefore reported as primary outcomes:
 
-\begin{itemize}
-    \item \textbf{Counting error.} The signed and absolute relative error in the
-    number of beads detected per micrograph, against the manual annotation.
+\textbf{Counting error.} The relative error in the number of beads found in a
+micrograph, reported both signed and absolute, since a method whose errors cancel
+across specimens behaves differently from one that is biased:
+%
+\begin{equation}
+    e = 100 \times \frac{|P| - |G|}{|G|} \quad (\%).
+    \label{eq:counting_error}
+\end{equation}
 
-    \item \textbf{Merge and split rates.} The proportion of ground-truth beads
-    absorbed into a predicted instance containing another bead, and the proportion of
-    single ground-truth beads divided across multiple predictions. These are the two
-    failure modes that corrupt a count, and they are reported separately because they
-    have opposite effects on it.
+\textbf{Merge and split rates.} These are the two failure modes that corrupt a
+count, and they have opposite effects on it, so they are reported separately.
+Both are defined through the asymmetric coverage of one mask by another,
+%
+\begin{equation}
+    c_{G}(g, p) = \frac{|g \cap p|}{|g|},
+    \qquad
+    c_{P}(g, p) = \frac{|g \cap p|}{|p|},
+    \label{eq:coverage}
+\end{equation}
+%
+with a threshold of $\tau = 0.5$ throughout. A prediction is a \emph{merge} when
+it contains at least half of each of two or more annotated beads, and every bead
+it absorbed counts as merged; an annotated bead is \emph{split} when it contains
+at least half of each of two or more predictions:
+%
+\begin{align}
+    \mathrm{merge\ rate} &= \frac{100}{|G|}
+        \Bigl|\bigl\{\, g \in G \;:\; \exists\, p \in P,\;
+        c_{G}(g,p) \geq \tau \;\wedge\;
+        |\{g' \in G : c_{G}(g',p) \geq \tau\}| \geq 2 \,\bigr\}\Bigr|,
+    \label{eq:merge_rate} \\[4pt]
+    \mathrm{split\ rate} &= \frac{100}{|G|}
+        \Bigl|\bigl\{\, g \in G \;:\;
+        |\{p \in P : c_{P}(g,p) \geq \tau\}| \geq 2 \,\bigr\}\Bigr|.
+    \label{eq:split_rate}
+\end{align}
+%
+Coverage is used rather than intersection over union because the two failures are
+asymmetric: a prediction that swallows two beads has low $\mathrm{IoU}$ with each
+of them while containing both almost entirely, and an overlap-based criterion
+would miss exactly the case being measured.
 
-    \item \textbf{Areal density.} Beads per square millimetre, computed from the
-    detected count and the calibrated field area, which is the form in which the
-    measurement is used for process comparison.
+\textbf{Areal density.} Beads per square millimetre, which is the form in which
+the measurement is used for process comparison. For a micrograph of
+$W \times H$ pixels at a pixel size of $s$ micrometres,
+%
+\begin{equation}
+    \rho = \frac{|P| \times 10^{6}}{W H s^{2}}
+    \quad (\mathrm{beads\ mm^{-2}}).
+    \label{eq:density}
+\end{equation}
 
-    \item \textbf{Size distribution agreement.} The predicted and manual
-    distributions of equivalent bead diameter in micrometres, compared by their
-    medians and interquartile ranges and by a two-sample Kolmogorov--Smirnov test.
-\end{itemize}
+\textbf{Size distribution agreement.} The predicted and manual distributions of
+equivalent bead diameter in micrometres, compared by their medians and
+interquartile ranges and by a two-sample Kolmogorov--Smirnov test.
 
 \section{Tools and Technologies}
 

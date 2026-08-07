@@ -126,9 +126,29 @@ quantity being measured.
 \subsection{U-Net Baseline}
 
 The semantic baseline uses a ResNet encoder initialised from ImageNet weights and a
-symmetric decoder with skip connections, trained with a combined cross-entropy and
-Dice loss to counter the strong foreground/background imbalance, since bead pixels
-are a small fraction of every micrograph. Instances are recovered from the predicted
+symmetric decoder with skip connections. It is trained with a combined
+cross-entropy and Dice loss to counter the strong foreground/background imbalance,
+since bead pixels are only 2 to 20\% of a micrograph. Writing $\hat{y}_i$ for the
+predicted probability at pixel $i$ and $y_i \in \{0,1\}$ for the annotation,
+%
+\begin{equation}
+    \mathcal{L} =
+    \underbrace{-\frac{1}{N}\sum_{i=1}^{N}
+      \bigl[\, y_i \log \hat{y}_i + (1 - y_i) \log (1 - \hat{y}_i) \,\bigr]}
+      _{\textstyle \text{cross-entropy}}
+    \;+\;
+    \underbrace{1 - \frac{2 \sum_i \hat{y}_i y_i + \varepsilon}
+                        {\sum_i \hat{y}_i + \sum_i y_i + \varepsilon}}
+      _{\textstyle \text{Dice}},
+    \label{eq:dice_bce}
+\end{equation}
+%
+with $\varepsilon = 1$ guarding the degenerate case of an empty crop.
+Cross-entropy alone is minimised well by a nearly empty prediction when the
+foreground is this sparse; the Dice term is scale-invariant in the number of
+foreground pixels and supplies the gradient that prevents it.
+
+Instances are recovered from the predicted
 mask by connected-component labelling, with no boundary-aware post-processing. The
 omission is deliberate: connected components cannot separate two beads whose
 predicted regions touch, and adding a boundary-aware correction would hide that
