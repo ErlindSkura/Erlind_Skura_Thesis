@@ -49,7 +49,8 @@ def polygon_area(points):
 
 Augmentation transforms the polygon vertices and the image together and
 rasterises only afterwards, so that overlapping beads stay separable. The
-reflection convention below is the one described in Section~4.8: vertices are
+reflection convention below is the one described in
+Section~\ref{sec:challenges}: vertices are
 continuous coordinates, so a reflection is $x \mapsto W - x$.
 
 \begin{lstlisting}[language=Python, caption={Vertex-space transforms (\texttt{code/data\_io.py})}]
@@ -82,7 +83,8 @@ def augment(img, polys, rng, *, crop_size, scale_range):
     return photometric(img, rng), polys
 \end{lstlisting}
 
-The check that found the one-pixel error described in Section~4.8. It rasterises
+The check that found the one-pixel error described in
+Section~\ref{sec:challenges}. It rasterises
 the transformed polygons and compares them against the directly transformed
 raster mask; the two agree to an intersection over union of 0.9995 under the
 correct convention and only 0.87 under the incorrect one.

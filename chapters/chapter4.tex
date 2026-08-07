@@ -179,6 +179,7 @@ configuration by four.
 % the runs actually performed; make_tables.py emits these into tab:training_config.
 
 \section{Challenges and Solutions}
+\label{sec:challenges}
 
 Three problems were encountered during data preparation. Each is recorded here
 because each changed a design decision.
@@ -217,6 +218,29 @@ agree to an intersection over union of 0.9995 under the correct convention and o
 because the failure produced no error message and no visibly wrong image -- only
 slightly wrong labels.
 
+\textbf{Evaluating a thousand objects per image was forty times slower than
+necessary.} Instances were initially held as full-frame masks, one
+$1024 \times 736$ array per object. The classical baseline emits over a thousand
+objects for a single micrograph, so its parameter search spent almost all of its
+time reading zeros outside the objects: a single Aggregated Jaccard Index
+computation took 5.95 seconds. Holding each instance instead as a bounding box
+plus a mask covering only that box, and computing intersections only for pairs
+whose boxes overlap, reduced that to 0.02 seconds and the full parameter search
+from over an hour to a few minutes.
+
+\textbf{The smoke run destroyed a completed set of results.} The fast
+correctness check described in Section~\ref{sec:deployment} originally wrote its predictions to
+the same directory as a real run. Re-running it after a completed four-fold
+experiment therefore overwrote several hours of predictions with output from eight
+training iterations, and did so silently: a smoke run produces a perfectly
+well-formed predictions file, so nothing fails, nothing warns, and the only
+symptom is that every subsequently reported number is wrong. The fix is
+structural rather than procedural --- a smoke run now redirects its working and
+results directories before any pipeline module is imported, so it cannot reach the
+real predictions at all. The episode is recorded here because the failure mode is
+general: a verification mechanism that shares mutable state with the thing it
+verifies can destroy what it was meant to protect.
+
 \section{Code Organization}
 
 \begin{itemize}
@@ -251,6 +275,33 @@ slightly wrong labels.
 Chapter~\ref{ch:results} is populated by \texttt{make\_tables.py} rather than by
 hand. Generating the tables from the stored metrics means no number can reach the
 thesis without a run having produced it.
+
+\section{Deployment}
+\label{sec:deployment}
+
+The pipeline is deployed as a Google Colab notebook that clones the repository,
+mounts the specimen data from Drive, and runs each stage as a separate cell. Three
+properties of that arrangement are deliberate rather than incidental.
+
+\textbf{Each stage is independently resumable.} A Colab session can be
+disconnected at any point, and a four-fold run of three methods takes long enough
+that this is likely rather than possible. Every stage writes its predictions to
+persistent storage before the next begins, so an interruption costs one stage and
+not the whole run.
+
+\textbf{A smoke path runs the entire pipeline in about two minutes.} It executes
+eight training iterations per fold and a single classical parameter combination.
+Its numbers are meaningless; its purpose is to establish that nothing crashes
+before committing hours of GPU time. It writes to a separate working directory,
+for a reason given in Section~\ref{sec:challenges}.
+
+\textbf{Reporting is reproducible from stored metrics.} The evaluation and
+table-generation stages read only the saved predictions, so the tables and figures
+of Chapter~\ref{ch:results} can be regenerated without repeating any training. A
+change to how a result is presented therefore cannot alter the result.
+
+The complete repository, including the notebook, is available at
+\texttt{https://github.com/ErlindSkura/Erlind\_Skura\_Thesis}.
 
 \section{Summary}
 

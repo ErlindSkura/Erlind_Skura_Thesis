@@ -63,19 +63,69 @@ a single NVIDIA T4.
 
 \input{results/table_training_config}
 
-Two settings are worth singling out because they were chosen from the data rather
-than taken from convention. Anchor sizes were reset to 8, 16, 32, 64 and 128
-pixels, against a torchvision default whose smallest anchor is 32 pixels: the
-median bead is 14 pixels across at $500\times$, and the default would leave the
-smallest beads without a well-matched proposal. The detection cap was raised from
-the COCO default of 100 to 400, because one $500\times$ micrograph contains 152
-beads and the default would have truncated the count -- corrupting precisely the
-quantity being measured.
+\subsection{Justification of Training Hyperparameters}
 
-The score threshold applied to Mask R-CNN's output was selected on each fold's
-own training partition by maximising $F_1$ at an intersection over union of 0.5.
-The selected values were 0.60, 0.70, 0.70 and 0.65 for folds Z2, Z4, Z5 and Z6.
-No fold's test partition influenced any choice made for that fold.
+Four settings depart from what a default configuration would give, and each was
+chosen from a measured property of the data rather than by search. This matters
+for how the results should be read: no hyperparameter was tuned against
+performance, so none of them can have been fitted to the test partitions.
+
+\textbf{Anchor sizes: 8, 16, 32, 64 and 128 pixels.} The torchvision default
+begins at 32 pixels. The median bead is 14 pixels across at $500\times$, so under
+the default the majority of objects at the lowest magnification would have no
+anchor within a factor of two of their size, and the region proposal network would
+be asked to regress a large correction for most of the dataset. The chosen ladder
+brackets the observed range of 14 to 76 pixels, widened at both ends to cover the
+random scaling applied during training.
+
+\textbf{Detection cap: 400 per image.} The COCO default is 100. Micrograph Z6-1
+contains 152 annotated beads, so the default would have truncated its output
+before any threshold was applied. The failure would have been silent and would
+have biased exactly the quantity this work measures. The cap is set high enough
+that it never binds.
+
+\textbf{Crop size $512 \times 512$ with scale jitter from 0.5 to 2.0.} A
+leave-one-specimen-out training partition holds eight micrographs. Training on
+whole images would therefore present eight distinct inputs; random crops draw a
+different field of view each time. The scaling range is wider than is usual
+because scale robustness across a sixfold range in apparent object size is the
+central difficulty of this dataset rather than an incidental nuisance.
+
+\textbf{Score threshold: selected per fold on training data.} The threshold
+applied to Mask R-CNN's output was chosen by maximising $F_1$ at an
+intersection over union of 0.5 on each fold's own \emph{training} partition. The
+selected values were 0.60, 0.70, 0.70 and 0.65 for folds Z2, Z4, Z5 and Z6. This
+is the one free parameter of the learned pipeline, and selecting it on test data
+would have inflated every number in this chapter. The U-Net's probability
+threshold and minimum object area were chosen the same way, as were the three
+parameters of the classical pipeline.
+
+The number of training iterations, 1500, was set by the available GPU budget
+rather than by a convergence criterion. This is a limitation and is recorded as
+one in Section~\ref{sec:limitations}: the reported figures are what this
+configuration produces, not what the architecture is capable of.
+
+\subsection{Evaluation Protocol}
+
+Every micrograph is scored exactly once, by the model of the fold that held its
+specimen out. The eleven per-image results are therefore mutually independent in
+the sense that no model contributed a score for a specimen it had seen, and
+pooling them gives a single estimate over the whole dataset.
+
+All three methods are evaluated by the same code, on the same predictions
+format, against the same ground truth. This is not a convenience: a controlled
+comparison is only meaningful if the differences between the methods come from the
+methods. Each writes run-length-encoded masks in COCO results format, and the
+evaluation module has no branch on which method produced them.
+
+Metrics are computed at three levels, because a single number conceals the
+failure modes that matter here. Average precision measures detection and
+delineation jointly. The Aggregated Jaccard Index and Panoptic Quality measure
+instance-level agreement, with Panoptic Quality decomposed into its recognition
+and segmentation factors. Counting error, merge rate and split rate measure the
+laboratory quantity directly. A method can score acceptably on the first and fail
+completely on the third, and Section~\ref{sec:counting} shows that this is not a
+hypothetical concern.
 
 \subsection{Fold Composition}
 
@@ -187,10 +237,7 @@ Section~\ref{sec:counting}, because a method whose errors cancel across specimen
 is useful for a population estimate in a way that a biased method is not, while
 still being unreliable for any single micrograph.
 
-Figure~\ref{fig:qualitative} shows the three methods on two held-out micrographs.
-The classical pipeline's output covers the frame irrespective of where the beads
-are; the U-Net's regions are sparse and fused; Mask R-CNN's are the only ones that
-correspond recognisably to individual beads.
+\subsection{Qualitative Examples}
 
 \begin{figure}[htbp]
     \centering
@@ -200,6 +247,32 @@ correspond recognisably to individual beads.
     that specimen. Red outlines are the manual annotation, blue the prediction.}
     \label{fig:qualitative}
 \end{figure}
+
+Figure~\ref{fig:qualitative} shows the three methods on two held-out micrographs,
+and each of the numerical findings above has a visible counterpart in it.
+
+On Z6-1 the annotator marked 152 beads. The classical pipeline returns 329
+regions that tile the frame more or less irrespective of where the beads are:
+its outlines follow the fibre texture, which is the visual form of an
+$\mathrm{AP}_{50}$ of 0.001. The U-Net returns 77 regions, roughly half the true
+count, and they are visibly larger than individual beads because adjacent beads
+have been absorbed into single components --- the 48.7\% merge rate made visible.
+Mask R-CNN returns 120 regions that correspond recognisably to individual beads,
+and its errors are of a different kind: beads missed entirely rather than beads
+fused together.
+
+On Z2-2, where the annotator marked 51 beads, the same pattern holds at a
+different scale. The classical pipeline returns 311 regions; the U-Net 31 and
+Mask R-CNN 37, both under-counting, but the U-Net's regions again span
+neighbouring beads while Mask R-CNN's do not.
+
+The panels also show what the summary statistics cannot: the beads themselves are
+low-contrast objects embedded in a dense fibre network, and in several places the
+distinction between a bead and a locally thickened fibre crossing is genuinely
+ambiguous to the eye. This is the limitation recorded in
+Section~\ref{sec:limitations} concerning the single annotation class, and it
+places an unknown ceiling on what any model can be expected to achieve against
+this ground truth.
 
 \section{The Cost of a Naive Split}
 \label{sec:leakage}
@@ -253,6 +326,7 @@ what could happen with a stronger model and on estimator variance, not on a
 measured gap in these runs.
 
 \section{Behaviour Across Magnification}
+\label{sec:magnification}
 
 \input{results/table_magnification}
 
@@ -381,8 +455,8 @@ comparisons can be made.
 The merge behaviour of semantic segmentation with connected-component
 post-processing is well documented in the nuclei segmentation literature, and is
 the motivation for the boundary-aware and shape-prior methods of
-Schmidt et al.\ \cite{schmidt2018stardist} and Stringer et al.\
-\cite{stringer2021cellpose} and for the weighted-boundary loss of the original
+\citeA{schmidt2018stardist} and
+\citeA{stringer2021cellpose}, and for the weighted-boundary loss of the original
 U-Net \cite{ronneberger2015unet, falk2019unet}. The 48.7\% merge rate measured
 here is a direct instance of that effect, and its magnitude is a consequence of
 how frequently beads touch in these micrographs.
@@ -394,7 +468,7 @@ Table~\ref{tab:magnification} is consistent with the general finding that
 performance degrades with object size in pixels.
 
 The absolute values reported here are well below those typically reported on
-nuclei benchmarks such as the dataset of Kumar et al.\ \cite{kumar2017dataset}.
+nuclei benchmarks such as the dataset of \citeA{kumar2017dataset}.
 The relevant difference is training set size: those results rest on tens of
 thousands of annotated objects, against 606 here from four specimens, of which
 roughly three-quarters are available for training in any fold.
@@ -411,7 +485,8 @@ different instrument.
 
 \textbf{Fifty-two beads at $3000\times$.} The highest magnification is represented by
 only 52 annotated objects, so the per-magnification result for $3000\times$ --
-which is also the most striking finding of Section~5.6 -- rests on a small sample
+which is also the most striking finding of
+Section~\ref{sec:magnification} -- rests on a small sample
 and should be read as indicative.
 
 \textbf{One annotator.} All 606 annotations come from a single source, so
@@ -444,8 +519,7 @@ depends on which specimen was held out, not how much it would move if the same
 experiment were repeated.
 
 With four folds, a standard deviation is itself estimated from four numbers and
-should not be treated as a confidence interval. Varoquaux
-\cite{varoquaux2018crossvalidation} shows that cross-validated estimates from small
+should not be treated as a confidence interval. \citeA{varoquaux2018crossvalidation} shows that cross-validated estimates from small
 samples carry error bars far wider than is usually assumed, and that differences
 well below those error bars are routinely reported as findings. The comparison in
 Section~\ref{sec:leakage} is the one most exposed to this: a difference of 0.0029
