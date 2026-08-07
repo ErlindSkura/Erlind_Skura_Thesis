@@ -312,7 +312,7 @@ def fig_size_agreement(m: dict) -> None:
         dets, _ = predio.load(PREDICTIONS / "loso" / f"{k}.json")
         grouped = predio.group_by_image(dets)
         vals = []
-        for n, rec in records.items():
+        for rec in records.values():
             masks, _ = predio.to_masks(grouped.get(rec.image_id, []))
             vals.append(_diams(rec, masks))
         v = np.concatenate(vals) if vals else np.zeros(0)
