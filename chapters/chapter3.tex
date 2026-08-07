@@ -7,6 +7,10 @@ This chapter defines the experimental design. It begins with the dataset, becaus
 its size and structure constrain everything that follows: 11 annotated micrographs
 drawn from four specimens is a small and strongly hierarchical sample, and the
 evaluation protocol has to be built around that fact rather than around convention.
+Roberts et al.\ \cite{roberts2017crossvalidation} set out why data with a
+hierarchical structure require the partition to respect that hierarchy, and
+Kapoor and Narayanan \cite{kapoor2023leakage} document how often the omission has
+produced published results that do not hold.
 The chapter then describes the physical calibration that lets pixel measurements be
 reported in micrometres, the three methods under comparison, and the metrics.
 
@@ -305,7 +309,10 @@ typical COCO objects -- the median bead occupies 0.04\% of the image area.
 Detection and mask quality are reported as average precision at an
 intersection-over-union threshold of 0.5 ($\mathrm{AP}_{50}$), at 0.75
 ($\mathrm{AP}_{75}$), and averaged over thresholds from 0.5 to 0.95 following the
-COCO protocol \cite{lin2014microsoft}. The aggregated Jaccard index
+COCO protocol \cite{lin2014microsoft}. Average precision at a fixed overlap
+threshold originates with the Pascal VOC challenge \cite{everingham2010pascal};
+the COCO variant averages it over a range of thresholds so that boundary accuracy
+is rewarded rather than only detection. The aggregated Jaccard index
 \cite{kumar2017dataset} is reported additionally, because it penalises merges and
 splits explicitly rather than treating each object independently, and panoptic
 quality \cite{kirillov2019panoptic} is reported to separate recognition from

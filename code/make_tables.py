@@ -1,3 +1,5 @@
+
+
 """Turn the measured metrics into the LaTeX tables and figures of Chapter 5.
 
 Generating the tables from ``results/metrics.json`` rather than typing them means

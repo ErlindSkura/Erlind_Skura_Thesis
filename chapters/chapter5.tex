@@ -444,8 +444,11 @@ depends on which specimen was held out, not how much it would move if the same
 experiment were repeated.
 
 With four folds, a standard deviation is itself estimated from four numbers and
-should not be treated as a confidence interval. The comparison in
-Section~\ref{sec:leakage} is the one most exposed to this: a difference of 0.003
+should not be treated as a confidence interval. Varoquaux
+\cite{varoquaux2018crossvalidation} shows that cross-validated estimates from small
+samples carry error bars far wider than is usually assumed, and that differences
+well below those error bars are routinely reported as findings. The comparison in
+Section~\ref{sec:leakage} is the one most exposed to this: a difference of 0.0029
 between protocols is far below the resolution these runs can distinguish, so the
 correct reading is that no difference was detected, not that the two protocols
 were shown to be equivalent.

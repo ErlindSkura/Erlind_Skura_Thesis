@@ -162,9 +162,10 @@ the measured one that the results have to be read against.
 \section{Development Environment}
 \label{sec:environment}
 
-Development is in Python with PyTorch and torchvision. Annotation handling and
-figures use NumPy, Pillow and Matplotlib; the classical baseline uses scikit-image
-and SciPy; average precision is computed with the reference COCO implementation.
+Development is in Python with PyTorch \cite{paszke2019pytorch} and torchvision.
+Annotation handling and figures use NumPy, Pillow and Matplotlib; the classical
+baseline uses scikit-image \cite{vanderwalt2014scikit} and SciPy; average precision
+is computed with the reference COCO implementation \cite{lin2014microsoft}.
 
 No local GPU was available, so the training stages run on Google Colab with an
 NVIDIA T4. This constrains the design in two ways that are worth stating rather
