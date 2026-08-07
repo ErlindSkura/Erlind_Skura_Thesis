@@ -6,6 +6,8 @@ bead_data.zip
 # Pipeline scratch: prepared images, fold manifests, model predictions.
 # All regenerable from the raw data by code/prepare_data.py.
 work/
+work_smoke/
+results_smoke/
 
 # results/ IS tracked. Chapter 5 \inputs the generated tables from it, and
 # metrics.json is the provenance for every number in the thesis: it records which
