@@ -7,10 +7,9 @@ bead_data.zip
 # All regenerable from the raw data by code/prepare_data.py.
 work/
 
-# Measured metrics and the tables generated from them. Untracked on purpose:
-# a partial run left in the repository is indistinguishable from a final one.
-# The definitive numbers are the tables pasted into chapters/chapter5.tex.
-results/
+# results/ IS tracked. Chapter 5 \inputs the generated tables from it, and
+# metrics.json is the provenance for every number in the thesis: it records which
+# run produced each figure. Both must travel with the LaTeX sources.
 
 # Claude Code project instructions
 CLAUDE.md

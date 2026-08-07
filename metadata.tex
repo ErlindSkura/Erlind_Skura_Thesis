@@ -72,10 +72,22 @@ laboratory actually uses: bead count, bead areal density, and the bead size
 distribution in physical units, obtained by calibrating each micrograph against
 its burned-in scale bar.
 
-% TODO: replace with the measured outcome once the experiments in Chapter 5 are complete.
-\textbf{[Results sentence to be written after Chapter 5: report detection AP,
-counting error against the manual ground truth, and agreement between the
-predicted and manual size distributions.]}
+Mask R-CNN outperforms both baselines on every metric measured, reaching
+$\mathrm{AP}_{50} = 0.282 \pm 0.054$ and a mean absolute counting error of 35.6\%,
+and its predicted median bead diameter agrees with the manual measurement to
+3.4\%. It does not reach the provisional accuracy criterion of
+$\mathrm{AP}_{50} \geq 0.70$, so the pipeline supports aggregate estimation and
+triage rather than unattended measurement. The comparison locates what instance
+segmentation contributes: the semantic baseline attains almost identical mask
+accuracy but merges 48.7\% of beads and under-counts by 44\%, so the gain is the
+separation of touching objects rather than boundary precision. Two results run
+against expectation. Performance improves with magnification, from
+$\mathrm{AP}_{50} = 0.234$ at $500\times$ to 0.369 at $3000\times$, despite the
+highest magnification holding only 52 of the 606 beads, identifying object size in
+pixels rather than label scarcity as the binding constraint. And a naive random
+split over images did not overstate performance, although it doubled the
+fold-to-fold variance, so partitioning by specimen is justified here as the more
+stable estimator rather than as a correction for measured optimism.
 }
 
 % Keywords (English)
@@ -107,8 +119,23 @@ vërtet: numrin e rruazave, dendësinë e tyre për njësi sipërfaqeje dhe shp�
 e madhësisë në njësi fizike, e llogaritur duke kalibruar secilin imazh me shiritin
 e shkallës të printuar brenda tij.
 
-% TODO: shto rezultatet pas përfundimit të Kapitullit 5.
-\textbf{[Fjalia e rezultateve shkruhet pas Kapitullit 5.]}
+Mask R-CNN rezulton më i mirë se të dy metodat bazë në çdo tregues të matur, duke
+arritur $\mathrm{AP}_{50} = 0{,}282 \pm 0{,}054$ dhe një gabim mesatar absolut
+numërimi prej 35,6\%, ndërsa diametri mesatar i parashikuar i rruazave përputhet
+me matjen manuale brenda 3,4\%. Nuk arrihet kriteri paraprak i saktësisë
+$\mathrm{AP}_{50} \geq 0{,}70$, prandaj sistemi shërben për vlerësim të
+përgjithshëm dhe përzgjedhje paraprake, jo për matje të pambikëqyrur. Krahasimi
+tregon qartë se çfarë sjell segmentimi i instancave: modeli bazë semantik arrin
+saktësi maskash pothuajse identike, por bashkon 48,7\% të rruazave dhe numëron
+44\% më pak, pra përfitimi qëndron në ndarjen e objekteve që preken me njëri-tjetrin
+dhe jo në saktësinë e konturit. Dy rezultate dolën në kundërshtim me pritshmërinë.
+Performanca përmirësohet me zmadhimin, nga $\mathrm{AP}_{50} = 0{,}234$ në
+$500\times$ në 0,369 në $3000\times$, edhe pse zmadhimi më i lartë përmban vetëm 52
+nga 606 rruazat, çka tregon se kufizimi kryesor është madhësia e objektit në
+piksel dhe jo mungesa e etiketave. Gjithashtu, ndarja e rastësishme sipas imazheve
+nuk e mbivlerësoi performancën, por dyfishoi luhatjen mes foldeve, prandaj ndarja
+sipas mostrës justifikohet këtu si vlerësues më i qëndrueshëm dhe jo si korrigjim
+i një optimizmi të matur.
 }
 
 % Keywords (Albanian)

@@ -1,20 +1,11 @@
 \chapter{CONCLUSION AND FUTURE WORK}
 \label{ch:conclusion}
 
-% =====================================================================
-% STATUS: SCAFFOLD. The conclusion cannot be written before Chapter 5 has
-% real numbers in it. What follows is the structure plus the parts that
-% are already established and will not change.
-% =====================================================================
-
 \section{Conclusion}
 
-% TODO: write after Chapter 5. State what was found, in the order of the four
-% questions posed in Section 1.3, and give the headline numbers.
-
 This thesis addressed the automated quantification of bead defects in SEM
-micrographs of electrospun nanofibre mats, a measurement currently performed by hand
-and therefore slow and difficult to reproduce.
+micrographs of electrospun nanofibre mats, a measurement currently performed by
+hand and therefore slow and difficult to reproduce.
 
 The dataset work is complete and is reported in Chapter~\ref{ch:methodology}. Eleven
 micrographs of four specimens, imaged at three magnifications and carrying 606
@@ -32,54 +23,104 @@ four specimens, so the specimen rather than the image is the unit of partitionin
 Both findings are reflected in the leave-one-specimen-out protocol adopted
 throughout.
 
-% TODO: the segmentation results paragraph goes here, once measured.
+Under that protocol, Mask R-CNN outperforms both baselines on every metric
+measured, reaching $\mathrm{AP}_{50} = 0.282 \pm 0.054$, an Aggregated Jaccard
+Index of $0.315 \pm 0.036$ and a mean absolute counting error of 35.6\%. It does
+not reach the provisional success criterion of $\mathrm{AP}_{50} \geq 0.70$ set in
+Section~\ref{sec:objectives}, and the pipeline as it stands is therefore not a
+replacement for a human operator. Its decomposed Panoptic Quality --
+a Segmentation Quality of 0.720 against a Recognition Quality of 0.487 -- locates
+the deficit precisely: the model delineates well the beads it finds, and finds
+fewer than half of them.
+
+The comparison against the two baselines answers the question the thesis was
+built around. The U-Net semantic baseline merges 48.7\% of ground-truth beads and
+never splits one, and consequently under-counts by 44\% with a systematically
+signed bias. Its mask accuracy is almost identical to Mask R-CNN's, differing by
+0.010 in AJI. What the instance formulation contributes on this data is therefore
+not boundary accuracy but the ability to separate objects that touch -- and the
+annotation itself shows that 8.8\% of bead pixels lie in a region claimed by more
+than one bead, so touching is common rather than exceptional here. The classical
+Otsu-plus-watershed pipeline fails outright at $\mathrm{AP}_{50} = 0.001$, for a
+reason measurable in the micrographs: beads are separated from the surrounding
+mat by only about 20 grey levels.
+
+Two findings were not anticipated. Performance improves monotonically with
+magnification, from $\mathrm{AP}_{50} = 0.234$ at $500\times$ to 0.369 at
+$3000\times$, even though the $3000\times$ group holds only 52 of the 606 beads.
+Object size in pixels, not the number of training examples, is the binding
+constraint. And the naive partitioning protocol did not overstate performance:
+a random split over the 11 micrographs gave $\mathrm{AP}_{50} = 0.284$ against
+0.282 for the specimen-wise protocol. It did, however, produce fold-to-fold
+variance twice as large, which is a reason to prefer the specimen-wise protocol
+as the more stable estimator even though no bias was detected.
 
 \section{Research Contributions}
-
-% TODO: revise once results exist -- contributions 3 and 4 are currently claims
-% about work that is specified but not yet completed.
 
 \begin{enumerate}
     \item A characterised and physically calibrated dataset of 606 bead defects
     across 11 SEM micrographs of four electrospun specimens, with per-magnification
     pixel sizes recovered from the instrument's own scale bars and validated for
-    internal consistency.
+    internal consistency to within 15\%.
 
     \item An evaluation protocol matched to the hierarchical structure of small
-    microscopy datasets, in which the specimen is the unit of partitioning, together
-    with a measurement of how much a naive split inflates apparent performance on
-    this data.
+    microscopy datasets, in which the specimen is the unit of partitioning,
+    together with a measurement of what a naive split actually costs on such a
+    dataset. That measurement returned no difference in the mean and a doubling
+    of the between-fold variance, which is a more useful result to report than
+    the inflation that was expected.
 
-    \item A controlled comparison of instance segmentation, semantic segmentation and
-    classical thresholding on identical micrographs under an identical protocol.
+    \item A controlled comparison of instance segmentation, semantic segmentation
+    and classical thresholding on identical micrographs under an identical
+    protocol, which isolates object separation -- rather than mask accuracy -- as
+    what instance-level modelling contributes on this modality, and quantifies it
+    as a 26.6 percentage point difference in merge rate.
 
-    \item An open implementation covering annotation conversion, scale calibration,
-    training, evaluation, and the reporting of bead count, areal density and size
-    distribution in physical units.
+    \item An open implementation covering annotation conversion, scale
+    calibration, training, evaluation, and the reporting of bead count, areal
+    density and size distribution in physical units, in which every table in
+    Chapter~\ref{ch:results} is generated from the stored metrics rather than
+    transcribed.
 \end{enumerate}
 
 \section{Limitations}
 
 The limitations are set out in Section~\ref{sec:limitations} and are summarised here: four specimens
 of a single material system; only 52 annotated beads at the highest magnification; a
-single annotator, so annotator bias cannot be separated from ground truth; and a
+single annotator, so annotator bias cannot be separated from ground truth; a
 single class, so the distinction between a bead and a locally thickened fibre segment
-rests on the annotator's implicit judgement rather than a stated criterion.
+rests on the annotator's implicit judgement rather than a stated criterion; and a
+single training run per configuration at a fixed seed, so every reported figure is
+a point estimate and the reported spreads describe sensitivity to the held-out
+specimen rather than run-to-run variability.
 
 \section{Future Work}
 \label{sec:futurework}
 
 \subsection{Short-term}
 
-\textbf{Extend the specimen count.} The single most valuable addition to this work is
+\textbf{Address the recognition deficit directly.} The measured Segmentation
+Quality of 0.720 against a Recognition Quality of 0.487 says that effort should go
+into finding beads rather than into refining masks. The obvious first steps are a
+longer training schedule than the 1500 iterations the available GPU time allowed,
+a hyperparameter search that this work did not perform, and a loss that
+up-weights recall. This is the cheapest available improvement and it is the one
+the evidence points at.
+
+\textbf{Extend the specimen count.} The single most valuable addition to the data is
 more specimens rather than more images of the same ones. Four specimens support four
 cross-validation folds; ten would support a materially stronger claim, and the
-annotation cost per specimen is already known from this work.
+annotation cost per specimen is already known from this work. It would also allow
+the protocol comparison of Section~\ref{sec:leakage} to be repeated with enough
+statistical resolution to detect the difference these four folds could not.
 
 \textbf{Measure inter-annotator agreement.} Having a second annotator re-delineate a
 subset would convert the largest stated limitation into a measured quantity, and
-would establish the ceiling against which any model should be judged. A model that
-matches inter-annotator agreement has reached the useful limit of the task.
+would establish the ceiling against which any model should be judged. This matters
+more here than it usually would: at $\mathrm{AP}_{50} = 0.282$ it is not known how
+much of the shortfall is model error and how much is disagreement a second human
+would also show. A model that matches inter-annotator agreement has reached the
+useful limit of the task.
 
 \textbf{Use the unannotated micrographs.} If further micrographs exist without
 annotations, they can be used for self-training or consistency-based
@@ -89,10 +130,18 @@ images and scarce labels.
 \textbf{Shape-prior architectures.} Bead defects are approximately ellipsoidal and
 convex, which is exactly the assumption behind StarDist
 \cite{schmidt2018stardist} and the flow-based representation of Cellpose
-\cite{stringer2021cellpose}. Both are plausible alternatives to Mask R-CNN on this
-data and would be a natural extension of the comparison.
+\cite{stringer2021cellpose}. Both are designed for the touching-object problem
+that Section~\ref{ch:results} identifies as the central difficulty, and are a
+natural extension of the comparison.
 
 \subsection{Long-term}
+
+\textbf{Image at the magnification the measurement needs.} The magnification
+result suggests a change in acquisition practice rather than in modelling: higher
+magnification gives more reliable per-bead measurements at the cost of a smaller
+field, so a mixed protocol -- a wide field for density and several high-power
+fields for size -- may measure both quantities better than any single setting.
+Testing that would require micrographs acquired for the purpose.
 
 \textbf{Joint fibre and bead analysis.} Bead quantification is one half of the
 morphological characterisation of a nanofibre mat; fibre diameter distribution is the
@@ -115,4 +164,27 @@ leverage.
 
 \section{Final Remarks}
 
-% TODO: write last, after everything else.
+The pipeline built here does not yet replace the operator with the mouse. At an
+$\mathrm{AP}_{50}$ of 0.282 and a per-micrograph counting error that ranges from
+$-68\%$ to $+95\%$, no laboratory should report its output as a measurement
+without checking it.
+
+What the work does establish is where the difficulty actually lies, and that is
+worth more at this stage than a higher number would have been. It is not
+segmentation accuracy: the masks Mask R-CNN produces overlap their targets by 0.72
+on average. It is not the size distribution: predicted median bead diameter agrees
+with the manual measurement to 3.4\%. It is detection of small, low-contrast
+objects that touch one another -- and the three measurements that isolate it are
+the recognition-versus-segmentation split of Panoptic Quality, the merge rate that
+separates the instance model from the semantic one, and the magnification trend
+that shows performance rising as objects grow in pixels while the training data
+shrink.
+
+Two of the results reported here are negative: the accuracy criterion was not met,
+and the data-leakage effect the protocol was designed to prevent did not appear.
+Both are reported as measured rather than reframed, and the second in particular
+is the more useful finding of the two, because it tells the next person working on
+a dataset of this shape that the expensive precaution matters for the variance of
+their estimate rather than for its mean. A thesis that reported only the
+comfortable half of its results would have given a worse account of what this
+dataset can and cannot support.
