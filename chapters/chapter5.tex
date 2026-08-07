@@ -455,8 +455,8 @@ comparisons can be made.
 The merge behaviour of semantic segmentation with connected-component
 post-processing is well documented in the nuclei segmentation literature, and is
 the motivation for the boundary-aware and shape-prior methods of
-\citeA{schmidt2018stardist} and
-\citeA{stringer2021cellpose}, and for the weighted-boundary loss of the original
+Schmidt et al.\ \cite{schmidt2018stardist} and Stringer et al.\
+\cite{stringer2021cellpose} and for the weighted-boundary loss of the original
 U-Net \cite{ronneberger2015unet, falk2019unet}. The 48.7\% merge rate measured
 here is a direct instance of that effect, and its magnitude is a consequence of
 how frequently beads touch in these micrographs.
@@ -468,7 +468,7 @@ Table~\ref{tab:magnification} is consistent with the general finding that
 performance degrades with object size in pixels.
 
 The absolute values reported here are well below those typically reported on
-nuclei benchmarks such as the dataset of \citeA{kumar2017dataset}.
+nuclei benchmarks such as the dataset of Kumar et al.\ \cite{kumar2017dataset}.
 The relevant difference is training set size: those results rest on tens of
 thousands of annotated objects, against 606 here from four specimens, of which
 roughly three-quarters are available for training in any fold.
@@ -519,7 +519,8 @@ depends on which specimen was held out, not how much it would move if the same
 experiment were repeated.
 
 With four folds, a standard deviation is itself estimated from four numbers and
-should not be treated as a confidence interval. \citeA{varoquaux2018crossvalidation} shows that cross-validated estimates from small
+should not be treated as a confidence interval. Varoquaux
+\cite{varoquaux2018crossvalidation} shows that cross-validated estimates from small
 samples carry error bars far wider than is usually assumed, and that differences
 well below those error bars are routinely reported as findings. The comparison in
 Section~\ref{sec:leakage} is the one most exposed to this: a difference of 0.0029

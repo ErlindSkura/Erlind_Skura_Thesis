@@ -4,25 +4,13 @@
 % This is the main file for your thesis. Customize the metadata.tex file
 % with your personal information and thesis details.
 
-% epoka.cls issues \bibliographystyle{plain} while it loads. Section 4.2.6 of the
-% Epoka thesis writing guideline requires APA, and BibTeX aborts if the .aux file
-% contains two \bibstyle commands, so the class's default is swallowed here and
-% the APA style is set once, below. epoka.cls itself is left untouched.
-\makeatletter
-\let\epoka@bibliographystyle\bibliographystyle
-\renewcommand{\bibliographystyle}[1]{}
-\makeatother
-
 \documentclass{epoka}
-
-\makeatletter
-\let\bibliographystyle\epoka@bibliographystyle
-\makeatother
 
 % Additional packages you might need
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
+\usepackage{cite}
 \usepackage{url}
 \usepackage{booktabs}
 \usepackage{multirow}
@@ -48,13 +36,9 @@
 % Added bookmark package to fix nested bookmark issues
 \usepackage{bookmark}
 
-% APA citations and reference list, as required by section 4.2.6 of the Epoka
-% thesis writing guideline. Loaded after hyperref, and overriding the numeric
-% \bibliographystyle{plain} that epoka.cls sets by default.
-% \cite{key}  -> (Author, year)     parenthetical
-% \citeA{key} -> Author (year)      textual, when the name is part of the sentence
-\usepackage{apacite}
-\bibliographystyle{apacite}
+% The numbered reference style comes from epoka.cls, which sets
+% \bibliographystyle{plain}. Note that section 4.2.6 of the Epoka thesis writing
+% guideline asks for APA; the numbered style is kept here deliberately.
 
 % Code listing setup (optional)
 \lstset{
