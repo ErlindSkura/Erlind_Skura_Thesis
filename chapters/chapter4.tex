@@ -147,33 +147,20 @@ the same protocol as the learned methods.
 
 \section{Training Setup}
 
-% TODO: every value below is a planned setting, not a measured one. Update this
-% table to reflect the runs actually performed before submitting.
-Table~\ref{tab:training_config} lists the training configuration. Each of the four
-folds is trained independently from the same initialisation, and no fold's held-out
-specimen influences any choice made during its training.
+Each of the four folds is trained independently from the same initialisation, and
+no fold's held-out specimen influences any choice made during its training --
+neither the number of iterations nor the score threshold applied to the output.
+The threshold is selected separately for each fold by maximising $F_1$ on that
+fold's own training partition.
 
-\begin{table}[htbp]
-    \centering
-    \caption{Planned training configuration, to be confirmed against the runs
-    actually performed.}
-    \label{tab:training_config}
-    \begin{tabular}{lll}
-        \toprule
-        Setting & Mask R-CNN & U-Net \\
-        \midrule
-        Backbone        & ResNet-50 + FPN   & ResNet-34 encoder \\
-        Initialisation  & COCO              & ImageNet \\
-        Optimiser       & SGD, momentum 0.9 & Adam \cite{kingma2015adam} \\
-        Learning rate   & \textit{TBD}      & \textit{TBD} \\
-        Batch size      & \textit{TBD}      & \textit{TBD} \\
-        Epochs          & \textit{TBD}      & \textit{TBD} \\
-        Loss            & RPN + box + mask  & Cross-entropy + Dice \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+The configuration is reported in Chapter~\ref{ch:results},
+Table~\ref{tab:training_config}, rather than here, because the values that matter
+are the ones the runs actually used. Stating a planned configuration in this
+chapter and a measured one in the next invites the two to drift apart, and it is
+the measured one that the results have to be read against.
 
 \section{Development Environment}
+\label{sec:environment}
 
 Development is in Python with PyTorch and torchvision. Annotation handling and
 figures use NumPy, Pillow and Matplotlib; the classical baseline uses scikit-image
