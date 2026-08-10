@@ -283,8 +283,13 @@ verifies can destroy what it was meant to protect.
     cannot treat them differently.
     \item \texttt{metrics.py}, \texttt{evaluate.py} -- segmentation metrics,
     counting and merge/split statistics, and physical quantification.
-    \item \texttt{make\_tables.py} -- generates the tables and figures of
-    Chapter~\ref{ch:results} directly from the measured metrics.
+    \item \texttt{make\_tables.py} -- generates the tables and the
+    prediction-dependent figures of Chapter~\ref{ch:results} directly from the
+    measured metrics.
+    \item \texttt{make\_figures.py} -- generates the dataset figures that do not
+    depend on a model: the scale comparison, the overlapping annotations, the
+    banner artefacts in the supplied augmentations, the grey-level contrast, and
+    the counting agreement.
     \item \texttt{run\_all.py} -- runs the pipeline end to end, with a
     \texttt{-{}-smoke} mode that executes a few iterations to verify that nothing
     crashes before committing hours of GPU time.

@@ -111,6 +111,37 @@ The dataset is therefore single-class: the task is to separate beads from everyt
 else, and no distinction is drawn between bead subtypes or between beads and
 locally thickened fibre segments.
 
+Two properties of the annotation constrain the implementation and are shown in
+Figures~\ref{fig:bead_examples} and \ref{fig:overlap}. The first is that the same
+physical object is presented to the model at very different resolutions: the
+median bead of specimen Z6 measures about 8\,$\mu$m at every magnification, but
+spans 16 pixels at $500\times$ and 77 at $3000\times$. The second is that beads
+touch. Across the dataset, 8.8\% of annotated bead pixels lie inside more than one
+polygon, so the annotation is not a partition of the image and cannot be stored as
+one without discarding exactly the regions where merge and split errors are
+decided.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig_bead_examples.pdf}
+    \caption{The median bead of specimen Z6 at each magnification, each crop
+    scaled to the same display size. The physical diameter is nearly constant, as
+    it must be for three views of one specimen, while the pixel diameter varies
+    almost fivefold. At $500\times$ the bead boundary is decided by a handful of
+    pixels; at $3000\times$ it is comfortably resolved.}
+    \label{fig:bead_examples}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig_overlap.pdf}
+    \caption{A region of Z6-1 in which annotated beads share pixels. Red outlines
+    are the manual annotation; shaded pixels are claimed by more than one bead.
+    Because touching beads are common rather than exceptional, instances are kept
+    as separate masks throughout rather than flattened into a single label map.}
+    \label{fig:overlap}
+\end{figure}
+
 % TODO(supervisor): questions D3-D5. Who produced the annotations? Was a second
 % annotator involved, and can a subset be re-annotated so that inter-annotator
 % agreement can be reported? Is the annotation exhaustive, i.e. is every bead in
@@ -226,7 +257,25 @@ of one micrograph. Reporting 143 images, or 7\,878 bead instances, would misstat
 the size of the sample by a factor of 13, and any metric computed over the augmented
 set would be dominated by repeated content.
 
-The second is methodological, and more serious. Because the copies were generated
+There is also a third reason, visible in Figure~\ref{fig:augmentation_problem}:
+the transformations were applied to the whole file, including the instrument
+banner. In the flipped copies the burned-in text is mirrored, and in the
+translated copies the banner has been displaced and black fill occupies the
+vacated region. No real micrograph looks like this, so the copies are not merely
+redundant but carry an artefact that a model could learn to key on.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig_augmentation_problem.pdf}
+    \caption{Three of the 143 supplied files: one original and two of its
+    pre-computed augmented copies, with the instrument banner outlined and
+    enlarged beneath each. The flip mirrors the burned-in text, and the
+    translation displaces the banner and leaves black fill along the top edge.
+    The augmentations were applied before the banner was considered.}
+    \label{fig:augmentation_problem}
+\end{figure}
+
+The second reason is methodological, and more serious. Because the copies were generated
 before partitioning, a random split over the 143 files would place transformed
 versions of the same source micrograph in both the training and the test partition.
 The test score would then partly measure memorisation. Augmentation is still used in

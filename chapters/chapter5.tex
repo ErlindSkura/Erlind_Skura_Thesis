@@ -205,6 +205,23 @@ everywhere. A global Otsu threshold therefore returns a speckled foreground whos
 area bears little relation to the beads, and the distance-transform watershed then
 partitions that speckle into hundreds of fragments.
 
+Figure~\ref{fig:contrast} shows why no choice of threshold could have rescued the
+method. The grey-level distributions inside and outside the beads are not merely
+close; they overlap along almost their entire range. Any global threshold that
+captured most bead pixels would also capture a large share of the background, and
+one that excluded the background would exclude most of the beads. The failure is a
+property of the images, not of the parameter search.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig_contrast.pdf}
+    \caption{Grey-level distributions inside and outside the annotated beads, for
+    one micrograph at each magnification. The means differ by about 20 levels
+    while the distributions overlap almost entirely, which is the condition under
+    which global thresholding cannot work.}
+    \label{fig:contrast}
+\end{figure}
+
 The parameters were tuned by grid search on each fold's training partition over
 morphological kernel size, minimum accepted object area in $\mu$m$^2$ and marker
 suppression distance. The grid brackets the median annotated bead area of about
@@ -369,6 +386,22 @@ per micrograph from $-67.6\%$ on Z5-1 to $+95.2\%$ on Z6-2. The mean absolute
 error per fold is 35.6\% while the mean signed error is $-2.9\%$. A single
 micrograph is therefore not a reliable measurement, and an aggregate over many
 micrographs is considerably better than any one of them.
+
+Figure~\ref{fig:counting} plots the two counts against each other. Six of the
+eleven micrographs fall within 25\% of the annotated count, but the two outliers
+are large and lie on opposite sides: Z5-1 is under-counted by two thirds, and
+Z6-2 is nearly doubled. Both are among the more densely populated micrographs,
+which is where a merge or a spurious split costs most.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.78\textwidth]{figures/fig_counting.pdf}
+    \caption{Predicted against annotated bead count for each held-out micrograph,
+    with marker shape indicating magnification. Points on the diagonal agree
+    exactly. The aggregate shortfall of 10.4\% is the net effect of errors that
+    run in both directions and largely cancel.}
+    \label{fig:counting}
+\end{figure}
 
 Areal density inherits this behaviour directly, since it is the count divided by a
 known physical area. On Z2-1 the model reports 348 beads\,mm$^{-2}$ against 305
