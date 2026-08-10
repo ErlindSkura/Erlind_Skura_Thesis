@@ -125,7 +125,8 @@ def train_one_fold(records, fold, *, iters, batch, lr, device, seed):
     return model
 
 
-def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED) -> None:
+def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
+        only: list[str] | None = None) -> None:
     ensure_dirs()
     device = _device()
     print(f"device: {device}  protocol: {protocol}  iters: {iters}  batch: {batch}")
@@ -134,7 +135,20 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED) -> N
                           "iters": iters, "batch": batch, "lr": lr, "seed": seed,
                           "thresholds": {}, "device": str(device)}
 
-    for fold in folds_mod.load(protocol):
+    selected = folds_mod.load(protocol)
+    if only:
+        selected = [f for f in selected if f["name"] in only]
+        if not selected:
+            raise SystemExit(f"no fold named {only}; available: "
+                             f"{[f['name'] for f in folds_mod.load(protocol)]}")
+        # A partial run cannot be evaluated as a cross-validation, so it is kept
+        # out of the file the evaluator reads.
+        meta["partial"] = True
+        meta["folds_run"] = [f["name"] for f in selected]
+        print(f"PARTIAL RUN: folds {meta['folds_run']} only. Written to a "
+              f"separate file; evaluate.py will not pick it up.")
+
+    for fold in selected:
         print(f"\n[fold {fold['name']}] train={len(fold['train'])} "
               f"test={fold['test']}", flush=True)
         model = train_one_fold(records, fold, iters=iters, batch=batch, lr=lr,
@@ -151,9 +165,24 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED) -> N
         del model
         torch.cuda.empty_cache()
 
-    out = PREDICTIONS / protocol / "maskrcnn.json"
+    name = "maskrcnn" if not only else "maskrcnn_partial"
+    out = PREDICTIONS / protocol / f"{name}.json"
     predio.save(out, all_dets, meta)
     print(f"\nwrote {len(all_dets)} detections to {out}")
+
+    if only:
+        # Report the pilot fold's own numbers, so the decision whether to commit
+        # to the full run can be made from evidence rather than from hope.
+        from data_io import rasterise
+        from metrics import aji, as_instances, f1_at_iou
+        for fold in selected:
+            for n in fold["test"]:
+                gt = as_instances(rasterise(records[n].polys, records[n].width,
+                                            records[n].height))
+                got = [d for d in all_dets if d["image_id"] == records[n].image_id]
+                pred = as_instances(predio.to_masks(got)[0])
+                print(f"    {n}: {len(pred):>3} predicted / {len(gt):>3} annotated"
+                      f"   AJI {aji(gt, pred):.3f}   F1@0.5 {f1_at_iou(gt, pred):.3f}")
 
 
 if __name__ == "__main__":
@@ -163,5 +192,8 @@ if __name__ == "__main__":
     ap.add_argument("--batch", type=int, default=4)
     ap.add_argument("--lr", type=float, default=0.005)
     ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument("--folds", nargs="*", default=None,
+                    help="run only these folds (e.g. --folds Z2) as a pilot; "
+                         "results go to a separate file and are not evaluated")
     a = ap.parse_args()
-    run(a.protocol, a.iters, a.batch, a.lr, a.seed)
+    run(a.protocol, a.iters, a.batch, a.lr, a.seed, a.folds)

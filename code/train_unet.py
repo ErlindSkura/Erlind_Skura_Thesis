@@ -119,7 +119,8 @@ def pick_params(model, records, train_names, device):
     return best
 
 
-def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED) -> None:
+def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
+        only: list[str] | None = None) -> None:
     ensure_dirs()
     device = _device()
     print(f"device: {device}  protocol: {protocol}  iters: {iters}  batch: {batch}")
@@ -127,7 +128,16 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED) -> N
     all_dets, meta = [], {"protocol": protocol, "method": "unet", "iters": iters,
                           "batch": batch, "lr": lr, "seed": seed, "params": {}}
 
-    for fold in folds_mod.load(protocol):
+    selected = folds_mod.load(protocol)
+    if only:
+        selected = [f for f in selected if f["name"] in only]
+        if not selected:
+            raise SystemExit(f"no fold named {only}")
+        meta["partial"] = True
+        meta["folds_run"] = [f["name"] for f in selected]
+        print(f"PARTIAL RUN: folds {meta['folds_run']} only.")
+
+    for fold in selected:
         print(f"\n[fold {fold['name']}] test={fold['test']}", flush=True)
         model = train_one_fold(records, fold, iters=iters, batch=batch, lr=lr,
                                device=device, seed=seed)
@@ -142,7 +152,7 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED) -> N
         del model
         torch.cuda.empty_cache()
 
-    out = PREDICTIONS / protocol / "unet.json"
+    out = PREDICTIONS / protocol / ("unet_partial.json" if only else "unet.json")
     predio.save(out, all_dets, meta)
     print(f"\nwrote {len(all_dets)} detections to {out}")
 
@@ -154,5 +164,7 @@ if __name__ == "__main__":
     ap.add_argument("--batch", type=int, default=8)
     ap.add_argument("--lr", type=float, default=3e-4)
     ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument("--folds", nargs="*", default=None,
+                    help="run only these folds as a pilot")
     a = ap.parse_args()
-    run(a.protocol, a.iters, a.batch, a.lr, a.seed)
+    run(a.protocol, a.iters, a.batch, a.lr, a.seed, a.folds)
