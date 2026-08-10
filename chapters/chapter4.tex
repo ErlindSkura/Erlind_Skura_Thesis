@@ -195,8 +195,12 @@ pipeline being one long run. Second, the total budget is limited, which is why t
 comparison is between three methods under one protocol rather than a wider
 hyperparameter search: the leave-one-specimen-out protocol already multiplies every
 configuration by four.
-% TODO: record the exact number of training iterations and the wall-clock time of
-% the runs actually performed; make_tables.py emits these into tab:training_config.
+
+The iteration counts and every other setting the runs actually used are recorded
+in Table~\ref{tab:training_config}, which \texttt{make\_tables.py} writes from the
+metadata each training script stores alongside its predictions. Wall-clock time
+was not instrumented and is therefore not reported; the training budget is stated
+as iterations, which is the quantity that was actually controlled.
 
 \section{Challenges and Solutions}
 \label{sec:challenges}

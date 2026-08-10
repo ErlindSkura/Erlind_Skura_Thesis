@@ -40,6 +40,14 @@
 % \bibliographystyle{plain}. Note that section 4.2.6 of the Epoka thesis writing
 % guideline asks for APA; the numbered style is kept here deliberately.
 
+% KNOWN TEMPLATE ISSUE (cosmetic, not fixed here). epoka.cls adds LIST OF TABLES
+% and LIST OF FIGURES to the table of contents after typesetting each list and
+% without \phantomsection, so both entries inherit the same hyperlink anchor and
+% clicking either one in the PDF jumps to the same wrong place. The printed page
+% numbers are correct and the printed thesis is unaffected. Fixing it properly
+% means editing epoka.cls, which is the department's file, so it is left alone
+% and recorded here instead.
+
 % Code listing setup (optional)
 \lstset{
     basicstyle=\ttfamily\small,
