@@ -25,6 +25,7 @@ from config import CROP, PREDICTIONS, SEED, WORK_H, FULL_W, ensure_dirs
 from datasets import BeadDataset, collate, load_records, rasterise
 from metrics import as_instances, f1_at_iou
 from models import build_maskrcnn, set_input_size
+from runtime import StepTimer, device_report, format_summary
 import predio
 
 
@@ -82,6 +83,7 @@ def train_one_fold(records, fold, *, iters, batch, lr, device, seed):
     model = build_maskrcnn().to(device)
     set_input_size(model, CROP, CROP)   # square crops pass through unresampled
 
+    timer = StepTimer(iters, batch, len(fold["train"]))
     ds = BeadDataset(records, fold["train"], train=True,
                      samples=iters * batch, seed=seed)
     loader = DataLoader(ds, batch_size=batch, shuffle=False, num_workers=2,
@@ -117,12 +119,13 @@ def train_one_fold(records, fold, *, iters, batch, lr, device, seed):
         torch.nn.utils.clip_grad_norm_(params, 10.0)
         scaler.step(opt)
         scaler.update()
+        timer.tick()
 
         if step % 100 == 0 or step == 1:
             print(f"    step {step:5d}/{iters}  loss {loss.item():.4f}  "
                   f"lr {opt.param_groups[0]['lr']:.5f}  "
                   f"{time.time() - t0:.0f}s", flush=True)
-    return model
+    return model, timer.summary()
 
 
 def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
@@ -133,7 +136,8 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
     records = load_records()
     all_dets, meta = [], {"protocol": protocol, "method": "maskrcnn",
                           "iters": iters, "batch": batch, "lr": lr, "seed": seed,
-                          "thresholds": {}, "device": str(device)}
+                          "thresholds": {}, "device": str(device),
+                          "hardware": device_report(), "runtime": {}}
 
     selected = folds_mod.load(protocol)
     if only:
@@ -151,8 +155,10 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
     for fold in selected:
         print(f"\n[fold {fold['name']}] train={len(fold['train'])} "
               f"test={fold['test']}", flush=True)
-        model = train_one_fold(records, fold, iters=iters, batch=batch, lr=lr,
-                               device=device, seed=seed)
+        model, timing = train_one_fold(records, fold, iters=iters, batch=batch,
+                                       lr=lr, device=device, seed=seed)
+        meta["runtime"][fold["name"]] = timing
+        print(format_summary(fold["name"], timing), flush=True)
         thr = pick_threshold(model, records, fold["train"], device)
         meta["thresholds"][fold["name"]] = thr
         print(f"    score threshold chosen on training partition: {thr:.2f}")

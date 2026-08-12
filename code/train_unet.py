@@ -25,6 +25,7 @@ from config import MIN_INSTANCE_PX, PREDICTIONS, SEED, ensure_dirs
 from datasets import BeadDataset, collate, load_records, rasterise
 from metrics import Instance, as_instances, f1_at_iou
 from models import UNetResNet34, dice_bce_loss
+from runtime import StepTimer, device_report, format_summary
 
 PROB_GRID = np.arange(0.20, 0.85, 0.05)
 MIN_AREA_GRID = (MIN_INSTANCE_PX, 64, 150)
@@ -47,6 +48,7 @@ def _binary(targets, device):
 def train_one_fold(records, fold, *, iters, batch, lr, device, seed):
     torch.manual_seed(seed)
     model = UNetResNet34().to(device)
+    timer = StepTimer(iters, batch, len(fold["train"]))
     ds = BeadDataset(records, fold["train"], train=True,
                      samples=iters * batch, seed=seed)
     loader = DataLoader(ds, batch_size=batch, shuffle=False, num_workers=2,
@@ -67,10 +69,11 @@ def train_one_fold(records, fold, *, iters, batch, lr, device, seed):
         scaler.scale(loss).backward()
         scaler.step(opt)
         scaler.update()
+        timer.tick()
         if step % 100 == 0 or step == 1:
             print(f"    step {step:5d}/{iters}  loss {loss.item():.4f}  "
                   f"{time.time() - t0:.0f}s", flush=True)
-    return model
+    return model, timer.summary()
 
 
 @torch.no_grad()
@@ -126,7 +129,8 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
     print(f"device: {device}  protocol: {protocol}  iters: {iters}  batch: {batch}")
     records = load_records()
     all_dets, meta = [], {"protocol": protocol, "method": "unet", "iters": iters,
-                          "batch": batch, "lr": lr, "seed": seed, "params": {}}
+                          "batch": batch, "lr": lr, "seed": seed, "params": {},
+                          "hardware": device_report(), "runtime": {}}
 
     selected = folds_mod.load(protocol)
     if only:
@@ -139,8 +143,10 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
 
     for fold in selected:
         print(f"\n[fold {fold['name']}] test={fold['test']}", flush=True)
-        model = train_one_fold(records, fold, iters=iters, batch=batch, lr=lr,
-                               device=device, seed=seed)
+        model, timing = train_one_fold(records, fold, iters=iters, batch=batch,
+                                       lr=lr, device=device, seed=seed)
+        meta["runtime"][fold["name"]] = timing
+        print(format_summary(fold["name"], timing), flush=True)
         thr, min_area = pick_params(model, records, fold["train"], device)
         meta["params"][fold["name"]] = {"prob_threshold": thr, "min_area_px": min_area}
         print(f"    chosen on training partition: prob>={thr:.2f}, min_area={min_area}px")

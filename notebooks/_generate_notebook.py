@@ -224,8 +224,16 @@ print((RES / "chapter5_tables.tex").read_text())
 md("""
 ## 10 · Download everything
 
-`thesis_results.zip` contains `metrics.json`, the generated LaTeX tables and the
-figures. Send this file back — it is everything needed to write Chapter 5.
+`thesis_results.zip` contains `metrics.json`, the generated LaTeX tables, the
+figures, and — importantly — the raw per-image predictions.
+
+The predictions are included because every metric in the thesis is a *function*
+of them. Shipping them back means a new metric (a different IoU threshold, a
+size-stratified AP, a counting statistic nobody has thought of yet) can be
+computed on a laptop in seconds instead of costing another GPU session. They
+cost well under a megabyte per method. An earlier version of this notebook left
+them behind on the Colab VM, and when the session was reset the numbers could
+only be recovered by retraining.
 """)
 code(r"""
 import shutil
@@ -238,7 +246,18 @@ shutil.copytree(RES, out / "results", dirs_exist_ok=True)
 figs = Path(os.environ["BEAD_RESULTS"]).parent / "figures"
 if figs.exists():
     shutil.copytree(figs, out / "figures", dirs_exist_ok=True)
+
+# The predictions and the ground-truth COCO file: together these make every
+# metric recomputable offline, with no GPU and no retraining.
+work = Path(os.environ["BEAD_WORK"])
+if (work / "preds").exists():
+    shutil.copytree(work / "preds", out / "preds", dirs_exist_ok=True)
+for extra in ("coco_gt.json", "folds_loso.json", "folds_random.json"):
+    if (work / extra).exists():
+        shutil.copy(work / extra, out / extra)
+
 shutil.make_archive("/content/thesis_results", "zip", out)
+print("bundled:", sorted(p.name for p in out.rglob("*") if p.is_file())[:20])
 files.download("/content/thesis_results.zip")
 """)
 

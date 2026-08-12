@@ -90,9 +90,20 @@ def evaluate_method(coco_gt, records, gt_masks, protocol: str, method: str) -> d
         row["test_images"] = names
         per_fold[fold["name"]] = row
 
-    keys = ("ap", "ap50", "ap75", "aji", "pq", "sq", "rq", "counting_error",
+    keys = ("ap", "ap50", "ap75", "ap_small", "ap_medium", "ap_large",
+            "ar100", "ar_max", "ar_small", "ar_medium", "ar_large",
+            "aji", "pq", "sq", "rq", "counting_error",
             "abs_counting_error", "merge_rate", "split_rate")
-    overall = {k: summarise([f[k] for f in per_fold.values()]) for k in keys}
+    # pycocotools returns -1 for a size band that the fold's ground truth does
+    # not populate -- at 3000x, for instance, no particle is COCO-"small". That
+    # sentinel must not be averaged in as if it were a score of -1, so it is
+    # dropped; a band absent from every fold stays absent from the summary.
+    overall = {}
+    for k in keys:
+        vals = [f[k] for f in per_fold.values() if f.get(k, -1) >= 0]
+        if vals:
+            overall[k] = summarise(vals)
+            overall[k]["n_folds"] = len(vals)
 
     by_mag = {}
     for mag in MAGNIFICATIONS:

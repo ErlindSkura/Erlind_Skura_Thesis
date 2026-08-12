@@ -233,15 +233,28 @@ def areal_density(n: int, width: int, height: int, um_per_px: float) -> float:
 
 def coco_ap(coco_gt, detections: list[dict], img_ids: list[int],
             max_dets: int = 400) -> dict:
-    """AP, AP50 and AP75 on masks, via pycocotools.
+    """The full COCO precision/recall panel on masks, via pycocotools.
 
     ``max_dets`` is raised well above the COCO default of 100 because a single
-    500x micrograph holds up to 152 beads.
+    500x micrograph holds up to 152 particles.
+
+    The size-stratified entries matter more here than in ordinary COCO usage.
+    Under COCO's own area bands, 82.8% of the annotated particles are "small"
+    (below 32x32 = 1024 px^2) and only 1.2% are "large", so ``ap`` is in
+    practice an average dominated by the small band. Reporting ``ap_small``
+    separately is what makes the comparison against the small-object detection
+    literature meaningful; a single pooled AP hides which regime a method
+    actually fails in. Bands with no ground truth come back as -1 from
+    pycocotools, and that sentinel is preserved rather than silently turned
+    into a zero, because "no objects of this size" and "found none of them"
+    are different statements.
     """
     from pycocotools.cocoeval import COCOeval
 
+    keys = ("ap", "ap50", "ap75", "ap_small", "ap_medium", "ap_large",
+            "ar1", "ar100", "ar_max", "ar_small", "ar_medium", "ar_large")
     if not detections:
-        return {"ap": 0.0, "ap50": 0.0, "ap75": 0.0}
+        return dict.fromkeys(keys, 0.0)
     with contextlib.redirect_stdout(io.StringIO()):
         coco_dt = coco_gt.loadRes([dict(d) for d in detections])
         ev = COCOeval(coco_gt, coco_dt, iouType="segm")
@@ -250,8 +263,7 @@ def coco_ap(coco_gt, detections: list[dict], img_ids: list[int],
         ev.evaluate()
         ev.accumulate()
         ev.summarize()
-    return {"ap": float(ev.stats[0]), "ap50": float(ev.stats[1]),
-            "ap75": float(ev.stats[2])}
+    return {k: float(v) for k, v in zip(keys, ev.stats)}
 
 
 def summarise(values: list[float]) -> dict:
