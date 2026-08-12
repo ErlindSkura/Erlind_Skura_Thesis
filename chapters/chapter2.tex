@@ -130,6 +130,160 @@ object centres and follows them to recover instances, and generalises across cel
 types without retraining. Bead defects are approximately ellipsoidal and convex, so
 these shape priors are a plausible fit and are noted here as alternatives.
 
+\subsection{Detection of Small Objects}
+\label{sec:small_objects}
+
+The objects counted in this work are small in the precise sense used by the COCO
+benchmark: an object is \emph{small} when its area falls below
+$32 \times 32 = 1024$ pixels. Under that convention 82.8\% of the particles
+annotated here are small, rising to 97\% in the $500\times$ micrographs, and only
+1.2\% are large (Section~\ref{sec:calibration}). This is not an incidental
+property of the dataset. It determines which results in the literature are a fair
+point of comparison, because detector accuracy degrades sharply and systematically
+with object size -- a decline documented across architectures and datasets in the
+survey of Liu et al.\ \cite{liu2021survey}, which attributes it to the small number
+of pixels each object contributes, the loss of that signal through successive
+downsampling, and the coarse alignment between small objects and the anchors or
+feature-map cells meant to capture them.
+
+The cleanest evidence for that degradation comes from holding the model and the
+dataset fixed and splitting the score by object size alone. Table~\ref{tab:coco_size}
+does this for five architectures evaluated on COCO, where every entry is drawn from
+the paper that introduced the method. No architecture escapes the pattern: the
+small-object score is between a seventh and a half of the large-object score for the
+same model on the same images. The ratio also separates the architectures in a way
+the pooled AP does not. The single-stage detectors of that generation lose the most
+-- YOLOv2 recovers only a seventh of its large-object accuracy on small objects --
+while the two-stage detectors built on a feature pyramid lose the least, which is
+the empirical basis for preferring a pyramid-based two-stage model here.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Average precision on COCO decomposed by object size. Every row is the
+    published result of the method's own paper, so the comparison holds the dataset
+    and the evaluation protocol fixed and varies only the architecture. The final
+    column is the ratio $\mathrm{AP}_S / \mathrm{AP}_L$: the fraction of a model's
+    large-object accuracy that survives on small objects. Mask R-CNN is scored on
+    masks, the others on boxes.}
+    \label{tab:coco_size}
+    \begin{tabular}{llrrrrr}
+        \toprule
+        Method & Backbone & AP & AP$_{50}$ & AP$_S$ & AP$_L$ & $\mathrm{AP}_S/\mathrm{AP}_L$ \\
+        \midrule
+        YOLOv2 \cite{redmon2016yolo, lin2020focal} & DarkNet-19 & 21.6 & 44.0 & 5.0  & 35.5 & 0.14 \\
+        SSD513 \cite{lin2020focal}        & ResNet-101      & 31.2 & 50.4 & 10.2 & 49.8 & 0.20 \\
+        Mask R-CNN \cite{he2017mask}      & ResNet-101-FPN  & 35.7 & 58.0 & 15.5 & 52.4 & 0.30 \\
+        Faster R-CNN \cite{lin2020focal}  & ResNet-101-FPN  & 36.2 & 59.1 & 18.2 & 48.2 & 0.38 \\
+        RetinaNet \cite{lin2020focal}     & ResNet-101-FPN  & 39.1 & 59.1 & 21.8 & 50.2 & 0.43 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+A second body of work studies domains where nearly every object is small, and it is
+these absolute numbers that set a realistic expectation for the present task.
+Table~\ref{tab:small_object_lit} collects studies whose stated aim, in the abstract,
+is the detection or segmentation of small objects. The aerial benchmark AI-TOD-v2
+\cite{xu2022tiny} is the most severe case reported: its objects average 12.7 pixels,
+comparable to the 14.3-pixel median of the $500\times$ micrographs here, and a
+standard Faster R-CNN reaches only 12.8 AP on it, scoring 0.0 on the very-tiny band
+of 2--8 pixels. Even the method proposed in that paper reaches 24.7 AP. Microscopy
+studies report far higher scores, but on a materially easier problem: both
+\cite{monchot2021titanium} and \cite{bals2023nanoparticles} image particles against a
+clean, uniform substrate rather than through an occluding fibre network, and both
+report region-overlap measures such as DICE or IoU rather than an average precision
+that must also assign every instance correctly.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Published results from studies that state small-object detection or
+    segmentation as their aim. The metrics are not mutually comparable -- AP
+    penalises every false positive and every missed instance, whereas DICE and IoU
+    measure region overlap once objects are found -- so the column reports each
+    study's own headline figure under its own name.}
+    \label{tab:small_object_lit}
+    \begin{tabular}{p{3.0cm}p{2.9cm}p{2.4cm}p{3.2cm}}
+        \toprule
+        Study & Domain and object size & Method & Reported result \\
+        \midrule
+        Xu et al. \cite{xu2022tiny} &
+        Aerial imagery; mean 12.7 px &
+        Faster R-CNN &
+        AP 12.8, AP$_{50}$ 29.9, AP 0.0 on 2--8 px \\
+        \addlinespace
+        Xu et al. \cite{xu2022tiny} &
+        Aerial imagery; mean 12.7 px &
+        DetectoRS + NWD-RKA &
+        AP 24.7, AP$_{50}$ 57.4 \\
+        \addlinespace
+        Monchot et al. \cite{monchot2021titanium} &
+        TiO$_2$ agglomerates, SEM &
+        Mask R-CNN, transfer learning &
+        DICE 0.95 \\
+        \addlinespace
+        Bals and Epple \cite{bals2023nanoparticles} &
+        Nanoparticles, SEM and STEM &
+        UNet++ &
+        IoU 0.92, $F_1$ 0.96 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Two lessons carry into the methodology. The first is that a feature pyramid is not
+optional at this object size, since it is the mechanism by which small objects
+retain a representation at a resolution where they still occupy several cells of the
+feature map. The second is that an average precision in the range reported in
+Chapter~\ref{ch:results} should be read against Tables~\ref{tab:coco_size} and
+\ref{tab:small_object_lit} rather than against the pooled COCO figures that are
+usually quoted, which are dominated by objects an order of magnitude larger than
+these.
+
+\subsection{Prior Work at Epoka University}
+\label{sec:epoka_prior}
+
+The problem addressed here has a direct antecedent in the host institution's own
+research, which has for several years concerned the counting and segmentation of
+small, low-contrast objects in microscopy. The imaging modality differs -- unstained
+brightfield rather than SEM -- but the difficulties are the same ones that recur
+throughout this thesis: objects that touch, backgrounds that are not uniform, and
+too few annotated images to train from scratch.
+
+Uka et al.\ \cite{uka2020faster} applied Faster R-CNN to counting cells in
+low-contrast micrographs, motivated by the observation that manual counting is
+repetitive and does not scale, and that unstained acquisition -- chosen to avoid the
+side effects of staining -- makes the objects harder to separate from the
+background. That combination of a counting endpoint with a detector that isolates
+each object in its own region is the same argument made in
+Section~\ref{sec:small_objects} for the present work, and it is the reason a
+region-based detector rather than a purely semantic model is the primary method
+here.
+
+The same group has established that the preprocessing applied before a network sees
+an image materially changes what it can learn: Uka et al.\
+\cite{uka2020preprocessing} report the effect of preprocessing choices on
+classification of microscopy images suffering from non-uniform illumination and low
+contrast. The contrast measurements reported in Figure~\ref{fig:contrast} show that
+the present dataset has the same character, with roughly eighteen grey levels
+separating a particle from the surrounding mat, and this is why preprocessing is
+treated in
+Chapter~\ref{ch:methodology} as an experimental variable rather than a fixed
+preliminary.
+
+A subsequent line of work covers the segmentation side. Uka et al.\
+\cite{uka2021basis} set out the image-analysis basis for evaluating cell--biomaterial
+interaction, and Polisi Duro et al.\ \cite{polisi2024detection} apply U-Net
+architectures to detection, segmentation, counting and average-area estimation --
+the same four endpoints reported in Chapter~\ref{ch:results}. More recent work
+\cite{polisi2023pruning, polisi2025efficient} examines how far such models can be
+compressed by pruning and quantisation, and how the choice of optimiser and loss
+function affects segmentation quality, which bears on the training configuration
+justified in Section~\ref{sec:training_config}.
+
+% TODO(supervisor): question L1. The reported counting accuracy in
+% \cite{uka2020faster} could not be retrieved without institutional access to
+% IEEE Xplore. Obtain the exact figure and add it to
+% Table~\ref{tab:small_object_lit} as a directly comparable row -- it is the
+% closest published result to this work's counting endpoint.
+
 \subsection{Segmentation from Few Annotated Images}
 
 Training on a handful of annotated micrographs is standard in microscopy, and the
