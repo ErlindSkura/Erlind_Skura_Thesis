@@ -207,6 +207,50 @@ def fig_contrast() -> None:
     plt.close(fig)
 
 
+def fig_preprocessing() -> None:
+    """The four preprocessing variants on one region, with what each does to contrast.
+
+    The point is visible rather than only numerical. CLAHE produces the widest
+    grey-level gap of the four and the worst usable contrast, because it raises
+    the fibre texture to the same amplitude as the particles: the background
+    standard deviation nearly doubles. Reading the separation alone would rank it
+    first.
+    """
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import preprocess as pp
+
+    name, box = "Z6-4", (100, 300, 560, 620)
+    full = _rgb(name).crop((0, 0, 1024, WORK_H))
+    mask = Image.new("L", (1024, WORK_H), 0)
+    d = ImageDraw.Draw(mask)
+    for p in _polys(name):
+        d.polygon([tuple(v) for v in p], fill=1)
+    m = np.asarray(mask, dtype=bool)
+
+    titles = {"none": "No preprocessing", "median": "Median filter, $3\\times3$",
+              "clahe": "CLAHE", "background": "Background subtraction"}
+    fig, axes = plt.subplots(1, 4, figsize=(13, 3.6), layout="constrained")
+    for ax, variant in zip(axes, ["none", "median", "clahe", "background"]):
+        out = pp.apply(full, variant)
+        grey = np.asarray(out.convert("L"), dtype=float)
+        fg, bg = grey[m], grey[~m]
+        norm = (bg.mean() - fg.mean()) / bg.std() if bg.std() else 0.0
+        ax.imshow(np.asarray(out.crop(box).convert("L")), cmap="gray",
+                  vmin=0, vmax=255)
+        ax.set_title(titles[variant], fontsize=10)
+        ax.set_xlabel(f"separation {bg.mean() - fg.mean():.1f} grey levels\n"
+                      f"background s.d. {bg.std():.1f}   "
+                      f"$\\Delta/\\sigma$ = {norm:.2f}", fontsize=8.5)
+        ax.set_xticks([])
+        ax.set_yticks([])
+    fig.suptitle("CLAHE gives the widest grey-level separation and the worst "
+                 "usable contrast: it raises the fibre texture as much as the "
+                 "particles", fontsize=11)
+    fig.savefig(FIGS / "fig_preprocessing.pdf", dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
 # --- 4. counting agreement ---------------------------------------------------
 
 
@@ -307,6 +351,7 @@ if __name__ == "__main__":
     fig_augmentation_problem()
     fig_overlap()
     fig_contrast()
+    fig_preprocessing()
     fig_bead_examples()
     if (RESULTS / "metrics.json").exists():
         fig_counting()

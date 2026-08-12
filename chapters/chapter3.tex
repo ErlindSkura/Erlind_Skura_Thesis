@@ -372,6 +372,52 @@ Anchor scales are set from the empirical bead size distribution rather than left
 their COCO defaults, since bead defects are far smaller relative to the image than
 typical COCO objects -- the median bead occupies 0.04\% of the image area.
 
+\subsection{Preprocessing as an Experimental Factor}
+\label{sec:preprocessing_method}
+
+Prior work from this institution reports that the preprocessing applied before a
+network sees a micrograph materially changes what it can learn, for images
+suffering from non-uniform illumination and low contrast
+\cite{uka2020preprocessing}. The present dataset shares the low contrast --
+about eighteen grey levels separate a particle from the surrounding mat -- but
+differs in one respect that governs which transforms are worth testing. In
+unstained brightfield the background is a smooth field; here it is a dense fibre
+network with structure at the same spatial scale as the particles. Transforms are
+therefore selected for this material rather than carried across.
+
+Four variants are compared, with the architecture, schedule, fold definitions and
+threshold-selection rule held fixed, so that any difference is attributable to
+the input transform alone:
+
+\begin{itemize}
+    \item \textbf{None.} The baseline, and not merely a formality. Both detectors
+    are initialised from weights trained on natural images, which carry
+    expectations about intensity statistics, so a transform can as easily cost
+    accuracy as buy it. A variant that loses to this row is a finding.
+
+    \item \textbf{CLAHE.} Contrast-limited adaptive histogram equalisation,
+    against the narrow separation. Adaptive rather than global because the mat's
+    brightness varies across a frame by more than the particle-to-mat difference,
+    so a single global mapping cannot serve both sides of an image.
+
+    \item \textbf{Background subtraction.} The particles are darker than the mat,
+    so the illumination estimate is a grey closing, an operation that erases dark
+    features while preserving the slowly varying field. Its footprint must exceed
+    the largest object present or that object is itself treated as illumination
+    and flattened away; the largest annotated particle spans 214 pixels, so the
+    footprint is set to 257.
+
+    \item \textbf{Median filter.} A $3\times3$ median against sensor noise,
+    deliberately small: the median particle is 20 pixels across, and a window
+    approaching that size would remove the object along with the noise.
+\end{itemize}
+
+Each variant is applied to the whole micrograph before cropping, at the single
+point where the training and inference paths share code. This is a correctness
+requirement rather than a convenience. A model trained on equalised images and
+evaluated on raw ones would still produce numbers, and those numbers would be
+wrong in a way no metric would reveal.
+
 \section{Evaluation Metrics}
 
 \subsection{Segmentation and Detection Metrics}

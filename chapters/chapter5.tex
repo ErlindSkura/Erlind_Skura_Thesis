@@ -255,6 +255,102 @@ Section~\ref{sec:counting}, because a method whose errors cancel across specimen
 is useful for a population estimate in a way that a biased method is not, while
 still being unreliable for any single micrograph.
 
+Table~\ref{tab:counting} restates the comparison on the counting endpoint alone.
+It is separated from Table~\ref{tab:method_comparison} because counting error and
+the raw count are the only quantities defined identically for a method that
+predicts masks and one that predicts only boxes, so it is the one place where
+every method can be listed without qualification. Where a row is marked
+\emph{box}, its average precision is computed on bounding boxes rather than
+masks, and the two are not interchangeable.
+
+\input{results/table_counting}
+
+Table~\ref{tab:ap_bands} decomposes average precision by object size. This
+matters more here than the pooled figure suggests: 82.8\% of the annotated
+particles fall in COCO's small band and 1.2\% in its large band
+(Section~\ref{sec:small_objects}), so the pooled AP is close to an average over a
+single band while appearing to describe three. $\mathrm{AP}_S$ is the column that
+characterises this dataset, and it is the column that should be compared against
+the small-object literature of Table~\ref{tab:coco_size} rather than the pooled
+COCO figures usually quoted.
+
+\input{results/table_ap_bands}
+
+\subsection{Effect of Input Preprocessing}
+\label{sec:preprocessing_results}
+
+The four preprocessing variants of Section~\ref{sec:preprocessing_method} can be
+characterised before any model is trained, by measuring on the annotations
+themselves what contrast each one leaves available. Table~\ref{tab:contrast}
+reports two quantities per variant: the mean grey-level separation between
+particle and mat, and that separation divided by the standard deviation of the
+background. The second is the one that matters. A transform that widens the gap
+while widening the spread by more has not made the particles easier to find, and
+reporting only the first would rank such a transform highest.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Particle-to-mat contrast under each preprocessing variant, measured
+    over all 606 annotated particles in the 11 micrographs before any training.
+    $\Delta$ is the mean grey level outside a particle minus the mean inside;
+    $\sigma$ is the standard deviation of the background. $\Delta/\sigma$ is the
+    contrast a filter or a threshold actually has to work with.}
+    \label{tab:contrast}
+    \begin{tabular}{lrrrr}
+        \toprule
+        Preprocessing & $\Delta$ (grey levels) & $\sigma$ & $\Delta/\sigma$ &
+        Change \\
+        \midrule
+        None (baseline)        & 18.0 & 33.2 & 0.550 & ---      \\
+        Median filter, $3\times3$ & 18.3 & 30.5 & 0.612 & $+11\%$ \\
+        Background subtraction & 20.3 & 34.9 & 0.593 & $+8\%$  \\
+        CLAHE                  & 23.1 & 62.5 & 0.372 & $-32\%$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+CLAHE is the instructive case. It produces the widest raw separation of the four,
+23.1 grey levels against the baseline's 18.0, and on that number alone would be
+the obvious choice. It also nearly doubles the background standard deviation,
+from 33.2 to 62.5, because the transform cannot distinguish a particle from the
+fibre texture surrounding it and amplifies both. The usable contrast falls by
+almost a third. Figure~\ref{fig:preprocessing} shows this directly: in the CLAHE
+panel the fibres are as strongly modulated as the particle.
+
+The other two transforms produce modest gains. The median filter improves
+$\Delta/\sigma$ by 11\% by reducing the background spread rather than by
+increasing the separation, which is the expected behaviour of a denoising filter
+on a signal it does not otherwise disturb. Background subtraction improves it by
+8\%, and its raw separation rises to 20.3, indicating that some of the measured
+particle-to-mat difference in the untransformed images is attributable to
+illumination gradient rather than to the particles.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig_preprocessing.pdf}
+    \caption{One region of Z6-4 under each preprocessing variant, with the
+    contrast each yields over the whole dataset. The CLAHE panel is the reason
+    the normalised measure is reported rather than the raw separation: the
+    particle is more strongly contrasted than in the baseline, and so is every
+    fibre around it.}
+    \label{fig:preprocessing}
+\end{figure}
+
+Two cautions attach to Table~\ref{tab:contrast}. It measures contrast, not
+accuracy, and a convolutional detector is not a threshold: it can exploit texture
+and shape that this statistic ignores, so a variant may help or harm detection in
+ways the table does not predict. And the models here are initialised from weights
+trained on natural images, so a transform that moves the intensity statistics far
+from that distribution may cost more than the contrast it buys. The measured
+contrast is a prior on where to look, not a substitute for the comparison.
+
+% The accuracy comparison appears here once the preprocessing runs exist;
+% make_tables.py emits table_preprocessing.tex only when at least two variants
+% have been evaluated, so this file compiles either way.
+\IfFileExists{results/table_preprocessing.tex}{%
+    \input{results/table_preprocessing}%
+}{}
+
 \subsection{Qualitative Examples}
 
 \begin{figure}[htbp]

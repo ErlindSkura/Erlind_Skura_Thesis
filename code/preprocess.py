@@ -86,11 +86,18 @@ def apply(img: Image.Image, variant: str) -> Image.Image:
         background = ndimage.grey_closing(
             grey, size=(BACKGROUND_FOOTPRINT, BACKGROUND_FOOTPRINT),
             mode="reflect")
-        # Subtracting drives the flat mat towards zero and leaves particles
-        # negative; adding the mean restores a mid-grey level so the result still
-        # occupies the range the pretrained weights expect.
-        corrected = grey.astype(np.int32) - background.astype(np.int32)
-        out = np.clip(corrected + int(grey.mean()), 0, 255).astype(np.uint8)
+        # Closing is extensive, so the difference is everywhere <= 0 and the
+        # image is really a map of how far each pixel sits below its local
+        # background. It is rescaled to the full 8-bit range rather than shifted
+        # by a constant: shifting by the mean and clipping, the obvious version,
+        # drove more than half the frame to pure black here, because next to a
+        # bright fibre the local background exceeds a dark void by more than the
+        # mean grey level. That would have been read as the transform destroying
+        # the image when it was the clipping that destroyed it.
+        corrected = grey.astype(np.float64) - background.astype(np.float64)
+        lo, hi = corrected.min(), corrected.max()
+        scaled = (corrected - lo) / (hi - lo) if hi > lo else np.zeros_like(corrected)
+        out = (scaled * 255.0).round().astype(np.uint8)
 
     elif variant == "median":
         from scipy import ndimage
