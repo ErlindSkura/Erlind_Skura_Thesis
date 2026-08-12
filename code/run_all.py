@@ -31,6 +31,9 @@ def _parse():
     ap.add_argument("--maskrcnn-batch", type=int, default=4)
     ap.add_argument("--skip-fasterrcnn", action="store_true",
                     help="omit the detection-only comparison")
+    ap.add_argument("--yolo", action="store_true",
+                    help="also train YOLOv8 (requires the ultralytics package)")
+    ap.add_argument("--yolo-weights", default="yolov8s-seg.pt")
     ap.add_argument("--unet-batch", type=int, default=8)
     ap.add_argument("--skip-random", action="store_true",
                     help="skip the naive-split control")
@@ -102,6 +105,12 @@ def main() -> None:
         print("=" * 70, "\n6/7  Faster R-CNN, detection only (leave-one-specimen-out)",
               flush=True)
         train_fasterrcnn.run("loso", iters=iters, batch=a.maskrcnn_batch, lr=0.005)
+
+    if a.yolo:
+        print("=" * 70, "\n6b/7 YOLOv8 (leave-one-specimen-out)", flush=True)
+        import train_yolo
+        train_yolo.run("loso", iters=iters, batch=a.maskrcnn_batch,
+                       weights=a.yolo_weights, imgsz=1024, mosaic=0.0)
 
     protocols = ["loso"]
     if not a.skip_random:

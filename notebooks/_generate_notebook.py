@@ -142,6 +142,18 @@ code(r"""
 """)
 
 md(r"""
+### 5b · Check the geometry
+
+Every conversion the pipeline depends on, checked against the real annotations:
+box extraction, the YOLO label export, and the dataset invariants the thesis
+quotes. These are the errors that would produce plausible numbers rather than a
+crash, so they have to be checked rather than assumed. All should pass.
+""")
+code(r"""
+!python tests.py
+""")
+
+md(r"""
 ## 6 · Smoke test
 
 Eight training iterations per fold. The numbers this produces are meaningless — the
@@ -187,7 +199,28 @@ code(r"""
 """)
 
 md(r"""
-### 7e · Mask R-CNN under the naive random split
+### 7e · YOLOv8
+
+A different family of architecture, not a controlled ablation: YOLOv8 shares no
+backbone, head, loss or augmentation with the R-CNN models, so it answers "does
+another family do better here", not "which component is responsible".
+
+Three settings differ from the Ultralytics defaults, each for a measured reason.
+`imgsz=1024` keeps native resolution — the default 640 would shrink the median
+500× particle from 14.3 px to 8.9 px. `mosaic=0.0` is off because mosaic roughly
+halves apparent object size, and 82.8% of these particles are already below
+COCO's small-object threshold. `max_det=400` prevents truncating dense images.
+
+`-seg` weights predict masks and join the mask comparison; swap to `yolov8s.pt`
+for detection only.
+""")
+code(r"""
+!pip install -q ultralytics
+!python train_yolo.py --protocol loso --iters 1500 --batch 4 --weights yolov8s-seg.pt
+""")
+
+md(r"""
+### 7f · Mask R-CNN under the naive random split
 
 This is the control for the data-leakage contribution: the same model and the same
 fold sizes, but the split ignores specimen identity. The gap between this and 7c is

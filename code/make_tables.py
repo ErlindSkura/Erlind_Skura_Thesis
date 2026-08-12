@@ -25,7 +25,8 @@ from config import MAGNIFICATIONS, PREDICTIONS, RESULTS, SPECIMENS
 from data_io import load_records, rasterise
 
 METHOD_LABEL = {"classical": "Otsu + watershed", "unet": "U-Net + CC",
-                "maskrcnn": "Mask R-CNN", "fasterrcnn": "Faster R-CNN"}
+                "maskrcnn": "Mask R-CNN", "fasterrcnn": "Faster R-CNN",
+                "yolo": "YOLOv8"}
 FIGS = RESULTS.parent / "figures"
 
 
@@ -67,10 +68,17 @@ def table_maskrcnn(m: dict) -> str:
 
 
 def table_comparison(m: dict) -> str:
+    """The mask-based comparison.
+
+    A method that predicts no masks is excluded rather than shown with blanks:
+    every column here except the counting error is a mask quantity, so such a row
+    would be almost entirely empty. Those methods are compared in
+    ``table_counting`` instead, on the quantities that are defined for both.
+    """
     rows = []
-    for key in ("classical", "unet", "maskrcnn"):
+    for key in ("classical", "unet", "maskrcnn", "fasterrcnn", "yolo"):
         r = m["loso"].get(key)
-        if not r:
+        if not r or r.get("box_only"):
             continue
         o = r["overall"]
         rows.append(f"        {METHOD_LABEL[key]:16s} & {_f(o['ap50']['mean'])} & "
@@ -79,9 +87,10 @@ def table_comparison(m: dict) -> str:
                     f"{_f(o['merge_rate']['mean'], 1)} \\\\")
     return f"""\\begin{{table}}[htbp]
     \\centering
-    \\caption{{The three methods under an identical protocol, averaged over the four
-    leave-one-specimen-out folds. Counting error is the mean absolute percentage
-    difference between the predicted and the annotated bead count.}}
+    \\caption{{The mask-predicting methods under an identical protocol, averaged over
+    the four leave-one-specimen-out folds. Counting error is the mean absolute
+    percentage difference between the predicted and the annotated particle count.
+    Detection-only methods are compared in Table~\\ref{{tab:counting}}.}}
     \\label{{tab:method_comparison}}
     \\begin{{tabular}}{{lrrrr}}
         \\toprule
@@ -134,7 +143,7 @@ def table_counting(m: dict) -> str:
     on, since a mask AP and a box AP are not the same measurement.
     """
     rows = []
-    for key in ("classical", "unet", "maskrcnn", "fasterrcnn"):
+    for key in ("classical", "unet", "maskrcnn", "fasterrcnn", "yolo"):
         r = m["loso"].get(key)
         if not r:
             continue
@@ -174,7 +183,7 @@ def table_ap_bands(m: dict) -> str:
     populate is left blank rather than shown as zero.
     """
     rows = []
-    for key in ("classical", "unet", "maskrcnn", "fasterrcnn"):
+    for key in ("classical", "unet", "maskrcnn", "fasterrcnn", "yolo"):
         r = m["loso"].get(key)
         if not r:
             continue
