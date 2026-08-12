@@ -26,7 +26,7 @@ from metrics import (
     panoptic_quality, summarise,
 )
 
-METHODS = ("classical", "unet", "maskrcnn", "fasterrcnn", "yolo")
+METHODS = ("classical", "unet", "maskrcnn", "fasterrcnn", "yolov8", "yolov5")
 
 # Metrics that need a predicted mask. A box-only method leaves these unset rather
 # than scoring zero: "did not segment" and "segmented badly" are different claims,

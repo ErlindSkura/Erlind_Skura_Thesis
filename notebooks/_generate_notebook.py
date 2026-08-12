@@ -220,7 +220,25 @@ code(r"""
 """)
 
 md(r"""
-### 7f · Mask R-CNN under the naive random split
+### 7f · YOLOv5
+
+Two things to be clear about when you present this.
+
+It is **YOLOv5u**, not the YOLOv5 of the 2020 papers: Ultralytics ships the
+YOLOv5 backbone fitted with YOLOv8's anchor-free head. So `yolov5su` against
+`yolov8s` varies mostly the *backbone* — it is not the anchor-based versus
+anchor-free comparison the version numbers suggest.
+
+Ultralytics has no `-seg` variant for YOLOv5, so it detects only: box AP and
+counting, no AJI and no size distribution. It writes to its own prediction file,
+so it does not overwrite 7e.
+""")
+code(r"""
+!python train_yolo.py --protocol loso --iters 1500 --batch 4 --weights yolov5su.pt
+""")
+
+md(r"""
+### 7g · Mask R-CNN under the naive random split
 
 This is the control for the data-leakage contribution: the same model and the same
 fold sizes, but the split ignores specimen identity. The gap between this and 7c is

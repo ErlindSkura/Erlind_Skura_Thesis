@@ -1,13 +1,32 @@
-"""Train and evaluate YOLOv8 under a given partitioning protocol.
+"""Train and evaluate a YOLO model under a given partitioning protocol.
+
+Handles both YOLOv8 and YOLOv5 through the Ultralytics package; the family is
+taken from the weights filename and each writes its own prediction file.
 
 This method is not a controlled ablation and must not be read as one. Mask R-CNN
 and Faster R-CNN differ from each other only in the mask branch, so a gap between
-them is attributable to it. YOLOv8 shares nothing with either: a different
+them is attributable to it. A YOLO model shares nothing with either: a different
 backbone, an anchor-free head, a different label assignment rule, a different
 loss, and its own augmentation and optimiser schedule implemented inside the
 Ultralytics package. It answers "does a different family of architecture do
 better on this data", not "which component is responsible". Chapter 5 reports it
 on that footing.
+
+Two things about the YOLOv5 side need stating, because both invite a wrong
+reading:
+
+*It is YOLOv5u, not the YOLOv5 of the literature.* Ultralytics distributes
+``yolov5su.pt`` and its siblings, where the "u" marks the original YOLOv5
+backbone fitted with YOLOv8's anchor-free, objectness-free split head. Comparing
+``yolov5su`` against ``yolov8s`` therefore varies mostly the backbone, and is not
+the anchor-based-versus-anchor-free comparison a reader would assume from the
+version numbers. Reproducing the published anchor-based YOLOv5 would mean the
+separate ``ultralytics/yolov5`` repository and its own training entry point.
+
+*It detects but does not segment.* Ultralytics ships no ``-seg`` variant for
+YOLOv5, so it goes through the box-only path: box AP and counting, no AJI,
+no panoptic quality and no size distribution. YOLOv8 has ``-seg`` weights and can
+be scored either way.
 
 Three settings depart from the Ultralytics defaults, each because of a measured
 property of this dataset rather than by search:
@@ -46,6 +65,20 @@ from metrics import as_instances, boxes_from_instances, f1_at_iou, f1_at_iou_box
 from runtime import device_report
 
 DATASET_ROOT = WORK / "yolo"
+
+
+def method_name(weights: str) -> str:
+    """The key this run is stored and reported under.
+
+    Derived from the weights rather than fixed, because YOLOv5 and YOLOv8 are run
+    through the same code path and would otherwise overwrite each other's
+    predictions.
+    """
+    stem = Path(weights).stem.lower()
+    for family in ("yolov5", "yolov8", "yolov9", "yolov10", "yolo11", "yolo12"):
+        if stem.startswith(family):
+            return family
+    return "yolo"
 
 
 def _require_ultralytics():
@@ -187,8 +220,9 @@ def run(protocol: str, iters: int, batch: int, weights: str, imgsz: int,
     records = load_records()
     segment = "-seg" in weights
 
+    method = method_name(weights)
     all_dets, meta = [], {
-        "protocol": protocol, "method": "yolo", "weights": weights,
+        "protocol": protocol, "method": method, "weights": weights,
         "iters": iters, "batch": batch, "imgsz": imgsz, "mosaic": mosaic,
         "seed": seed, "thresholds": {}, "hardware": device_report(),
         "runtime": {}, "box_only": not segment,
@@ -251,7 +285,7 @@ def run(protocol: str, iters: int, batch: int, weights: str, imgsz: int,
                   f"{len(records[n].polys)} annotated")
         del model
 
-    name = "yolo" if not only else "yolo_partial"
+    name = method if not only else f"{method}_partial"
     out = PREDICTIONS / protocol / f"{name}.json"
     predio.save(out, all_dets, meta)
     print(f"\nwrote {len(all_dets)} detections to {out}")

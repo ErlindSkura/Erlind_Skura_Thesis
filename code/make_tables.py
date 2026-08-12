@@ -26,7 +26,10 @@ from data_io import load_records, rasterise
 
 METHOD_LABEL = {"classical": "Otsu + watershed", "unet": "U-Net + CC",
                 "maskrcnn": "Mask R-CNN", "fasterrcnn": "Faster R-CNN",
-                "yolo": "YOLOv8"}
+                "yolov8": "YOLOv8", "yolov5": "YOLOv5u"}
+
+# Order used in every comparison table, coarsest method first.
+ALL_METHODS = ("classical", "unet", "maskrcnn", "fasterrcnn", "yolov8", "yolov5")
 FIGS = RESULTS.parent / "figures"
 
 
@@ -76,7 +79,7 @@ def table_comparison(m: dict) -> str:
     ``table_counting`` instead, on the quantities that are defined for both.
     """
     rows = []
-    for key in ("classical", "unet", "maskrcnn", "fasterrcnn", "yolo"):
+    for key in ALL_METHODS:
         r = m["loso"].get(key)
         if not r or r.get("box_only"):
             continue
@@ -135,15 +138,15 @@ def table_leakage(m: dict) -> str | None:
 def table_counting(m: dict) -> str:
     """Counting accuracy across every method, including the box-only detector.
 
-    Kept separate from the AJI comparison because Faster R-CNN predicts no masks
-    and so has no AJI, no merge rate and no size distribution. Counting error and
-    the raw count are defined identically for a box and for a mask, so this is the
-    one table on which all four methods can be placed side by side without
-    qualification. The average precision column names the IoU type it was computed
-    on, since a mask AP and a box AP are not the same measurement.
+    Kept separate from the AJI comparison because the detection-only methods
+    predict no masks, and so have no AJI, no merge rate and no size distribution.
+    Counting error and the raw count are defined identically for a box and for a
+    mask, so this is the one table on which every method can be placed side by
+    side without qualification. The average precision column names the IoU type it
+    was computed on, since a mask AP and a box AP are not the same measurement.
     """
     rows = []
-    for key in ("classical", "unet", "maskrcnn", "fasterrcnn", "yolo"):
+    for key in ALL_METHODS:
         r = m["loso"].get(key)
         if not r:
             continue
@@ -160,9 +163,9 @@ def table_counting(m: dict) -> str:
     \\caption{{Counting accuracy under the leave-one-specimen-out protocol. Counts
     are pooled over all 11 held-out micrographs; the error is the mean absolute
     percentage difference per micrograph, so it does not cancel between images that
-    over- and under-count. Faster R-CNN predicts boxes and no masks, so its average
-    precision is computed on boxes and it is absent from the mask-based comparisons
-    of Table~\\ref{{tab:method_comparison}}.}}
+    over- and under-count. Methods marked (box) predict boxes and no masks, so
+    their average precision is computed on boxes and they are absent from the
+    mask-based comparison of Table~\\ref{{tab:method_comparison}}.}}
     \\label{{tab:counting}}
     \\begin{{tabular}}{{lrrrr}}
         \\toprule
@@ -183,7 +186,7 @@ def table_ap_bands(m: dict) -> str:
     populate is left blank rather than shown as zero.
     """
     rows = []
-    for key in ("classical", "unet", "maskrcnn", "fasterrcnn", "yolo"):
+    for key in ALL_METHODS:
         r = m["loso"].get(key)
         if not r:
             continue
@@ -214,7 +217,7 @@ def table_ap_bands(m: dict) -> str:
 def table_runtime(m: dict) -> str:
     """Wall-clock cost per fold, in the units the supervisor asked for."""
     rows = []
-    for key in ("unet", "maskrcnn", "fasterrcnn"):
+    for key in ALL_METHODS:
         r = m["loso"].get(key)
         if not r:
             continue
@@ -231,7 +234,7 @@ def table_runtime(m: dict) -> str:
     if not rows:
         return ""
     hw = ""
-    for key in ("maskrcnn", "unet", "fasterrcnn"):
+    for key in ALL_METHODS:
         h = ((m["loso"].get(key) or {}).get("meta") or {}).get("hardware") or {}
         if h.get("gpu"):
             hw = f" Trained on {h['gpu']}."
