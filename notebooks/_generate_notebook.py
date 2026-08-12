@@ -175,7 +175,19 @@ code(r"""
 """)
 
 md(r"""
-### 7d · Mask R-CNN under the naive random split
+### 7d · Faster R-CNN, detection only
+
+The same backbone, anchors and schedule as 7c, without the mask branch. The
+laboratory endpoint is a count, and counting needs only detection, so this
+measures what the mask branch is actually worth for the quantity of interest.
+It reports box AP rather than mask AP, and no AJI — it predicts no masks.
+""")
+code(r"""
+!python train_fasterrcnn.py --protocol loso --iters 1500 --batch 4
+""")
+
+md(r"""
+### 7e · Mask R-CNN under the naive random split
 
 This is the control for the data-leakage contribution: the same model and the same
 fold sizes, but the split ignores specimen identity. The gap between this and 7c is

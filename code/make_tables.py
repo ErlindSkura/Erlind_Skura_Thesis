@@ -25,7 +25,7 @@ from config import MAGNIFICATIONS, PREDICTIONS, RESULTS, SPECIMENS
 from data_io import load_records, rasterise
 
 METHOD_LABEL = {"classical": "Otsu + watershed", "unet": "U-Net + CC",
-                "maskrcnn": "Mask R-CNN"}
+                "maskrcnn": "Mask R-CNN", "fasterrcnn": "Faster R-CNN"}
 FIGS = RESULTS.parent / "figures"
 
 
@@ -118,6 +118,128 @@ def table_leakage(m: dict) -> str | None:
         Leave-one-specimen-out   & {_f(rb['ap50']['mean'])} & {_f(rb['aji']['mean'])} & {_f(rb['abs_counting_error']['mean'], 1)} \\\\
         \\midrule
 {diff}
+        \\bottomrule
+    \\end{{tabular}}
+\\end{{table}}"""
+
+
+def table_counting(m: dict) -> str:
+    """Counting accuracy across every method, including the box-only detector.
+
+    Kept separate from the AJI comparison because Faster R-CNN predicts no masks
+    and so has no AJI, no merge rate and no size distribution. Counting error and
+    the raw count are defined identically for a box and for a mask, so this is the
+    one table on which all four methods can be placed side by side without
+    qualification. The average precision column names the IoU type it was computed
+    on, since a mask AP and a box AP are not the same measurement.
+    """
+    rows = []
+    for key in ("classical", "unet", "maskrcnn", "fasterrcnn"):
+        r = m["loso"].get(key)
+        if not r:
+            continue
+        o = r["overall"]
+        n_pred = sum(v["n_pred"] for v in r["per_image"].values())
+        n_gt = sum(v["n_gt"] for v in r["per_image"].values())
+        kind = "box" if r.get("box_only") else "mask"
+        ap50 = _f(o["ap50"]["mean"]) if "ap50" in o else "---"
+        rows.append(f"        {METHOD_LABEL[key]:16s} & {n_pred} & {n_gt} & "
+                    f"{_f(o['abs_counting_error']['mean'], 1)} & "
+                    f"{ap50} ({kind}) \\\\")
+    return f"""\\begin{{table}}[htbp]
+    \\centering
+    \\caption{{Counting accuracy under the leave-one-specimen-out protocol. Counts
+    are pooled over all 11 held-out micrographs; the error is the mean absolute
+    percentage difference per micrograph, so it does not cancel between images that
+    over- and under-count. Faster R-CNN predicts boxes and no masks, so its average
+    precision is computed on boxes and it is absent from the mask-based comparisons
+    of Table~\\ref{{tab:method_comparison}}.}}
+    \\label{{tab:counting}}
+    \\begin{{tabular}}{{lrrrr}}
+        \\toprule
+        Method & Detected & Annotated & Counting error (\\%) & $\\mathrm{{AP}}_{{50}}$ \\\\
+        \\midrule
+{chr(10).join(rows)}
+        \\bottomrule
+    \\end{{tabular}}
+\\end{{table}}"""
+
+
+def table_ap_bands(m: dict) -> str:
+    """Average precision split by COCO object-size band.
+
+    82.8% of the annotated particles fall in the small band, so a pooled AP is
+    close to an average over one band while appearing to describe all three. The
+    bands are reported separately for that reason. A band the ground truth does not
+    populate is left blank rather than shown as zero.
+    """
+    rows = []
+    for key in ("classical", "unet", "maskrcnn", "fasterrcnn"):
+        r = m["loso"].get(key)
+        if not r:
+            continue
+        o = r["overall"]
+        cells = [(_f(o[k]["mean"]) if k in o else "---")
+                 for k in ("ap", "ap50", "ap75", "ap_small", "ap_medium", "ap_large")]
+        rows.append(f"        {METHOD_LABEL[key]:16s} & " + " & ".join(cells) + " \\\\")
+    return f"""\\begin{{table}}[htbp]
+    \\centering
+    \\caption{{Average precision decomposed by object size, under the
+    leave-one-specimen-out protocol. The bands are COCO's: small is below
+    $32 \\times 32$ pixels, large above $96 \\times 96$. Since 82.8\\% of the
+    annotated particles are small and 1.2\\% are large, $\\mathrm{{AP}}_S$ is the
+    column that describes this dataset; a dash marks a band the held-out ground
+    truth does not populate, which cannot be scored.}}
+    \\label{{tab:ap_bands}}
+    \\begin{{tabular}}{{lrrrrrr}}
+        \\toprule
+        Method & AP & $\\mathrm{{AP}}_{{50}}$ & $\\mathrm{{AP}}_{{75}}$ &
+        $\\mathrm{{AP}}_S$ & $\\mathrm{{AP}}_M$ & $\\mathrm{{AP}}_L$ \\\\
+        \\midrule
+{chr(10).join(rows)}
+        \\bottomrule
+    \\end{{tabular}}
+\\end{{table}}"""
+
+
+def table_runtime(m: dict) -> str:
+    """Wall-clock cost per fold, in the units the supervisor asked for."""
+    rows = []
+    for key in ("unet", "maskrcnn", "fasterrcnn"):
+        r = m["loso"].get(key)
+        if not r:
+            continue
+        rt = (r.get("meta") or {}).get("runtime") or {}
+        folds = [v for v in rt.values() if v]
+        if not folds:
+            continue
+        mean = lambda f: sum(x[f] for x in folds) / len(folds)   # noqa: E731
+        rows.append(
+            f"        {METHOD_LABEL[key]:16s} & {folds[0]['batch']} & "
+            f"{mean('s_per_step_median'):.3f} & {folds[0]['steps_per_epoch']:.1f} & "
+            f"{mean('s_per_epoch'):.1f} & {mean('epochs'):.1f} & "
+            f"{mean('train_wall_s') / 60:.1f} \\\\")
+    if not rows:
+        return ""
+    hw = ""
+    for key in ("maskrcnn", "unet", "fasterrcnn"):
+        h = ((m["loso"].get(key) or {}).get("meta") or {}).get("hardware") or {}
+        if h.get("gpu"):
+            hw = f" Trained on {h['gpu']}."
+            break
+    return f"""\\begin{{table}}[htbp]
+    \\centering
+    \\caption{{Training cost per fold, averaged over the four leave-one-specimen-out
+    folds.{hw} Training draws random crops on demand rather than iterating a fixed
+    set, so an epoch is defined here as one crop-equivalent pass over the fold's
+    eight training micrographs. Step times are medians, measured with the device
+    synchronised, and exclude the first step, which carries one-off initialisation.}}
+    \\label{{tab:runtime}}
+    \\begin{{tabular}}{{lrrrrrr}}
+        \\toprule
+        Method & Batch & s/step & Steps/epoch & s/epoch & Epochs & Total (min) \\\\
+        \\midrule
+{chr(10).join(rows)}
         \\bottomrule
     \\end{{tabular}}
 \\end{{table}}"""
@@ -355,12 +477,17 @@ def run() -> None:
         "folds": table_folds(m),
         "maskrcnn_results": table_maskrcnn(m),
         "method_comparison": table_comparison(m),
+        "counting": table_counting(m),
+        "ap_bands": table_ap_bands(m),
         "magnification": table_magnification(m),
         "physical": table_physical(m),
     }
     leakage = table_leakage(m)
     if leakage:
         tables["leakage"] = leakage
+    runtime = table_runtime(m)
+    if runtime:
+        tables["runtime"] = runtime
 
     # One file per table, so Chapter 5 can \input each where it belongs and a
     # re-run updates the chapter in place. The combined file is kept as well,

@@ -51,6 +51,38 @@ def build_maskrcnn(num_classes: int = 2, pretrained: bool = True) -> nn.Module:
     return model
 
 
+# --- Faster R-CNN ----------------------------------------------------------
+
+
+def build_fasterrcnn(num_classes: int = 2, pretrained: bool = True) -> nn.Module:
+    """Mask R-CNN's detector without the mask branch.
+
+    Included because the laboratory endpoint is a count, and a count needs only
+    detection. Comparing the two isolates what the mask branch contributes: the
+    two models share a backbone, an anchor configuration and a detection budget,
+    so a difference in counting accuracy between them is attributable to the mask
+    branch rather than to capacity or to tuning. The same architecture was applied
+    to cell counting in low-contrast micrographs by Uka et al. (2020).
+    """
+    weights = "DEFAULT" if pretrained else None
+    model = torchvision.models.detection.fasterrcnn_resnet50_fpn_v2(
+        weights=weights, weights_backbone="DEFAULT" if pretrained else None,
+    )
+
+    in_features = model.roi_heads.box_predictor.cls_score.in_features
+    model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+
+    model.rpn.anchor_generator = AnchorGenerator(
+        sizes=tuple((s,) for s in ANCHOR_SIZES),
+        aspect_ratios=((0.5, 1.0, 2.0),) * len(ANCHOR_SIZES),
+    )
+
+    model.roi_heads.detections_per_img = DETECTIONS_PER_IMG
+    model.rpn._pre_nms_top_n = {"training": 2000, "testing": 2000}
+    model.rpn._post_nms_top_n = {"training": 2000, "testing": 1000}
+    return model
+
+
 def set_input_size(model: nn.Module, min_size: int, max_size: int) -> None:
     """Pin the internal resize so that no resampling happens.
 

@@ -200,6 +200,54 @@ def f1_at_iou(gts, preds, thr: float = 0.5) -> float:
     return 0.0 if precision + recall == 0 else 2 * precision * recall / (precision + recall)
 
 
+# --- box-space geometry ----------------------------------------------------
+#
+# Faster R-CNN predicts boxes and no masks. Rather than fill each box to make a
+# pseudo-mask -- which would inflate every region-overlap score, since a particle
+# fills roughly pi/4 of its own bounding box -- box-only methods are scored in box
+# space, and the mask-based metrics are simply not reported for them. To keep the
+# comparison against Mask R-CNN fair, Mask R-CNN is scored here as well, using the
+# boxes it also predicts.
+
+
+def boxes_from_instances(instances) -> np.ndarray:
+    """``[x0, y0, x1, y1]`` per instance, in the order given.
+
+    Coordinates are exclusive at the upper edge, matching ``Instance``, so a
+    one-pixel object has width 1 rather than 0.
+    """
+    inst = as_instances(instances)
+    if not inst:
+        return np.zeros((0, 4), dtype=np.float64)
+    return np.array([[i.x0, i.y0, i.x1, i.y1] for i in inst], dtype=np.float64)
+
+
+def box_iou_matrix(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """IoU between every box in ``a`` and every box in ``b``."""
+    a, b = np.asarray(a, dtype=np.float64), np.asarray(b, dtype=np.float64)
+    if a.size == 0 or b.size == 0:
+        return np.zeros((len(a), len(b)), dtype=np.float64)
+    x0 = np.maximum(a[:, None, 0], b[None, :, 0])
+    y0 = np.maximum(a[:, None, 1], b[None, :, 1])
+    x1 = np.minimum(a[:, None, 2], b[None, :, 2])
+    y1 = np.minimum(a[:, None, 3], b[None, :, 3])
+    inter = np.clip(x1 - x0, 0, None) * np.clip(y1 - y0, 0, None)
+    area_a = ((a[:, 2] - a[:, 0]) * (a[:, 3] - a[:, 1]))[:, None]
+    area_b = ((b[:, 2] - b[:, 0]) * (b[:, 3] - b[:, 1]))[None, :]
+    return inter / np.maximum(area_a + area_b - inter, 1e-9)
+
+
+def f1_at_iou_boxes(gt_boxes, pred_boxes, thr: float = 0.5) -> float:
+    """The box-space counterpart of ``f1_at_iou``, matched the same way."""
+    gt_boxes, pred_boxes = np.asarray(gt_boxes), np.asarray(pred_boxes)
+    if len(gt_boxes) == 0 or len(pred_boxes) == 0:
+        return 0.0
+    iou = box_iou_matrix(gt_boxes, pred_boxes)
+    tp = int(np.count_nonzero(iou > thr))
+    precision, recall = tp / len(pred_boxes), tp / len(gt_boxes)
+    return 0.0 if precision + recall == 0 else 2 * precision * recall / (precision + recall)
+
+
 # --- counting and physical quantities --------------------------------------
 
 
@@ -232,7 +280,7 @@ def areal_density(n: int, width: int, height: int, um_per_px: float) -> float:
 
 
 def coco_ap(coco_gt, detections: list[dict], img_ids: list[int],
-            max_dets: int = 400) -> dict:
+            max_dets: int = 400, iou_type: str = "segm") -> dict:
     """The full COCO precision/recall panel on masks, via pycocotools.
 
     ``max_dets`` is raised well above the COCO default of 100 because a single
@@ -255,9 +303,14 @@ def coco_ap(coco_gt, detections: list[dict], img_ids: list[int],
             "ar1", "ar100", "ar_max", "ar_small", "ar_medium", "ar_large")
     if not detections:
         return dict.fromkeys(keys, 0.0)
+    # loadRes decides what it is scoring from the fields present, so a bbox
+    # evaluation must not carry a segmentation alongside it.
+    if iou_type == "bbox":
+        detections = [{k: v for k, v in d.items() if k != "segmentation"}
+                      for d in detections]
     with contextlib.redirect_stdout(io.StringIO()):
         coco_dt = coco_gt.loadRes([dict(d) for d in detections])
-        ev = COCOeval(coco_gt, coco_dt, iouType="segm")
+        ev = COCOeval(coco_gt, coco_dt, iouType=iou_type)
         ev.params.imgIds = list(img_ids)
         ev.params.maxDets = [1, 100, max_dets]
         ev.evaluate()

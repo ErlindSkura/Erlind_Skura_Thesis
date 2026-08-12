@@ -29,6 +29,8 @@ def _parse():
                     help="tiny run in a separate directory; results are not usable")
     ap.add_argument("--iters", type=int, default=1500)
     ap.add_argument("--maskrcnn-batch", type=int, default=4)
+    ap.add_argument("--skip-fasterrcnn", action="store_true",
+                    help="omit the detection-only comparison")
     ap.add_argument("--unet-batch", type=int, default=8)
     ap.add_argument("--skip-random", action="store_true",
                     help="skip the naive-split control")
@@ -71,6 +73,7 @@ def main() -> None:
     import folds as folds_mod
     import make_tables
     import prepare_data
+    import train_fasterrcnn
     import train_maskrcnn
     import train_unet
     from config import RESULTS, WORK
@@ -92,17 +95,22 @@ def main() -> None:
     print("=" * 70, "\n4/6  U-Net baseline (leave-one-specimen-out)", flush=True)
     train_unet.run("loso", iters=iters, batch=a.unet_batch, lr=3e-4)
 
-    print("=" * 70, "\n5/6  Mask R-CNN (leave-one-specimen-out)", flush=True)
+    print("=" * 70, "\n5/7  Mask R-CNN (leave-one-specimen-out)", flush=True)
     train_maskrcnn.run("loso", iters=iters, batch=a.maskrcnn_batch, lr=0.005)
+
+    if not a.skip_fasterrcnn:
+        print("=" * 70, "\n6/7  Faster R-CNN, detection only (leave-one-specimen-out)",
+              flush=True)
+        train_fasterrcnn.run("loso", iters=iters, batch=a.maskrcnn_batch, lr=0.005)
 
     protocols = ["loso"]
     if not a.skip_random:
-        print("=" * 70, "\n5b/6 Mask R-CNN under the naive random split (control)",
+        print("=" * 70, "\n6b/7 Mask R-CNN under the naive random split (control)",
               flush=True)
         train_maskrcnn.run("random", iters=iters, batch=a.maskrcnn_batch, lr=0.005)
         protocols.append("random")
 
-    print("=" * 70, "\n6/6  evaluating and tabulating", flush=True)
+    print("=" * 70, "\n7/7  evaluating and tabulating", flush=True)
     evaluate.run(tuple(protocols))
     make_tables.run()
 
