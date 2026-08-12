@@ -26,7 +26,11 @@ from metrics import (
     panoptic_quality, summarise,
 )
 
-METHODS = ("classical", "unet", "maskrcnn", "fasterrcnn", "yolov8", "yolov5")
+# The preprocessing variants are separate entries because each is a separate
+# trained model, written to its own prediction file.
+PREPROCESS_VARIANTS = ("maskrcnn_clahe", "maskrcnn_background", "maskrcnn_median")
+METHODS = ("classical", "unet", "maskrcnn", "fasterrcnn", "yolov8",
+           "yolov5") + PREPROCESS_VARIANTS
 
 # Metrics that need a predicted mask. A box-only method leaves these unset rather
 # than scoring zero: "did not segment" and "segmented badly" are different claims,

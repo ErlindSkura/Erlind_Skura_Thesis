@@ -26,7 +26,19 @@ from data_io import load_records, rasterise
 
 METHOD_LABEL = {"classical": "Otsu + watershed", "unet": "U-Net + CC",
                 "maskrcnn": "Mask R-CNN", "fasterrcnn": "Faster R-CNN",
-                "yolov8": "YOLOv8", "yolov5": "YOLOv5u"}
+                "yolov8": "YOLOv8", "yolov5": "YOLOv5u",
+                "maskrcnn_clahe": "Mask R-CNN + CLAHE",
+                "maskrcnn_background": "Mask R-CNN + background subtraction",
+                "maskrcnn_median": "Mask R-CNN + median filter"}
+
+# The preprocessing ablation: the same architecture, varying only the input
+# transform, so a difference is attributable to preprocessing alone.
+PREPROCESS_ABLATION = ("maskrcnn", "maskrcnn_median", "maskrcnn_clahe",
+                       "maskrcnn_background")
+PREPROCESS_NAME = {"maskrcnn": "None (baseline)",
+                   "maskrcnn_median": "Median filter, 3x3",
+                   "maskrcnn_clahe": "CLAHE",
+                   "maskrcnn_background": "Background subtraction"}
 
 # Order used in every comparison table, coarsest method first.
 ALL_METHODS = ("classical", "unet", "maskrcnn", "fasterrcnn", "yolov8", "yolov5")
@@ -207,6 +219,82 @@ def table_ap_bands(m: dict) -> str:
         \\toprule
         Method & AP & $\\mathrm{{AP}}_{{50}}$ & $\\mathrm{{AP}}_{{75}}$ &
         $\\mathrm{{AP}}_S$ & $\\mathrm{{AP}}_M$ & $\\mathrm{{AP}}_L$ \\\\
+        \\midrule
+{chr(10).join(rows)}
+        \\bottomrule
+    \\end{{tabular}}
+\\end{{table}}"""
+
+
+def measure_separation() -> dict[str, str]:
+    """Particle-to-mat contrast under each preprocessing variant.
+
+    Measured here from the micrographs and the annotations rather than stored as a
+    constant, so the column cannot drift out of step with what ``preprocess.apply``
+    actually does. Normalised by the background standard deviation: a transform
+    that widens the grey-level gap while widening the spread by more has reduced
+    the contrast available, and the raw gap would hide that.
+    """
+    try:
+        import preprocess as pp
+        from metrics import as_instances
+        records = load_records()
+        out = {}
+        for key, variant in (("maskrcnn", "none"),
+                             ("maskrcnn_median", "median"),
+                             ("maskrcnn_clahe", "clahe"),
+                             ("maskrcnn_background", "background")):
+            vals = []
+            for r in records.values():
+                img = pp.apply(Image.open(r.path).convert("RGB"), variant)
+                masks = as_instances(rasterise(r.polys, r.width, r.height))
+                s = pp.separation(img, masks)
+                if s:
+                    vals.append(s["normalised"])
+            if vals:
+                out[key] = f"{np.mean(vals):.2f}"
+        return out
+    except Exception:                                        # pragma: no cover
+        # The table is still worth printing without this column.
+        return {}
+
+
+def table_preprocessing(m: dict) -> str:
+    """The preprocessing ablation: one architecture, one protocol, varying input.
+
+    Returns empty when no variant has been run, so the table simply does not
+    appear rather than appearing with a single row.
+    """
+    rows = []
+    separation = measure_separation()
+    for key in PREPROCESS_ABLATION:
+        r = m["loso"].get(key)
+        if not r:
+            continue
+        o = r["overall"]
+        sep = separation.get(key)
+        rows.append(
+            f"        {PREPROCESS_NAME[key]:26s} & "
+            f"{sep if sep else '---':>5} & {_f(o['ap50']['mean'])} & "
+            f"{_f(o['ap_small']['mean']) if 'ap_small' in o else '---'} & "
+            f"{_f(o['aji']['mean'])} & "
+            f"{_f(o['abs_counting_error']['mean'], 1)} \\\\")
+    if len(rows) < 2:
+        return ""
+    return f"""\\begin{{table}}[htbp]
+    \\centering
+    \\caption{{Effect of input preprocessing on Mask R-CNN, under the
+    leave-one-specimen-out protocol. Architecture, schedule, folds and
+    threshold-selection rule are identical across rows, so a difference is
+    attributable to the input transform alone. The second column is the
+    particle-to-mat contrast measured directly on the annotations before any
+    training: the mean grey-level separation divided by the standard deviation of
+    the background, which is the contrast a filter actually has to work with.}}
+    \\label{{tab:preprocessing}}
+    \\begin{{tabular}}{{lrrrrr}}
+        \\toprule
+        Preprocessing & Contrast & $\\mathrm{{AP}}_{{50}}$ & $\\mathrm{{AP}}_S$ &
+        AJI & Counting error (\\%) \\\\
         \\midrule
 {chr(10).join(rows)}
         \\bottomrule
@@ -500,6 +588,9 @@ def run() -> None:
     runtime = table_runtime(m)
     if runtime:
         tables["runtime"] = runtime
+    prep = table_preprocessing(m)
+    if prep:
+        tables["preprocessing"] = prep
 
     # One file per table, so Chapter 5 can \input each where it belongs and a
     # re-run updates the chapter in place. The combined file is kept as well,

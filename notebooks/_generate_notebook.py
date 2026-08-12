@@ -238,7 +238,40 @@ code(r"""
 """)
 
 md(r"""
-### 7g · Mask R-CNN under the naive random split
+### 7g · Preprocessing ablation
+
+The same architecture, schedule, folds and threshold rule — only the input
+transform changes, so a difference is attributable to preprocessing alone.
+
+Contrast measured on the annotations *before* training (separation between
+particle and mat, divided by background spread — what a filter actually has to
+work with):
+
+| Variant | Contrast | vs baseline |
+|---|---|---|
+| none | 0.55 | — |
+| median | 0.61 | +11% |
+| clahe | 0.37 | −32% |
+| background | 0.27 | −51% |
+
+CLAHE widens the raw grey-level gap from 18 to 23 levels but nearly doubles the
+background spread, because it amplifies the fibre texture as much as the
+particles. Background subtraction fails for a reason specific to this material:
+the background here is not a smooth illumination field but a dense fibre network,
+so flattening it also flattens the inter-fibre voids that made particles stand
+out.
+
+Whether that proxy predicts detection accuracy is the point of running these.
+Each is a full 4-fold run, so budget about an hour apiece.
+""")
+code(r"""
+!python train_maskrcnn.py --protocol loso --iters 1500 --batch 4 --preprocess median
+!python train_maskrcnn.py --protocol loso --iters 1500 --batch 4 --preprocess clahe
+!python train_maskrcnn.py --protocol loso --iters 1500 --batch 4 --preprocess background
+""")
+
+md(r"""
+### 7h · Mask R-CNN under the naive random split
 
 This is the control for the data-leakage contribution: the same model and the same
 fold sizes, but the split ignores specimen identity. The gap between this and 7c is

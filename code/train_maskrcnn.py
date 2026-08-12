@@ -25,6 +25,7 @@ from config import CROP, PREDICTIONS, SEED, WORK_H, FULL_W, ensure_dirs
 from datasets import BeadDataset, collate, load_records, rasterise
 from metrics import as_instances, f1_at_iou
 from models import build_maskrcnn, set_input_size
+from preprocess import VARIANTS
 from runtime import StepTimer, device_report, format_summary
 import predio
 
@@ -34,11 +35,12 @@ def _device() -> torch.device:
 
 
 @torch.no_grad()
-def infer(model, records, names, device, score_thresh: float, mask_thresh: float = 0.5):
+def infer(model, records, names, device, score_thresh: float, mask_thresh: float = 0.5,
+          preprocess: str = "none"):
     """Predict on whole micrographs at native resolution."""
     model.eval()
     set_input_size(model, WORK_H, FULL_W)
-    ds = BeadDataset(records, names, train=False)
+    ds = BeadDataset(records, names, train=False, preprocess=preprocess)
     out = {}
     for i in range(len(ds)):
         image, target = ds[i]
@@ -57,9 +59,11 @@ def infer(model, records, names, device, score_thresh: float, mask_thresh: float
 
 
 @torch.no_grad()
-def pick_threshold(model, records, train_names, device) -> float:
+def pick_threshold(model, records, train_names, device,
+                   preprocess: str = "none") -> float:
     """Choose the score threshold on the training partition only."""
-    raw = infer(model, records, train_names, device, score_thresh=0.05)
+    raw = infer(model, records, train_names, device, score_thresh=0.05,
+                preprocess=preprocess)
     # Both sides converted to sparse instances once, not on every threshold.
     gt = {n: as_instances(rasterise(records[n].polys, records[n].width,
                                     records[n].height))
@@ -78,14 +82,15 @@ def pick_threshold(model, records, train_names, device) -> float:
     return best_t
 
 
-def train_one_fold(records, fold, *, iters, batch, lr, device, seed):
+def train_one_fold(records, fold, *, iters, batch, lr, device, seed,
+                   preprocess="none"):
     torch.manual_seed(seed)
     model = build_maskrcnn().to(device)
     set_input_size(model, CROP, CROP)   # square crops pass through unresampled
 
     timer = StepTimer(iters, batch, len(fold["train"]))
     ds = BeadDataset(records, fold["train"], train=True,
-                     samples=iters * batch, seed=seed)
+                     samples=iters * batch, seed=seed, preprocess=preprocess)
     loader = DataLoader(ds, batch_size=batch, shuffle=False, num_workers=2,
                         collate_fn=collate, pin_memory=device.type == "cuda")
 
@@ -129,7 +134,7 @@ def train_one_fold(records, fold, *, iters, batch, lr, device, seed):
 
 
 def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
-        only: list[str] | None = None) -> None:
+        only: list[str] | None = None, preprocess: str = "none") -> None:
     ensure_dirs()
     device = _device()
     print(f"device: {device}  protocol: {protocol}  iters: {iters}  batch: {batch}")
@@ -137,7 +142,8 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
     all_dets, meta = [], {"protocol": protocol, "method": "maskrcnn",
                           "iters": iters, "batch": batch, "lr": lr, "seed": seed,
                           "thresholds": {}, "device": str(device),
-                          "hardware": device_report(), "runtime": {}}
+                          "hardware": device_report(), "runtime": {},
+                          "preprocess": preprocess}
 
     selected = folds_mod.load(protocol)
     if only:
@@ -156,14 +162,16 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
         print(f"\n[fold {fold['name']}] train={len(fold['train'])} "
               f"test={fold['test']}", flush=True)
         model, timing = train_one_fold(records, fold, iters=iters, batch=batch,
-                                       lr=lr, device=device, seed=seed)
+                                       lr=lr, device=device, seed=seed,
+                                       preprocess=preprocess)
         meta["runtime"][fold["name"]] = timing
         print(format_summary(fold["name"], timing), flush=True)
-        thr = pick_threshold(model, records, fold["train"], device)
+        thr = pick_threshold(model, records, fold["train"], device, preprocess)
         meta["thresholds"][fold["name"]] = thr
         print(f"    score threshold chosen on training partition: {thr:.2f}")
 
-        preds = infer(model, records, fold["test"], device, score_thresh=thr)
+        preds = infer(model, records, fold["test"], device, score_thresh=thr,
+                      preprocess=preprocess)
         for name, (masks, scores) in preds.items():
             all_dets += predio.encode(masks, scores, records[name].image_id)
             print(f"    {name}: {len(masks)} predicted / "
@@ -171,7 +179,11 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
         del model
         torch.cuda.empty_cache()
 
-    name = "maskrcnn" if not only else "maskrcnn_partial"
+    # Each preprocessing variant is a separate result, so it gets a separate
+    # file. Without this the ablation would overwrite the baseline run.
+    name = "maskrcnn" if preprocess == "none" else f"maskrcnn_{preprocess}"
+    if only:
+        name += "_partial"
     out = PREDICTIONS / protocol / f"{name}.json"
     predio.save(out, all_dets, meta)
     print(f"\nwrote {len(all_dets)} detections to {out}")
@@ -201,5 +213,7 @@ if __name__ == "__main__":
     ap.add_argument("--folds", nargs="*", default=None,
                     help="run only these folds (e.g. --folds Z2) as a pilot; "
                          "results go to a separate file and are not evaluated")
+    ap.add_argument("--preprocess", default="none", choices=VARIANTS,
+                    help="preprocessing variant; each writes its own file")
     a = ap.parse_args()
-    run(a.protocol, a.iters, a.batch, a.lr, a.seed, a.folds)
+    run(a.protocol, a.iters, a.batch, a.lr, a.seed, a.folds, a.preprocess)

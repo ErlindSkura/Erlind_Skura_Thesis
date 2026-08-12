@@ -24,21 +24,36 @@ class BeadDataset(Dataset):
 
     def __init__(self, records: dict[str, Record], names: list[str], *,
                  train: bool, samples: int = 400, crop: int = CROP,
-                 scale_range: tuple[float, float] = SCALE_RANGE, seed: int = SEED):
+                 scale_range: tuple[float, float] = SCALE_RANGE, seed: int = SEED,
+                 preprocess: str = "none"):
         self.records = [records[n] for n in names]
         self.train = train
         self.samples = samples
         self.crop = crop
         self.scale_range = scale_range
         self.seed = seed
+        self.preprocess = preprocess
         self._cache: dict[str, Image.Image] = {}
 
     def __len__(self) -> int:
         return self.samples if self.train else len(self.records)
 
     def _image(self, rec: Record) -> Image.Image:
+        """The micrograph, preprocessed once and cached.
+
+        Preprocessing is applied here, to the whole micrograph before cropping and
+        augmentation, for two reasons. It is where training and inference share a
+        code path, so the two cannot diverge -- a model trained on equalised images
+        and evaluated on raw ones would produce a plausible, wrong result. And the
+        variants are deterministic functions of the image, so computing them per
+        crop would repeat identical work thousands of times per fold.
+        """
         if rec.name not in self._cache:
-            self._cache[rec.name] = Image.open(rec.path).convert("RGB")
+            img = Image.open(rec.path).convert("RGB")
+            if self.preprocess != "none":
+                import preprocess as pp
+                img = pp.apply(img, self.preprocess)
+            self._cache[rec.name] = img
         return self._cache[rec.name]
 
     def __getitem__(self, idx: int):

@@ -169,6 +169,57 @@ def test_annotation_invariants(records) -> None:
           f"{100 * (areas >= 96 * 96).mean():.1f}%")
 
 
+def test_preprocessing(records) -> None:
+    """The invariants a preprocessing variant must not break.
+
+    A variant that silently changed image size or channel count would produce a
+    model that trains and scores plausibly while being fed something different
+    from what the evaluation assumes.
+    """
+    import preprocess as pp
+    from PIL import Image
+
+    print("preprocessing")
+    rec = records["Z6-4"]
+    src = Image.open(rec.path).convert("RGB")
+
+    check("'none' returns the image untouched",
+          pp.apply(src, "none") is src)
+
+    ok_shape = ok_range = True
+    for v in pp.VARIANTS:
+        out = pp.apply(src, v)
+        if out.size != src.size or out.mode != "RGB":
+            ok_shape = False
+        a = np.asarray(out)
+        if a.dtype != np.uint8 or a.min() < 0 or a.max() > 255:
+            ok_range = False
+    check("every variant preserves size and RGB mode", ok_shape)
+    check("every variant stays in 8-bit range", ok_range)
+
+    a = np.asarray(pp.apply(src, "clahe"))
+    b = np.asarray(pp.apply(src, "clahe"))
+    check("variants are deterministic", np.array_equal(a, b))
+
+    check("an unknown variant is rejected rather than ignored",
+          _raises(lambda: pp.apply(src, "sharpen")))
+
+    # The background estimator must span the largest annotated object (214 px),
+    # or a genuine particle is flattened away as if it were illumination.
+    check("background footprint exceeds the largest particle",
+          pp.BACKGROUND_FOOTPRINT > 214, f"{pp.BACKGROUND_FOOTPRINT} px vs 214 px")
+
+
+def _raises(fn) -> bool:
+    try:
+        fn()
+    except ValueError:
+        return True
+    except Exception:
+        return False
+    return False
+
+
 def main() -> int:
     records = load_records()
     test_box_iou()
@@ -176,6 +227,7 @@ def main() -> int:
     test_yolo_labels(records)
     test_yolo_boxes_match_polygons(records)
     test_annotation_invariants(records)
+    test_preprocessing(records)
     print()
     if FAILURES:
         print(f"{len(FAILURES)} check(s) failed: {', '.join(FAILURES)}")
