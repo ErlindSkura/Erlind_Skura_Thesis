@@ -106,6 +106,39 @@ rather than by a convergence criterion. This is a limitation and is recorded as
 one in Section~\ref{sec:limitations}: the reported figures are what this
 configuration produces, not what the architecture is capable of.
 
+\subsection{Computational Cost}
+\label{sec:runtime}
+
+Every method in this chapter was trained on a single NVIDIA T4 through Google
+Colab. Four quantities are recorded per method: the median time per optimiser
+step, the number of steps in an epoch, the resulting time per epoch, and the
+total wall-clock time for one fold. Four folds are run per protocol, so a
+complete cross-validation costs four times the last of these.
+
+One definition has to be stated for those numbers to mean anything. Training
+does not iterate a fixed set of images; it draws random $512 \times 512$ crops
+on demand, so there is no natural epoch boundary. An epoch is therefore defined
+here as one crop-equivalent pass over the eight training micrographs of a fold,
+which at this crop size is 2.875 crops per micrograph. Reporting steps per epoch
+alongside the step time makes the convention explicit rather than leaving the
+reader to infer it, and the two together reconstruct any of the other figures.
+
+Step times are medians rather than means, measured with the device synchronised
+before the clock is read, and exclude the first step of each fold. Without the
+synchronisation the measurement would record the time to enqueue the kernels
+rather than to execute them, which on a GPU is a much smaller and quite
+meaningless number; the first step is excluded separately because it carries
+one-off allocation and kernel selection that recur nowhere else in the run.
+
+% Emitted by make_tables.py only once at least one method has recorded timings.
+% The sentence that cites the table lives inside the conditional as well, so that
+% this file compiles with no undefined reference before the instrumented runs
+% exist.
+\IfFileExists{results/table_runtime.tex}{%
+    Table~\ref{tab:runtime} gives these figures for every method.
+    \input{results/table_runtime}%
+}{}
+
 \subsection{Evaluation Protocol}
 
 Every micrograph is scored exactly once, by the model of the fold that held its

@@ -43,9 +43,10 @@ performance.
 thesis.tex, metadata.tex, epoka.cls   LaTeX entry point (Overleaf-compatible, flat)
 chapters/                             chapters 1-6 and appendix A
 figures/                              generated figures
-references.bib                        23 references
+references.bib                        42 references
 code/                                 the pipeline (see below)
 notebooks/Thesis_Colab.ipynb          runs the training stages on Colab
+MANUAL.md                             execution order, and what each run puts in the thesis
 ```
 
 ## The pipeline
@@ -56,14 +57,25 @@ notebooks/Thesis_Colab.ipynb          runs the training stages on Colab
 | `prepare_data.py` | banner cropping, LabelMe → COCO |
 | `folds.py` | fold manifests for both protocols |
 | `data_io.py` | annotation loading, rasterisation, augmentation geometry — **no torch** |
-| `datasets.py`, `models.py` | PyTorch dataset; Mask R-CNN config and U-Net |
-| `train_maskrcnn.py`, `train_unet.py`, `classical.py` | the three methods |
-| `predio.py` | shared prediction format (COCO RLE) for all three methods |
-| `metrics.py`, `evaluate.py` | AP, AJI, PQ, counting, merge/split, physical units |
-| `make_tables.py` | generates the Chapter 5 tables and figures from the metrics |
+| `datasets.py`, `models.py` | PyTorch dataset; Mask R-CNN, Faster R-CNN and U-Net |
+| `preprocess.py` | the four input variants compared as an experimental factor |
+| `runtime.py` | step, epoch and wall-clock timing, device-synchronised |
+| `classical.py` | Otsu + watershed baseline |
+| `train_unet.py` | U-Net encoder–decoder, semantic, plus connected components |
+| `train_maskrcnn.py` | Mask R-CNN, and the preprocessing ablation via `--preprocess` |
+| `train_fasterrcnn.py` | Faster R-CNN, detection only, no mask branch |
+| `train_yolo.py` | both YOLO families, selected by `--weights` |
+| `predio.py` | shared prediction format (COCO RLE) for every method |
+| `metrics.py`, `evaluate.py` | AP panel, AJI, PQ, counting, merge/split, physical units |
+| `make_tables.py` | generates the Chapter 5 tables and two figures from the metrics |
+| `make_figures.py` | the figures that do not depend on a run, plus the counting figure |
 | `run_all.py` | end to end, with `--smoke` for a fast correctness check |
+| `tests.py` | 20 checks on geometry, annotations and preprocessing invariants |
 | `dataset_stats.py` | the descriptive figures of Chapter 3 |
 | `make_colab_bundle.py` | packages the 11 originals for upload |
+
+The execution order, and which run is needed for each table in the thesis, is in
+[`MANUAL.md`](MANUAL.md).
 
 ### Running it
 
