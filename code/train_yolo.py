@@ -59,12 +59,19 @@ import numpy as np
 
 import folds as folds_mod
 import predio
-from config import PREDICTIONS, SEED, WORK, ensure_dirs
+from config import PREDICTIONS, SCRATCH, SEED, ensure_dirs
 from data_io import load_records, rasterise
 from metrics import as_instances, boxes_from_instances, f1_at_iou, f1_at_iou_boxes
 from runtime import device_report
 
-DATASET_ROOT = WORK / "yolo"
+# The exported dataset and the Ultralytics run directory both live here rather
+# than under WORK, and the reason is arithmetic. The step budget converts to 750
+# epochs over 8 micrographs, and Ultralytics rewrites ``last.pt`` at the end of
+# every one of them; on Colab, WORK is Google Drive, so that is 750 sequential
+# 23 MB round trips per fold. Neither the exported copies nor the checkpoints are
+# results: ``export_fold`` rebuilds the dataset from the records on every run,
+# and the predictions go to PREDICTIONS as they do for every other method.
+DATASET_ROOT = SCRATCH / "yolo"
 
 
 def method_name(weights: str) -> str:
@@ -252,10 +259,13 @@ def run(protocol: str, iters: int, batch: int, weights: str, imgsz: int,
 
         model = YOLO(weights)
         t0 = time.perf_counter()
+        # cache="ram" holds the training split in memory. Eight micrographs at
+        # 1024x736x3 is about 18 MB, and it removes 750 re-reads of the same
+        # files. It changes what is timed, not what is learnt.
         model.train(data=str(cfg), epochs=epochs, imgsz=imgsz, batch=batch,
                     seed=seed, mosaic=mosaic, max_det=400, val=False,
-                    project=str(root / "runs"), name="train", exist_ok=True,
-                    plots=False, verbose=False)
+                    cache="ram", project=str(root / "runs"), name="train",
+                    exist_ok=True, plots=False, verbose=False)
         wall = time.perf_counter() - t0
         steps_per_epoch = max(1.0, n_train / batch)
         meta["runtime"][fold["name"]] = {

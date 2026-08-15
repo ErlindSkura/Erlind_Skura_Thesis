@@ -6,11 +6,13 @@ code runs unchanged on a local Windows machine and on Google Colab:
     BEAD_DATA     the ``Segmentations`` directory holding ``Images`` and ``Labels``
     BEAD_WORK     scratch directory for prepared images, folds and predictions
     BEAD_RESULTS  directory for metric files and generated LaTeX tables
+    BEAD_SCRATCH  throwaway directory for data no run ever needs to read back
 """
 
 from __future__ import annotations
 
 import os
+import tempfile
 from pathlib import Path
 
 # --- dataset facts ---------------------------------------------------------
@@ -58,6 +60,14 @@ PREPARED_IMAGES = WORK / "images"
 COCO_GT = WORK / "coco_gt.json"
 PREDICTIONS = WORK / "preds"
 CHECKPOINTS = WORK / "checkpoints"
+
+# Intermediate files that are rewritten thousands of times and read back never.
+# Deliberately *not* under WORK: on Colab that is a mounted Google Drive, where a
+# write costs seconds rather than milliseconds, and a training loop that saves a
+# checkpoint every epoch would spend most of its wall clock inside the FUSE
+# layer. The local disk is wiped on disconnect, which is the correct trade for
+# data that is regenerated at the start of every run anyway.
+SCRATCH = _path("BEAD_SCRATCH", str(Path(tempfile.gettempdir()) / "bead_scratch"))
 
 
 def ensure_dirs() -> None:

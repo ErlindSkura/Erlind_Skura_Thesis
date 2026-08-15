@@ -23,7 +23,13 @@ parazgjedhjet nga `config.py`:
 BEAD_DATA     …/Segmentations   (Images/ dhe Labels/)
 BEAD_WORK     thesis/work       (imazhet e përgatitura, folds, parashikimet)
 BEAD_RESULTS  thesis/results    (metrics.json dhe tabelat .tex)
+BEAD_SCRATCH  disku lokal       (dataseti i eksportuar i YOLO-s dhe checkpoint-et)
 ```
+
+`BEAD_SCRATCH` nuk vendoset nga notebook-u dhe nuk duhet vendosur me dorë. Është
+i vetmi që **nuk** duhet të tregojë te Drive: Ultralytics rishkruan `last.pt` në
+fund të çdo epoke, dhe me 750 epoka për fold kjo do të thoshte 750 shkrime nga
+23 MB secili mbi Drive. Parazgjedhja është dosja e përkohshme e sistemit.
 
 ---
 
