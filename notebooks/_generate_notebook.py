@@ -92,6 +92,20 @@ code(rf"""
 import os, subprocess
 from pathlib import Path
 
+# Re-derived here rather than inherited from section 2, so that this cell still
+# works as the single thing to re-run after a runtime restart. A restart clears
+# the kernel namespace but not /content, which is exactly the state in which the
+# names below would otherwise be missing while the files they point at are fine.
+DATA = Path("/content/data")
+DRIVE = Path("/content/drive/MyDrive")
+ROOT = DRIVE / "thesis_work" if DRIVE.exists() else Path("/content/thesis_work")
+
+if not (DATA / "Segmentations").exists():
+    raise SystemExit("run section 2 first: the micrographs are not unpacked")
+if not DRIVE.exists():
+    print("WARNING: Drive is not mounted. Everything this session produces will "
+          "be lost on disconnect. Run section 2.")
+
 CODE = Path("/content/thesis")
 if CODE.exists():
     subprocess.run(["git", "-C", str(CODE), "pull", "--ff-only"], check=False)
@@ -104,6 +118,11 @@ os.environ["BEAD_RESULTS"] = str(ROOT / "results")
 os.chdir(CODE / "code")
 print("cwd:", Path.cwd())
 print("work:", os.environ["BEAD_WORK"])
+# The pull above cannot use check=True: a shallow clone fails it for reasons that
+# do not matter here. So the commit is printed instead, because the failure mode
+# that costs a GPU session is a pull that quietly did nothing.
+print("code:", subprocess.run(["git", "-C", str(CODE), "log", "--oneline", "-1"],
+                              capture_output=True, text=True).stdout.strip())
 """)
 
 md("## 4 · Verify the environment")
