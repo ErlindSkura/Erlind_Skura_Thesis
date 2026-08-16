@@ -288,7 +288,7 @@ code(r"""
 
 md("## 9 · Look at the results")
 code(r"""
-import json
+import json, os
 from pathlib import Path
 
 RES = Path(os.environ["BEAD_RESULTS"])
@@ -313,7 +313,10 @@ for protocol, methods in m.items():
 """)
 
 code(r"""
-print((RES / "chapter5_tables.tex").read_text())
+import os
+from pathlib import Path
+
+print((Path(os.environ["BEAD_RESULTS"]) / "chapter5_tables.tex").read_text())
 """)
 
 md("""
@@ -331,14 +334,16 @@ them behind on the Colab VM, and when the session was reset the numbers could
 only be recovered by retraining.
 """)
 code(r"""
-import shutil
+import os, shutil
+from pathlib import Path
 from google.colab import files
 
+RES = Path(os.environ["BEAD_RESULTS"])
 out = Path("/content/thesis_results")
 shutil.rmtree(out, ignore_errors=True)
 out.mkdir()
 shutil.copytree(RES, out / "results", dirs_exist_ok=True)
-figs = Path(os.environ["BEAD_RESULTS"]).parent / "figures"
+figs = RES.parent / "figures"
 if figs.exists():
     shutil.copytree(figs, out / "figures", dirs_exist_ok=True)
 
