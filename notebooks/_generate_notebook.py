@@ -323,12 +323,27 @@ for protocol, methods in m.items():
     print(f"\n=== {protocol} ===")
     for name, r in methods.items():
         o = r["overall"]
-        print(f"{name:11s} AP50 {o['ap50']['mean']:.3f}+-{o['ap50']['std']:.3f}   "
-              f"AP {o['ap']['mean']:.3f}   AJI {o['aji']['mean']:.3f}   "
-              f"PQ {o['pq']['mean']:.3f}   "
-              f"|count err| {o['abs_counting_error']['mean']:5.1f}%   "
-              f"merge {o['merge_rate']['mean']:4.1f}%   "
-              f"split {o['split_rate']['mean']:4.1f}%")
+
+        # Same convention as evaluate.py: a metric the method cannot support
+        # prints as '--'. Faster R-CNN and YOLOv5 predict boxes and no masks, so
+        # evaluate.py leaves AJI, PQ and the merge/split rates unset rather than
+        # zero, and the key is absent from `overall` entirely. Printing 0.000
+        # there would be a fabricated number in the one place this notebook is
+        # read from.
+        def _m(key, fmt=".3f", width=0, o=o):
+            return (format(o[key]["mean"], fmt) if key in o else "--").rjust(width)
+
+        sd = f"+-{o['ap50']['std']:.3f}" if "ap50" in o else " " * 9
+        print(f"{name:11s} [{r['iou_type']:4s}] AP50 {_m('ap50')}{sd}   "
+              f"AP {_m('ap')}   AJI {_m('aji', width=5)}   "
+              f"PQ {_m('pq', width=5)}   "
+              f"|count err| {_m('abs_counting_error', '.1f', 5)}%   "
+              f"merge {_m('merge_rate', '.1f', 4)}%   "
+              f"split {_m('split_rate', '.1f', 4)}%")
+
+print("\n[segm] is mask AP, [bbox] is box AP. The two columns are not "
+      "comparable:\nbox AP is the easier measure, so a box-only method's AP "
+      "must not be read\nas beating a mask method's.")
 """)
 
 code(r"""
