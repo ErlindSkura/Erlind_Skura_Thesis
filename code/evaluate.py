@@ -37,6 +37,11 @@ METHODS = ("classical", "unet", "maskrcnn", "fasterrcnn", "yolov8",
 # and a zero here would read as the second while meaning the first.
 MASK_ONLY_METRICS = ("aji", "pq", "sq", "rq", "merge_rate", "split_rate")
 
+# The only metrics for which pycocotools can emit its -1 "band not populated"
+# sentinel. Every other metric is reported as computed, sign included.
+SENTINEL_KEYS = ("ap", "ap50", "ap75", "ap_small", "ap_medium", "ap_large",
+                 "ar100", "ar_max", "ar_small", "ar_medium", "ar_large")
+
 
 def _load_coco():
     from pycocotools.coco import COCO
@@ -134,10 +139,15 @@ def evaluate_method(coco_gt, records, gt_masks, protocol: str, method: str) -> d
     # not populate -- at 3000x, for instance, no particle is COCO-"small". That
     # sentinel must not be averaged in as if it were a score of -1, so it is
     # dropped; a band absent from every fold stays absent from the summary.
+    # The sentinel only exists for the AP and AR bands, and the test is applied
+    # to those alone: signed counting error is legitimately negative whenever a
+    # method under-counts, and rejecting it as a sentinel would drop exactly the
+    # folds that carry the bias the mean is meant to expose.
     overall = {}
     for k in keys:
-        vals = [f[k] for f in per_fold.values()
-                if f.get(k) is not None and f[k] >= 0]
+        vals = [f[k] for f in per_fold.values() if f.get(k) is not None]
+        if k in SENTINEL_KEYS:
+            vals = [v for v in vals if v >= 0]
         if vals:
             overall[k] = summarise(vals)
             overall[k]["n_folds"] = len(vals)
