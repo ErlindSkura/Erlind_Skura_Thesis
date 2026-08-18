@@ -130,6 +130,38 @@ object centres and follows them to recover instances, and generalises across cel
 types without retraining. Bead defects are approximately ellipsoidal and convex, so
 these shape priors are a plausible fit and are noted here as alternatives.
 
+\subsection{One-Stage Detection}
+\label{sec:onestage}
+
+The two-stage design above spends its first stage proposing regions and its second
+refining them. One-stage detectors remove the proposal step and predict class and
+box directly on a dense grid of locations, which is what makes them fast. YOLO
+\cite{redmon2016yolo} introduced the formulation, and its principal early weakness
+was accuracy on the objects that fall between grid cells -- small, clustered ones.
+Lin et al.\ \cite{lin2020focal} identified the cause as the class imbalance of
+dense prediction, where the overwhelming majority of candidate locations are
+background, and addressed it with a loss that down-weights easy negatives. The
+modern YOLO releases \cite{jocher2023ultralytics} keep the one-stage structure but
+drop the anchor boxes, predicting object extent directly and adding an optional
+branch that emits a mask per detection, which brings the family into the same
+comparison as the region-based instance models.
+
+The reason to test one here is not speed, which this application does not need,
+but the different inductive bias. A region-based model reasons about one object at
+a time inside its own proposal; a one-stage model reasons about the whole frame at
+once and must resolve neighbouring objects through non-maximum suppression rather
+than by construction. For a dataset in which the objects touch, that is a
+substantive difference rather than an implementation detail, and
+Chapter~\ref{ch:results} measures which way it cuts.
+
+Two cautions from the literature carry directly into how the result should be
+read. The family's weakness on small objects is documented rather than
+incidental, and Section~\ref{sec:small_objects} quantifies it against the other
+architectures in this comparison. And a comparison against a region-based model
+varies the backbone, the label assignment, the loss and the augmentation schedule
+together, so it answers whether a different family does better on this data, not
+which component is responsible.
+
 \subsection{Detection of Small Objects}
 \label{sec:small_objects}
 
