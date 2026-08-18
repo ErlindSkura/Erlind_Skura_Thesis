@@ -372,8 +372,11 @@ def table_magnification(m: dict) -> str:
 
 
 def table_physical(m: dict) -> str:
+    # Every method that predicts masks, in the standard order. A box-only method
+    # has no equivalent circular diameter to report, and drops out on the
+    # "gt_median" test rather than being excluded by name.
     rows = []
-    for key in ("classical", "unet", "maskrcnn"):
+    for key in ALL_METHODS:
         r = m["loso"].get(key)
         if not r:
             continue
@@ -421,8 +424,11 @@ def table_folds(m: dict) -> str:
     return f"""\\begin{{table}}[htbp]
     \\centering
     \\caption{{Leave-one-specimen-out fold composition and the bead counts
-    Mask R-CNN produced for each held-out specimen. Counting error is signed:
-    positive means the method over-counted.}}
+    Mask R-CNN produced for each held-out specimen. Counting error is signed --
+    positive means the method over-counted -- and is the mean over the fold's
+    micrographs, not the difference between the two count columns: a fold whose
+    micrographs err in opposite directions can carry a mean of either sign while
+    its totals agree.}}
     \\label{{tab:folds}}
     \\begin{{tabular}}{{llrrrr}}
         \\toprule
@@ -475,7 +481,11 @@ def _outline(gray: np.ndarray, masks, colour) -> np.ndarray:
 
 def fig_qualitative(m: dict, names=("Z6-1", "Z2-2")) -> None:
     records = load_records()
-    available = [k for k in ("classical", "unet", "maskrcnn") if k in m["loso"]]
+    # Every mask-predicting method that ran, in the standard order. A box-only
+    # method has no mask to outline and is excluded by the box_only flag rather
+    # than by name, so adding a method to the pipeline adds it to the figure.
+    available = [k for k in ALL_METHODS
+                 if k in m["loso"] and not m["loso"][k].get("box_only")]
     preds = {}
     for k in available:
         dets, _ = predio.load(PREDICTIONS / "loso" / f"{k}.json")
