@@ -3,19 +3,22 @@
 \begin{table}[htbp]
     \centering
     \caption{Leave-one-specimen-out fold composition and the bead counts
-    Mask R-CNN produced for each held-out specimen. Counting error is signed:
-    positive means the method over-counted.}
+    Mask R-CNN produced for each held-out specimen. Counting error is signed --
+    positive means the method over-counted -- and is the mean over the fold's
+    micrographs, not the difference between the two count columns: a fold whose
+    micrographs err in opposite directions can carry a mean of either sign while
+    its totals agree.}
     \label{tab:folds}
     \begin{tabular}{llrrrr}
         \toprule
         Fold & Test specimen & Micrographs & Annotated & Predicted & Counting error (\%) \\
         \midrule
-        1 & Z2 & 3 & 132 & 129 & -1.1 \\
-        2 & Z4 & 2 & 63 & 39 & -32.0 \\
-        3 & Z5 & 3 & 173 & 95 & -24.2 \\
-        4 & Z6 & 3 & 238 & 280 & 45.5 \\
+        1 & Z2 & 3 & 132 & 144 & -1.4 \\
+        2 & Z4 & 2 & 63 & 57 & 18.2 \\
+        3 & Z5 & 3 & 173 & 136 & 12.1 \\
+        4 & Z6 & 3 & 238 & 299 & 54.8 \\
         \midrule
-        \multicolumn{2}{l}{\textbf{Total}} & \textbf{11} & \textbf{606} & \textbf{543} & \\
+        \multicolumn{2}{l}{\textbf{Total}} & \textbf{11} & \textbf{606} & \textbf{636} & \\
         \bottomrule
     \end{tabular}
 \end{table}

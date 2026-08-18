@@ -25,19 +25,22 @@
 \begin{table}[htbp]
     \centering
     \caption{Leave-one-specimen-out fold composition and the bead counts
-    Mask R-CNN produced for each held-out specimen. Counting error is signed:
-    positive means the method over-counted.}
+    Mask R-CNN produced for each held-out specimen. Counting error is signed --
+    positive means the method over-counted -- and is the mean over the fold's
+    micrographs, not the difference between the two count columns: a fold whose
+    micrographs err in opposite directions can carry a mean of either sign while
+    its totals agree.}
     \label{tab:folds}
     \begin{tabular}{llrrrr}
         \toprule
         Fold & Test specimen & Micrographs & Annotated & Predicted & Counting error (\%) \\
         \midrule
-        1 & Z2 & 3 & 132 & 129 & -1.1 \\
-        2 & Z4 & 2 & 63 & 39 & -32.0 \\
-        3 & Z5 & 3 & 173 & 95 & -24.2 \\
-        4 & Z6 & 3 & 238 & 280 & 45.5 \\
+        1 & Z2 & 3 & 132 & 144 & -1.4 \\
+        2 & Z4 & 2 & 63 & 57 & 18.2 \\
+        3 & Z5 & 3 & 173 & 136 & 12.1 \\
+        4 & Z6 & 3 & 238 & 299 & 54.8 \\
         \midrule
-        \multicolumn{2}{l}{\textbf{Total}} & \textbf{11} & \textbf{606} & \textbf{543} & \\
+        \multicolumn{2}{l}{\textbf{Total}} & \textbf{11} & \textbf{606} & \textbf{636} & \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -50,12 +53,12 @@
         \toprule
         Test specimen & $\mathrm{AP}_{50}$ & $\mathrm{AP}_{75}$ & AP & AJI \\
         \midrule
-        Z2 & 0.358 & 0.059 & 0.122 & 0.337 \\
-        Z4 & 0.277 & 0.095 & 0.137 & 0.273 \\
-        Z5 & 0.232 & 0.060 & 0.101 & 0.300 \\
-        Z6 & 0.259 & 0.061 & 0.094 & 0.351 \\
+        Z2 & 0.331 & 0.068 & 0.113 & 0.267 \\
+        Z4 & 0.356 & 0.120 & 0.159 & 0.392 \\
+        Z5 & 0.260 & 0.044 & 0.103 & 0.290 \\
+        Z6 & 0.275 & 0.049 & 0.086 & 0.329 \\
         \midrule
-        Mean $\pm$ s.d. & 0.282 $\pm$ 0.054 & 0.069 $\pm$ 0.017 & 0.113 $\pm$ 0.020 & 0.315 $\pm$ 0.036 \\
+        Mean $\pm$ s.d. & 0.306 $\pm$ 0.045 & 0.070 $\pm$ 0.035 & 0.115 $\pm$ 0.031 & 0.320 $\pm$ 0.055 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -73,7 +76,8 @@
         \midrule
         Otsu + watershed & 0.001 & 0.067 & 580.4 & 17.4 \\
         U-Net + CC       & 0.152 & 0.305 & 44.2 & 48.7 \\
-        Mask R-CNN       & 0.282 & 0.315 & 35.6 & 22.1 \\
+        Mask R-CNN       & 0.306 & 0.320 & 41.1 & 30.0 \\
+        YOLOv8           & 0.254 & 0.254 & 93.2 & 34.5 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -93,7 +97,9 @@
         \midrule
         Otsu + watershed & 2205 & 606 & 580.4 & 0.001 (mask) \\
         U-Net + CC       & 325 & 606 & 44.2 & 0.152 (mask) \\
-        Mask R-CNN       & 543 & 606 & 35.6 & 0.282 (mask) \\
+        Mask R-CNN       & 636 & 606 & 41.1 & 0.306 (mask) \\
+        Faster R-CNN     & 619 & 606 & 45.9 & 0.279 (box) \\
+        YOLOv8           & 1223 & 606 & 93.2 & 0.254 (mask) \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -112,9 +118,11 @@
         Method & AP & $\mathrm{AP}_{50}$ & $\mathrm{AP}_{75}$ &
         $\mathrm{AP}_S$ & $\mathrm{AP}_M$ & $\mathrm{AP}_L$ \\
         \midrule
-        Otsu + watershed & 0.000 & 0.001 & 0.000 & --- & --- & --- \\
-        U-Net + CC       & 0.049 & 0.152 & 0.031 & --- & --- & --- \\
-        Mask R-CNN       & 0.113 & 0.282 & 0.069 & --- & --- & --- \\
+        Otsu + watershed & 0.000 & 0.001 & 0.000 & 0.000 & 0.001 & 0.000 \\
+        U-Net + CC       & 0.049 & 0.152 & 0.031 & 0.054 & 0.085 & 0.138 \\
+        Mask R-CNN       & 0.115 & 0.306 & 0.070 & 0.116 & 0.158 & 0.168 \\
+        Faster R-CNN     & 0.100 & 0.279 & 0.052 & 0.110 & 0.099 & 0.182 \\
+        YOLOv8           & 0.083 & 0.254 & 0.031 & 0.091 & 0.096 & 0.040 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -129,9 +137,9 @@
         \toprule
         Magnification & Images & Beads & $\mathrm{AP}_{50}$ & AJI & $|$Counting error$|$ (\%) \\
         \midrule
-        $500\times$ & 3 & 325 & 0.234 & 0.255 & 34.3 \\
-        $1000\times$ & 4 & 229 & 0.318 & 0.320 & 45.2 \\
-        $3000\times$ & 4 & 52 & 0.369 & 0.367 & 27.9 \\
+        $500\times$ & 3 & 325 & 0.237 & 0.252 & 32.1 \\
+        $1000\times$ & 4 & 229 & 0.344 & 0.335 & 35.3 \\
+        $3000\times$ & 4 & 52 & 0.404 & 0.338 & 55.9 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -151,7 +159,8 @@
         \midrule
         Otsu + watershed & 2205 & 8.58 & [6.72, 10.99] & 0.105 & 4.9e-05 \\
         U-Net + CC       & 325 & 8.78 & [6.48, 12.09] & 0.154 & 7.5e-05 \\
-        Mask R-CNN       & 543 & 7.70 & [5.75, 9.12] & 0.122 & 3.6e-04 \\
+        Mask R-CNN       & 636 & 7.51 & [5.61, 8.94] & 0.153 & 7.5e-07 \\
+        YOLOv8           & 1223 & 7.81 & [6.05, 10.39] & 0.075 & 2.0e-02 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -167,10 +176,53 @@
         \toprule
         Protocol & $\mathrm{AP}_{50}$ & AJI & Counting error (\%) \\
         \midrule
-        Random split over images & 0.284 & 0.317 & 36.1 \\
-        Leave-one-specimen-out   & 0.282 & 0.315 & 35.6 \\
+        Random split over images & 0.303 & 0.313 & 44.7 \\
+        Leave-one-specimen-out   & 0.306 & 0.320 & 41.1 \\
         \midrule
-        Difference & 0.003 & 0.001 & 0.5 \\
+        Difference & -0.003 & -0.007 & 3.7 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Training cost per fold, averaged over the four leave-one-specimen-out
+    folds. Trained on Tesla T4. Training draws random crops on demand rather than iterating a fixed
+    set, so an epoch is defined here as one crop-equivalent pass over the fold's
+    eight training micrographs. Step times are medians, measured with the device
+    synchronised, and exclude the first step, which carries one-off initialisation.}
+    \label{tab:runtime}
+    \begin{tabular}{lrrrrrr}
+        \toprule
+        Method & Batch & s/step & Steps/epoch & s/epoch & Epochs & Total (min) \\
+        \midrule
+        U-Net + CC       & 8 & 0.488 & 2.9 & 1.7 & 507.2 & 14.5 \\
+        Mask R-CNN       & 4 & 0.405 & 5.8 & 2.5 & 253.5 & 10.5 \\
+        Faster R-CNN     & 4 & 0.350 & 5.8 & 2.2 & 253.5 & 9.3 \\
+        YOLOv8           & 4 & 1.280 & 2.0 & 2.6 & 729.2 & 32.0 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Effect of input preprocessing on Mask R-CNN, under the
+    leave-one-specimen-out protocol. Architecture, schedule, folds and
+    threshold-selection rule are identical across rows, so a difference is
+    attributable to the input transform alone. The second column is the
+    particle-to-mat contrast measured directly on the annotations before any
+    training: the mean grey-level separation divided by the standard deviation of
+    the background, which is the contrast a filter actually has to work with.}
+    \label{tab:preprocessing}
+    \begin{tabular}{lrrrrr}
+        \toprule
+        Preprocessing & Contrast & $\mathrm{AP}_{50}$ & $\mathrm{AP}_S$ &
+        AJI & Counting error (\%) \\
+        \midrule
+        None (baseline)            &  0.55 & 0.306 & 0.116 & 0.320 & 41.1 \\
+        Median filter, 3x3         &  0.61 & 0.289 & 0.108 & 0.320 & 36.4 \\
+        CLAHE                      &  0.37 & 0.262 & 0.094 & 0.290 & 39.3 \\
+        Background subtraction     &  0.59 & 0.263 & 0.104 & 0.307 & 31.3 \\
         \bottomrule
     \end{tabular}
 \end{table}
