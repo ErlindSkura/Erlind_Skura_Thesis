@@ -155,6 +155,48 @@ predicted regions touch, and adding a boundary-aware correction would hide that
 limitation rather than measure it. Whether it costs anything on this data is
 reported as the merge rate in Chapter~\ref{ch:results}.
 
+\subsection{Faster R-CNN}
+
+Faster R-CNN is built from the same torchvision family as Mask R-CNN, from the
+same COCO-pretrained ResNet-50 and feature pyramid weights, with the mask
+predictor absent. The anchor ladder, the detection budget of 400, the region
+proposal limits, the optimiser, the learning-rate schedule and the input-size
+pinning are set by the same code path, so the two models differ in the mask
+branch and in nothing else that was configured.
+
+The consequence for the output format is deliberate. Predictions are written as
+boxes with no segmentation field, and the evaluation module therefore leaves
+every mask-level metric unset for this method rather than filling each box with a
+rectangle to score. "Did not segment" and "segmented badly" are different claims,
+and a zero would report the second while meaning the first.
+
+\subsection{YOLOv8}
+
+YOLOv8 is trained through the Ultralytics package rather than through the
+torchvision path, which imposes two implementation differences that the results
+depend on.
+
+The package expects a dataset on disk in its own layout, so each fold is exported
+to a scratch directory as images plus one label file per image, with the
+instance polygons converted to normalised vertex lists. That export is written to
+local disk rather than to the mounted Drive: the step budget converts to roughly
+750 epochs over eight micrographs, and the package rewrites its
+\texttt{last.pt} checkpoint at the end of every epoch, which over a network
+filesystem would dominate the run time.
+
+The package also drives its own training loop, so the schedule, the augmentation
+and the optimiser are its defaults rather than the ones in
+Table~\ref{tab:training_config}, with three exceptions set explicitly: the input
+size at 1024, mosaic augmentation disabled, and the detection cap at 400. Its
+predictions are converted to the same run-length-encoded mask format every other
+method writes, so the evaluation code sees no difference between them.
+
+Both YOLO families are handled by one script, which selects the family from the
+weights filename and writes each to its own prediction file. Only YOLOv8 is
+reported in Chapter~\ref{ch:results}: the package ships no segmentation variant
+of YOLOv5, so that family would enter the comparison on the box-only path
+alongside Faster R-CNN, and it was not run.
+
 \subsection{Classical Baseline}
 
 The classical pipeline is implemented with scikit-image: CLAHE contrast
@@ -330,7 +372,7 @@ of Chapter~\ref{ch:results} can be regenerated without repeating any training. A
 change to how a result is presented therefore cannot alter the result.
 
 The complete repository, including the notebook, is available at
-\texttt{https://github.com/ErlindSkura/Erlind\_Skura\_Thesis}.
+\url{https://github.com/ErlindSkura/Erlind_Skura_Thesis}.
 
 \section{Summary}
 

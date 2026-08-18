@@ -23,37 +23,67 @@ four specimens, so the specimen rather than the image is the unit of partitionin
 Both findings are reflected in the leave-one-specimen-out protocol adopted
 throughout.
 
-Under that protocol, Mask R-CNN outperforms both baselines on every metric
-measured, reaching $\mathrm{AP}_{50} = 0.282 \pm 0.054$, an Aggregated Jaccard
-Index of $0.315 \pm 0.036$ and a mean absolute counting error of 35.6\%. It does
-not reach the provisional success criterion of $\mathrm{AP}_{50} \geq 0.70$ set in
-Section~\ref{sec:objectives}, and the pipeline as it stands is therefore not a
-replacement for a human operator. Its decomposed Panoptic Quality --
-a Segmentation Quality of 0.720 against a Recognition Quality of 0.487 -- locates
-the deficit precisely: the model delineates well the beads it finds, and finds
-fewer than half of them.
+Under that protocol, Mask R-CNN outperforms the four alternatives on every
+mask-level metric measured, reaching $\mathrm{AP}_{50} = 0.306 \pm 0.045$, an
+Aggregated Jaccard Index of $0.320 \pm 0.055$ and a mean absolute counting error
+of 41.1\%. It does not reach the provisional success criterion of
+$\mathrm{AP}_{50} \geq 0.70$ set in Section~\ref{sec:objectives}, and the pipeline
+as it stands is therefore not a replacement for a human operator. Its decomposed
+Panoptic Quality -- a Segmentation Quality of 0.693 against a Recognition Quality
+of 0.495 -- locates the deficit precisely: the model delineates well the beads it
+finds, and finds about half of them, matching 305 of the 606 annotated beads at an
+overlap of 0.5.
 
-The comparison against the two baselines answers the question the thesis was
-built around. The U-Net semantic baseline merges 48.7\% of ground-truth beads and
-never splits one, and consequently under-counts by 44\% with a systematically
-signed bias. Its mask accuracy is almost identical to Mask R-CNN's, differing by
-0.010 in AJI. What the instance formulation contributes on this data is therefore
-not boundary accuracy but the ability to separate objects that touch -- and the
-annotation itself shows that 8.8\% of bead pixels lie in a region claimed by more
-than one bead, so touching is common rather than exceptional here. The classical
-Otsu-plus-watershed pipeline fails outright at $\mathrm{AP}_{50} = 0.001$, for a
-reason measurable in the micrographs: beads are separated from the surrounding
-mat by only about 20 grey levels.
+The comparison against the four alternatives answers the question the thesis was
+built around, and each of them fails in a way that isolates a different component.
 
-Two findings were not anticipated. Performance improves monotonically with
-magnification, from $\mathrm{AP}_{50} = 0.234$ at $500\times$ to 0.369 at
-$3000\times$, even though the $3000\times$ group holds only 52 of the 606 beads.
-Object size in pixels, not the number of training examples, is the binding
-constraint. And the naive partitioning protocol did not overstate performance:
-a random split over the 11 micrographs gave $\mathrm{AP}_{50} = 0.284$ against
-0.282 for the specimen-wise protocol. It did, however, produce fold-to-fold
-variance twice as large, which is a reason to prefer the specimen-wise protocol
-as the more stable estimator even though no bias was detected.
+The U-Net semantic baseline merges 48.7\% of ground-truth beads and never splits
+one, and consequently under-counts by 44\% with a bias that never changes sign.
+Its mask accuracy is almost identical to Mask R-CNN's, differing by 0.015 in AJI.
+What the instance formulation contributes on this data is therefore not boundary
+accuracy but the ability to separate objects that touch -- and the annotation
+itself shows that 8.8\% of bead pixels lie in a region claimed by more than one
+bead, so touching is common rather than exceptional here.
+
+Faster R-CNN, which is Mask R-CNN with the mask branch removed and everything else
+held fixed, counts almost as well as the full model: 45.9\% against 41.1\%, for
+13\% less training time. The mask branch is therefore not what makes the count
+work. It is what makes the size distribution measurable at all, and since size in
+micrometres is one of the two quantities the laboratory asked for, it is not
+optional here despite its small effect on the count.
+
+YOLOv8 finds more of the real beads than any other method tested -- a recall of
+0.696 against Mask R-CNN's 0.503 -- and reports 1223 objects against 606
+annotated, for a counting error of 93.2\%. A method can be the best detector
+measured and the worst instrument measured, and this one is both.
+
+The classical Otsu-plus-watershed pipeline fails outright at
+$\mathrm{AP}_{50} = 0.001$, for a reason measurable in the micrographs: beads are
+separated from the surrounding mat by only about 20 grey levels.
+
+Three findings were not anticipated. Detection improves monotonically with
+magnification, from $\mathrm{AP}_{50} = 0.237$ at $500\times$ to 0.404 at
+$3000\times$, even though the $3000\times$ group holds only 52 of the 606 beads:
+object size in pixels, not the number of training examples, is the binding
+constraint. Counting runs the other way over the same range, from 32.1\% error to
+55.9\%, for the arithmetic reason that a higher magnification frames fewer objects,
+so the two trends together argue for $1000\times$ rather than for either extreme.
+And the naive partitioning protocol did not overstate performance: a random split
+over the 11 micrographs gave $\mathrm{AP}_{50} = 0.303$ against 0.306 for the
+specimen-wise protocol, a difference in the wrong direction to be a leak. It did,
+however, produce a fold-to-fold spread 2.3 times as wide, which is a reason to
+prefer the specimen-wise protocol as the more stable estimator even though no bias
+was detected.
+
+A fourth result is negative in a narrower sense. None of the three preprocessing
+transforms improved detection over the untransformed input: Mask R-CNN scores
+$\mathrm{AP}_{50} = 0.306$ on raw micrographs against 0.289, 0.263 and 0.262 with
+a median filter, background subtraction and CLAHE. The contrast measured on the
+annotations before any training predicted the harmful transform correctly and the
+helpful ones wrongly. One of the three did improve the laboratory endpoint:
+background subtraction cut counting error from 41.1\% to 31.3\% by nearly halving
+the split rate, which is the clearest evidence in this work that detection
+accuracy and counting accuracy are not the same objective.
 
 \section{Research Contributions}
 
@@ -66,21 +96,30 @@ as the more stable estimator even though no bias was detected.
     \item An evaluation protocol matched to the hierarchical structure of small
     microscopy datasets, in which the specimen is the unit of partitioning,
     together with a measurement of what a naive split actually costs on such a
-    dataset. That measurement returned no difference in the mean and a doubling
-    of the between-fold variance, which is a more useful result to report than
-    the inflation that was expected.
+    dataset. That measurement returned no difference in the mean and a
+    fold-to-fold spread 2.3 times as wide, which is a more useful result to report
+    than the inflation that was expected.
 
-    \item A controlled comparison of instance segmentation, semantic segmentation
-    and classical thresholding on identical micrographs under an identical
-    protocol, which isolates object separation -- rather than mask accuracy -- as
-    what instance-level modelling contributes on this modality, and quantifies it
-    as a 26.6 percentage point difference in merge rate.
+    \item A controlled comparison of five methods -- two-stage instance
+    segmentation, the same detector without its mask branch, a one-stage
+    alternative, semantic segmentation with connected components, and classical
+    thresholding -- on identical micrographs under an identical protocol. It
+    isolates object separation, rather than mask accuracy, as what instance-level
+    modelling contributes on this modality, and quantifies it as an 18.7
+    percentage point difference in merge rate; and it isolates the mask branch as
+    worth 4.8 percentage points of counting error and every mask-level measurement.
+
+    \item A measurement of preprocessing as an experimental factor rather than as
+    a default, on a material whose background carries structure at the same
+    spatial scale as the objects, showing that the transform which most improves
+    the raw particle-to-mat separation is the one that most harms detection.
 
     \item An open implementation covering annotation conversion, scale
     calibration, training, evaluation, and the reporting of bead count, areal
     density and size distribution in physical units, in which every table in
     Chapter~\ref{ch:results} is generated from the stored metrics rather than
-    transcribed.
+    transcribed, and whose complete set of results regenerates in 7.1 hours on a
+    single freely available GPU.
 \end{enumerate}
 
 \section{Limitations}
@@ -89,7 +128,9 @@ The limitations are set out in Section~\ref{sec:limitations} and are summarised 
 of a single material system; only 52 annotated beads at the highest magnification; a
 single annotator, so annotator bias cannot be separated from ground truth; a
 single class, so the distinction between a bead and a locally thickened fibre segment
-rests on the annotator's implicit judgement rather than a stated criterion; and a
+rests on the annotator's implicit judgement rather than a stated criterion; a
+one-stage method that was not given an input budget matched to the region-based
+models, so its accuracy is not a like-for-like architectural comparison; and a
 single training run per configuration at a fixed seed, so every reported figure is
 a point estimate and the reported spreads describe sensitivity to the held-out
 specimen rather than run-to-run variability.
@@ -100,12 +141,21 @@ specimen rather than run-to-run variability.
 \subsection{Short-term}
 
 \textbf{Address the recognition deficit directly.} The measured Segmentation
-Quality of 0.720 against a Recognition Quality of 0.487 says that effort should go
+Quality of 0.693 against a Recognition Quality of 0.495 says that effort should go
 into finding beads rather than into refining masks. The obvious first steps are a
 longer training schedule than the 1500 iterations the available GPU time allowed,
 a hyperparameter search that this work did not perform, and a loss that
 up-weights recall. This is the cheapest available improvement and it is the one
-the evidence points at.
+the evidence points at. The YOLOv8 result gives it a target: some architecture in
+this comparison already reaches a recall of 0.696 on these micrographs, so the
+recognition ceiling is higher than Mask R-CNN's 0.503.
+
+\textbf{Suppress false positives rather than chase recall.} The complementary
+reading of the same comparison is that YOLOv8's recall advantage is bought with
+801 spurious detections. A post-hoc classifier over detections, or the
+score-calibration the two families were shown to differ in, would test whether the
+recall of one method and the precision of the other can be had together. This is
+the cheapest experiment suggested by any result in this work.
 
 \textbf{Extend the specimen count.} The single most valuable addition to the data is
 more specimens rather than more images of the same ones. Four specimens support four
@@ -117,7 +167,7 @@ statistical resolution to detect the difference these four folds could not.
 \textbf{Measure inter-annotator agreement.} Having a second annotator re-delineate a
 subset would convert the largest stated limitation into a measured quantity, and
 would establish the ceiling against which any model should be judged. This matters
-more here than it usually would: at $\mathrm{AP}_{50} = 0.282$ it is not known how
+more here than it usually would: at $\mathrm{AP}_{50} = 0.306$ it is not known how
 much of the shortfall is model error and how much is disagreement a second human
 would also show. A model that matches inter-annotator agreement has reached the
 useful limit of the task.
@@ -138,10 +188,11 @@ natural extension of the comparison.
 
 \textbf{Image at the magnification the measurement needs.} The magnification
 result suggests a change in acquisition practice rather than in modelling: higher
-magnification gives more reliable per-bead measurements at the cost of a smaller
-field, so a mixed protocol -- a wide field for density and several high-power
-fields for size -- may measure both quantities better than any single setting.
-Testing that would require micrographs acquired for the purpose.
+magnification gives more reliable per-bead measurements and a less reliable count,
+because it frames fewer objects, so a mixed protocol -- a wide field for density
+and several high-power fields for size -- may measure both quantities better than
+any single setting. Testing that would require micrographs acquired for the
+purpose.
 
 \textbf{Joint fibre and bead analysis.} Bead quantification is one half of the
 morphological characterisation of a nanofibre mat; fibre diameter distribution is the
@@ -165,26 +216,35 @@ leverage.
 \section{Final Remarks}
 
 The pipeline built here does not yet replace the operator with the mouse. At an
-$\mathrm{AP}_{50}$ of 0.282 and a per-micrograph counting error that ranges from
-$-68\%$ to $+95\%$, no laboratory should report its output as a measurement
-without checking it.
+$\mathrm{AP}_{50}$ of 0.306 and a per-micrograph counting error that ranges from
+$-53\%$ to $+103\%$, no laboratory should report its output on a single field as a
+measurement without checking it.
 
 What the work does establish is where the difficulty actually lies, and that is
 worth more at this stage than a higher number would have been. It is not
-segmentation accuracy: the masks Mask R-CNN produces overlap their targets by 0.72
+segmentation accuracy: the masks Mask R-CNN produces overlap their targets by 0.69
 on average. It is not the size distribution: predicted median bead diameter agrees
-with the manual measurement to 3.4\%. It is detection of small, low-contrast
-objects that touch one another -- and the three measurements that isolate it are
-the recognition-versus-segmentation split of Panoptic Quality, the merge rate that
-separates the instance model from the semantic one, and the magnification trend
-that shows performance rising as objects grow in pixels while the training data
-shrink.
+with the manual measurement to 5.8\%. It is detection of small, low-contrast
+objects that touch one another -- and the measurements that isolate it are the
+recognition-versus-segmentation split of Panoptic Quality, the merge and split
+rates that separate the instance model from the semantic one, and the
+magnification trend that shows detection rising as objects grow in pixels while
+the training data shrink.
 
-Two of the results reported here are negative: the accuracy criterion was not met,
-and the data-leakage effect the protocol was designed to prevent did not appear.
-Both are reported as measured rather than reframed, and the second in particular
-is the more useful finding of the two, because it tells the next person working on
-a dataset of this shape that the expensive precaution matters for the variance of
-their estimate rather than for its mean. A thesis that reported only the
-comfortable half of its results would have given a worse account of what this
-dataset can and cannot support.
+One methodological result deserves to outlive the specific numbers. Across this
+comparison, the ranking of the methods depends on which quantity is asked for.
+YOLOv8 beats the U-Net on average precision and loses to it on counting. The two
+methods with the best agreement to the manual size distribution, by the
+Kolmogorov--Smirnov statistic, are the two that over-count most severely. A study
+of this problem that reported a single accuracy figure would have ranked the
+methods wrongly for the laboratory that has to use them, and would not have been
+able to tell.
+
+Three of the results reported here are negative: the accuracy criterion was not
+met, the data-leakage effect the protocol was designed to prevent did not appear,
+and no preprocessing transform improved detection. All are reported as measured
+rather than reframed, and the second in particular is the more useful finding,
+because it tells the next person working on a dataset of this shape that the
+expensive precaution matters for the variance of their estimate rather than for
+its mean. A thesis that reported only the comfortable half of its results would
+have given a worse account of what this dataset can and cannot support.

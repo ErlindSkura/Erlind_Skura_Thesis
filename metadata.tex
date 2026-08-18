@@ -64,29 +64,34 @@ micrographs of four specimens imaged at 500$\times$, 1000$\times$ and
 beads span a sixfold range in apparent size and the four specimens are the only
 independent units in the data, the evaluation uses leave-one-specimen-out
 cross-validation, which prevents the same specimen from appearing in both the
-training and the test partition. Mask R-CNN is compared against a U-Net semantic
-baseline and against a classical Otsu-plus-watershed pipeline representing current
-manual practice. Beyond detection quality, the pipeline reports the quantities the
+training and the test partition. Mask R-CNN is compared against four alternatives under an
+identical protocol: the same detector with its mask branch removed, a one-stage
+YOLOv8 segmentation model, a U-Net semantic baseline, and a classical
+Otsu-plus-watershed pipeline representing current manual practice. Beyond detection quality, the pipeline reports the quantities the
 laboratory actually uses: bead count, bead areal density, and the bead size
 distribution in physical units, obtained by calibrating each micrograph against
 its burned-in scale bar.
 
-Mask R-CNN outperforms both baselines on every metric measured, reaching
-$\mathrm{AP}_{50} = 0.282 \pm 0.054$ and a mean absolute counting error of 35.6\%,
-and its predicted median bead diameter agrees with the manual measurement to
-3.4\%. It does not reach the provisional accuracy criterion of
+Mask R-CNN outperforms all four alternatives on every mask-level metric
+measured, reaching $\mathrm{AP}_{50} = 0.306 \pm 0.045$ and a mean absolute
+counting error of 41.1\% per micrograph, and its predicted median bead diameter
+agrees with the manual measurement to 5.8\%. It does not reach the provisional accuracy criterion of
 $\mathrm{AP}_{50} \geq 0.70$, so the pipeline supports aggregate estimation and
 triage rather than unattended measurement. The comparison locates what instance
 segmentation contributes: the semantic baseline attains almost identical mask
 accuracy but merges 48.7\% of beads and under-counts by 44\%, so the gain is the
-separation of touching objects rather than boundary precision. Two results run
-against expectation. Performance improves with magnification, from
-$\mathrm{AP}_{50} = 0.234$ at $500\times$ to 0.369 at $3000\times$, despite the
+separation of touching objects rather than boundary precision. Three results run
+against expectation. Detection improves with magnification, from
+$\mathrm{AP}_{50} = 0.237$ at $500\times$ to 0.404 at $3000\times$, despite the
 highest magnification holding only 52 of the 606 beads, identifying object size in
-pixels rather than label scarcity as the binding constraint. And a naive random
-split over images did not overstate performance, although it doubled the
-fold-to-fold variance, so partitioning by specimen is justified here as the more
-stable estimator rather than as a correction for measured optimism.
+pixels rather than label scarcity as the binding constraint, while counting
+degrades over the same range because a narrower field frames fewer objects. A
+naive random split over images did not overstate performance, although it widened
+the fold-to-fold spread by a factor of 2.3, so partitioning by specimen is
+justified here as the more stable estimator rather than as a correction for
+measured optimism. And no preprocessing transform improved detection over the
+untransformed input, although background subtraction reduced counting error to
+31.3\%.
 }
 
 % Keywords (English)
@@ -111,30 +116,35 @@ manualisht. Duke qenë se rruazat shfaqen me përmasa që ndryshojnë deri në g
 herë dhe se katër mostrat janë njësitë e vetme të pavarura në të dhëna,
 vlerësimi kryhet me validim të kryqëzuar duke lënë jashtë një mostër të plotë
 (\emph{leave-one-specimen-out}), çka pengon shfaqjen e së njëjtës mostër njëkohësisht
-në trajnim dhe në testim. Mask R-CNN krahasohet me një model bazë U-Net dhe me një
-metodë klasike Otsu me \emph{watershed}, e cila përfaqëson praktikën aktuale manuale.
+në trajnim dhe në testim. Mask R-CNN krahasohet me katër alternativa nën të njëjtin protokoll: i njëjti
+detektor pa degën e maskave, një model një-fazësh YOLOv8 me segmentim, një model
+bazë U-Net dhe një metodë klasike Otsu me \emph{watershed}, e cila përfaqëson
+praktikën aktuale manuale.
 Përveç cilësisë së detektimit, sistemi raporton madhësitë që laboratori i përdor
 vërtet: numrin e rruazave, dendësinë e tyre për njësi sipërfaqeje dhe shpërndarjen
 e madhësisë në njësi fizike, e llogaritur duke kalibruar secilin imazh me shiritin
 e shkallës të printuar brenda tij.
 
-Mask R-CNN rezulton më i mirë se të dy metodat bazë në çdo tregues të matur, duke
-arritur $\mathrm{AP}_{50} = 0{,}282 \pm 0{,}054$ dhe një gabim mesatar absolut
-numërimi prej 35,6\%, ndërsa diametri mesatar i parashikuar i rruazave përputhet
-me matjen manuale brenda 3,4\%. Nuk arrihet kriteri paraprak i saktësisë
+Mask R-CNN rezulton më i mirë se të katër alternativat në çdo tregues të matur
+në nivel maske, duke arritur $\mathrm{AP}_{50} = 0{,}306 \pm 0{,}045$ dhe një
+gabim mesatar absolut numërimi prej 41,1\% për imazh, ndërsa diametri mesatar i
+parashikuar i rruazave përputhet me matjen manuale brenda 5,8\%. Nuk arrihet kriteri paraprak i saktësisë
 $\mathrm{AP}_{50} \geq 0{,}70$, prandaj sistemi shërben për vlerësim të
 përgjithshëm dhe përzgjedhje paraprake, jo për matje të pambikëqyrur. Krahasimi
 tregon qartë se çfarë sjell segmentimi i instancave: modeli bazë semantik arrin
 saktësi maskash pothuajse identike, por bashkon 48,7\% të rruazave dhe numëron
 44\% më pak, pra përfitimi qëndron në ndarjen e objekteve që preken me njëri-tjetrin
-dhe jo në saktësinë e konturit. Dy rezultate dolën në kundërshtim me pritshmërinë.
-Performanca përmirësohet me zmadhimin, nga $\mathrm{AP}_{50} = 0{,}234$ në
-$500\times$ në 0,369 në $3000\times$, edhe pse zmadhimi më i lartë përmban vetëm 52
+dhe jo në saktësinë e konturit. Tri rezultate dolën në kundërshtim me pritshmërinë.
+Detektimi përmirësohet me zmadhimin, nga $\mathrm{AP}_{50} = 0{,}237$ në
+$500\times$ në 0,404 në $3000\times$, edhe pse zmadhimi më i lartë përmban vetëm 52
 nga 606 rruazat, çka tregon se kufizimi kryesor është madhësia e objektit në
-piksel dhe jo mungesa e etiketave. Gjithashtu, ndarja e rastësishme sipas imazheve
-nuk e mbivlerësoi performancën, por dyfishoi luhatjen mes foldeve, prandaj ndarja
-sipas mostrës justifikohet këtu si vlerësues më i qëndrueshëm dhe jo si korrigjim
-i një optimizmi të matur.
+piksel dhe jo mungesa e etiketave; numërimi përkeqësohet në të njëjtin interval,
+sepse një fushë më e ngushtë përmban më pak objekte. Ndarja e rastësishme sipas
+imazheve nuk e mbivlerësoi performancën, por e zgjeroi luhatjen mes foldeve me
+faktorin 2,3, prandaj ndarja sipas mostrës justifikohet këtu si vlerësues më i
+qëndrueshëm dhe jo si korrigjim i një optimizmi të matur. Së fundi, asnjë
+transformim paraprak i hyrjes nuk e përmirësoi detektimin krahasuar me imazhin e
+patransformuar, megjithëse zbritja e sfondit e uli gabimin e numërimit në 31,3\%.
 }
 
 % Keywords (Albanian)

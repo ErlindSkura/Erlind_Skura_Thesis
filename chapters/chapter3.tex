@@ -372,6 +372,52 @@ Anchor scales are set from the empirical bead size distribution rather than left
 their COCO defaults, since bead defects are far smaller relative to the image than
 typical COCO objects -- the median bead occupies 0.04\% of the image area.
 
+\subsection{Detection Without Segmentation: Faster R-CNN}
+
+The endpoint this work exists to serve is a count, and a count needs only
+detection. Faster R-CNN \cite{ren2015faster} is therefore included as a
+controlled ablation of Mask R-CNN's mask branch: the two share the ResNet-50 and
+feature pyramid backbone, the anchor sizes rescaled to the measured particle
+size, the detection budget, the optimiser, the schedule, the fold definitions and
+the rule that fixes the score threshold on each fold's training partition. The
+mask branch is the only difference between them, so a gap between them is
+attributable to it. The same architecture was applied to counting cells in
+low-contrast micrographs by Uka et al.\ \cite{uka2020faster}.
+
+Its predictions are stored as boxes with no segmentation field, and it is
+consequently absent from every mask-level result: the Aggregated Jaccard Index,
+Panoptic Quality, the merge and split rates and the size distribution are mask
+quantities, and filling each box to manufacture one would score the method on
+something it never predicted. What the ablation can compare is the count, which
+is defined identically for both.
+
+\subsection{A One-Stage Alternative: YOLOv8}
+
+YOLOv8 is included to answer a different question from the ablation above:
+whether a different family of architecture does better on this data. It is not a
+controlled comparison and is not read as one. It shares nothing with the
+region-based models -- a different backbone, an anchor-free head, a different
+label assignment rule, a different loss, and its own augmentation and optimiser
+schedule -- so a difference between it and Mask R-CNN identifies no component as
+responsible. The segmentation variant is used, so it predicts masks and is scored
+on every metric the region-based instance model is.
+
+Three settings depart from the package defaults, each for a measured property of
+this dataset rather than by search. The input size is held at 1024 rather than
+the default 640, since downscaling a $1024 \times 736$ micrograph by 0.625 would
+take the median particle at $500\times$ from 14.3 to 8.9 pixels. Mosaic
+augmentation is disabled, because composing four images and rescaling roughly
+halves apparent object size, and 82.8\% of the particles are already below COCO's
+small-object threshold. The detection cap is raised to 400 for the same reason it
+is raised for the region-based models.
+
+One consequence of the first of those settings has to be stated with the results.
+The package's data pipeline expects a fixed directory of images rather than the
+crops the region-based models draw on demand, so YOLOv8 trains on whole
+micrographs at 1024 pixels where they train on $512 \times 512$ crops. Its
+training cost is therefore not comparable with theirs, and
+Chapter~\ref{ch:results} reports it on that footing.
+
 \subsection{Preprocessing as an Experimental Factor}
 \label{sec:preprocessing_method}
 
