@@ -48,9 +48,17 @@ three views of one specimen. One combination is absent -- specimen Z4 has no
 $500\times$ micrograph -- and specimen Z6 uses the identifier Z6-4 for its
 $3000\times$ view. Table~\ref{tab:dataset} summarises the resulting layout.
 
-% TODO(supervisor): questions D1-D2. What do Z2, Z4, Z5 and Z6 correspond to --
-% which polymer, which solvent, and which spinning parameters differ between them?
-% Confirm also why Z4-1 is missing and why Z6 uses the suffix -4.
+The four specimens are four different production methods, not four repeats of
+one. This is what makes the partitioning choice of Section~\ref{sec:protocol}
+consequential rather than procedural: holding out a specimen holds out a
+production method, so a model that generalises across the folds has generalised
+across the process and not merely across the frame.
+
+% TODO(supervisor): question D1. Which polymer, solvent and spinning parameters
+% distinguish the four production methods? Why is Z4-1 missing, and why does Z6
+% use the suffix -4? The measurement workbook supplied on 2026-08-23 also covers
+% specimens Z1 and Z3, which are not in the annotated set -- confirm whether
+% micrographs of those exist and could be annotated.
 
 \begin{table}[htbp]
     \centering
@@ -107,9 +115,45 @@ of 16. Across the 11 micrographs there are 606 annotated beads. No annotation
 intersects the instrument banner region described in
 Section~\ref{sec:banner}.
 
-The dataset is therefore single-class: the task is to separate beads from everything
-else, and no distinction is drawn between bead subtypes or between beads and
-locally thickened fibre segments.
+The dataset is therefore single-class: the task is to separate beads from
+everything else, and no distinction is drawn between bead subtypes.
+
+\subsubsection{What Counts as an Object}
+\label{sec:object_definition}
+
+A segmentation result is interpretable only against a definition of the thing
+being segmented, so the three rules the annotator worked to are stated here
+rather than left implicit in the polygons. They were specified by the
+supervisor, who directs the group that produced the specimens.
+
+\begin{enumerate}
+    \item \textbf{Circularity.} The embedded zeolite particles -- referred to
+    throughout this thesis as beads, the two terms denoting the same objects --
+    are approximately circular in projection. An object is annotated when it
+    presents as a compact, roughly circular body, and not when it presents as an
+    elongated fibre segment.
+
+    \item \textbf{Swellings count.} Where a fibre thickens locally into such a
+    body, that swelling is annotated as a particle even though the fibre passes
+    through it and continues out the other side. In these micrographs that is the
+    common case rather than the exception, which is why no distinction is drawn
+    between a free particle and a thickened fibre segment: by the specification
+    there is none to draw.
+
+    \item \textbf{A cluster is one object.} Where several small particles lie
+    together, the group is outlined once, as a cluster of a few beads, rather
+    than resolved into its members.
+\end{enumerate}
+
+The third rule carries a consequence that Chapter~\ref{ch:results} has to
+live with. A method that splits a cluster into its visible members is scored as
+having made a split error, even where its output may be closer to the number of
+individual crystals present. What this thesis counts is therefore particle
+sites, and the merge and split rates of Section~\ref{sec:comparison} measure
+agreement with that convention rather than with crystal-level truth. The
+distinction is carried through to the physical quantification of
+Section~\ref{sec:counting} and revisited among the limitations in
+Section~\ref{sec:limitations}.
 
 Two properties of the annotation constrain the implementation and are shown in
 Figures~\ref{fig:bead_examples} and \ref{fig:overlap}. The first is that the same
@@ -142,10 +186,11 @@ decided.
     \label{fig:overlap}
 \end{figure}
 
-% TODO(supervisor): questions D3-D5. Who produced the annotations? Was a second
-% annotator involved, and can a subset be re-annotated so that inter-annotator
-% agreement can be reported? Is the annotation exhaustive, i.e. is every bead in
-% every micrograph outlined, or only the unambiguous ones?
+% TODO(supervisor): questions D3-D4. Who produced the annotations, and was a
+% second annotator involved? Can a subset be re-annotated so that inter-annotator
+% agreement can be reported? (Question D5, what counts as an object, was answered
+% on 2026-08-23 and is now Section~\ref{sec:object_definition}. Whether the
+% annotation is exhaustive still needs confirming.)
 
 \subsection{Physical Calibration}
 \label{sec:calibration}
