@@ -36,14 +36,38 @@ def _device() -> torch.device:
 
 @torch.no_grad()
 def infer(model, records, names, device, score_thresh: float, mask_thresh: float = 0.5,
-          preprocess: str = "none"):
-    """Predict on whole micrographs at native resolution."""
+          preprocess: str = "none", upsample: int = 1):
+    """Predict on whole micrographs, always returned at native resolution."""
     model.eval()
-    set_input_size(model, WORK_H, FULL_W)
-    ds = BeadDataset(records, names, train=False, preprocess=preprocess)
+    ds = BeadDataset(records, names, train=False, preprocess=preprocess,
+                     upsample=upsample)
     out = {}
+
+    if upsample != 1:
+        # A magnified frame does not fit through the model in one pass, so it is
+        # tiled and the predictions mapped back; see upsample.py. Both the input
+        # size and the detection budget become per-tile quantities here, and both
+        # are put back afterwards: a model left with min_size at the tile size
+        # would silently upscale the next whole frame it was given.
+        import upsample as up
+        budget = model.roi_heads.detections_per_img
+        set_input_size(model, up.TILE, up.TILE)
+        model.roi_heads.detections_per_img = up.TILE_DETECTIONS
+        try:
+            for i in range(len(ds)):
+                image, name = ds.frame(i)
+                out[name] = up.predict_tiled(
+                    model, image, device, native_hw=(WORK_H, FULL_W),
+                    factor=upsample, want_masks=True,
+                    score_thresh=score_thresh, mask_thresh=mask_thresh)
+        finally:
+            model.roi_heads.detections_per_img = budget
+            set_input_size(model, WORK_H, FULL_W)
+        return out
+
+    set_input_size(model, WORK_H, FULL_W)
     for i in range(len(ds)):
-        image, target = ds[i]
+        image, name = ds.frame(i)
         with autocast("cuda", enabled=device.type == "cuda"):
             pred = model([image.to(device)])[0]
         keep = pred["scores"] >= score_thresh
@@ -54,16 +78,24 @@ def infer(model, records, names, device, score_thresh: float, mask_thresh: float
         # well. Such a detection has no area, so it cannot be matched or scored;
         # dropping it here keeps masks and scores aligned everywhere downstream.
         kept = [(m, s) for m, s in zip(masks, scores) if m.any()]
-        out[target["name"]] = ([m for m, _ in kept], [s for _, s in kept])
+        out[name] = ([m for m, _ in kept], [s for _, s in kept])
     return out
 
 
 @torch.no_grad()
 def pick_threshold(model, records, train_names, device,
-                   preprocess: str = "none") -> float:
-    """Choose the score threshold on the training partition only."""
+                   preprocess: str = "none", upsample: int = 1):
+    """Choose the score threshold on the training partition only.
+
+    Returns the threshold *and* the training-partition predictions it implies.
+    The predictions are a by-product: choosing the threshold already requires
+    inference over every training image, so returning it costs nothing and is
+    what makes the training-versus-test comparison of Chapter 5 essentially
+    free. Recomputing it later would have doubled the inference bill for a
+    number that was already sitting in memory.
+    """
     raw = infer(model, records, train_names, device, score_thresh=0.05,
-                preprocess=preprocess)
+                preprocess=preprocess, upsample=upsample)
     # Both sides converted to sparse instances once, not on every threshold.
     gt = {n: as_instances(rasterise(records[n].polys, records[n].width,
                                     records[n].height))
@@ -79,18 +111,29 @@ def pick_threshold(model, records, train_names, device,
         mean_f1 = float(np.mean(scores))
         if mean_f1 > best_f1:
             best_f1, best_t = mean_f1, float(t)
-    return best_t
+
+    at_threshold = {}
+    for n in train_names:
+        masks, sc = raw[n]
+        kept = [(m, s) for m, s in zip(masks, sc) if s >= best_t]
+        at_threshold[n] = ([m for m, _ in kept], [s for _, s in kept])
+    return best_t, at_threshold
 
 
 def train_one_fold(records, fold, *, iters, batch, lr, device, seed,
-                   preprocess="none"):
+                   preprocess="none", upsample=1):
     torch.manual_seed(seed)
     model = build_maskrcnn().to(device)
     set_input_size(model, CROP, CROP)   # square crops pass through unresampled
 
     timer = StepTimer(iters, batch, len(fold["train"]))
+    # The crop size is deliberately left alone under magnification. A 512 px crop
+    # of a 3x frame covers a third of the physical area it covered before, which
+    # is the point: the objects in it are three times larger in pixels. Enlarging
+    # the crop to hold the same field of view would undo the factor being tested.
     ds = BeadDataset(records, fold["train"], train=True,
-                     samples=iters * batch, seed=seed, preprocess=preprocess)
+                     samples=iters * batch, seed=seed, preprocess=preprocess,
+                     upsample=upsample)
     loader = DataLoader(ds, batch_size=batch, shuffle=False, num_workers=2,
                         collate_fn=collate, pin_memory=device.type == "cuda")
 
@@ -134,16 +177,23 @@ def train_one_fold(records, fold, *, iters, batch, lr, device, seed,
 
 
 def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
-        only: list[str] | None = None, preprocess: str = "none") -> None:
+        only: list[str] | None = None, preprocess: str = "none",
+        upsample: int = 1) -> None:
     ensure_dirs()
     device = _device()
-    print(f"device: {device}  protocol: {protocol}  iters: {iters}  batch: {batch}")
+    print(f"device: {device}  protocol: {protocol}  iters: {iters}  batch: {batch}"
+          + (f"  upsample: {upsample}x" if upsample != 1 else ""))
     records = load_records()
     all_dets, meta = [], {"protocol": protocol, "method": "maskrcnn",
                           "iters": iters, "batch": batch, "lr": lr, "seed": seed,
                           "thresholds": {}, "device": str(device),
                           "hardware": device_report(), "runtime": {},
-                          "preprocess": preprocess}
+                          "preprocess": preprocess, "upsample": upsample}
+    # Predictions on each fold's own *training* images, kept apart from the test
+    # predictions and tagged with the fold that produced them. A micrograph is in
+    # the training partition of three of the four folds and is predicted
+    # differently by each, so image_id alone no longer identifies a prediction.
+    train_dets: list[dict] = []
 
     selected = folds_mod.load(protocol)
     if only:
@@ -163,15 +213,21 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
               f"test={fold['test']}", flush=True)
         model, timing = train_one_fold(records, fold, iters=iters, batch=batch,
                                        lr=lr, device=device, seed=seed,
-                                       preprocess=preprocess)
+                                       preprocess=preprocess, upsample=upsample)
         meta["runtime"][fold["name"]] = timing
         print(format_summary(fold["name"], timing), flush=True)
-        thr = pick_threshold(model, records, fold["train"], device, preprocess)
+        thr, on_train = pick_threshold(model, records, fold["train"], device,
+                                       preprocess, upsample)
         meta["thresholds"][fold["name"]] = thr
         print(f"    score threshold chosen on training partition: {thr:.2f}")
 
+        for name, (masks, scores) in on_train.items():
+            for det in predio.encode(masks, scores, records[name].image_id):
+                det["fold"] = fold["name"]
+                train_dets.append(det)
+
         preds = infer(model, records, fold["test"], device, score_thresh=thr,
-                      preprocess=preprocess)
+                      preprocess=preprocess, upsample=upsample)
         for name, (masks, scores) in preds.items():
             all_dets += predio.encode(masks, scores, records[name].image_id)
             print(f"    {name}: {len(masks)} predicted / "
@@ -179,14 +235,22 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
         del model
         torch.cuda.empty_cache()
 
-    # Each preprocessing variant is a separate result, so it gets a separate
-    # file. Without this the ablation would overwrite the baseline run.
+    # Each variant is a separate result, so it gets a separate file. Without this
+    # the ablations would overwrite the baseline run.
     name = "maskrcnn" if preprocess == "none" else f"maskrcnn_{preprocess}"
+    if upsample != 1:
+        name += f"_x{upsample}"
     if only:
         name += "_partial"
     out = PREDICTIONS / protocol / f"{name}.json"
     predio.save(out, all_dets, meta)
     print(f"\nwrote {len(all_dets)} detections to {out}")
+
+    if train_dets and not only:
+        out_train = PREDICTIONS / protocol / f"{name}_train.json"
+        predio.save(out_train, train_dets, dict(meta, partition="train"))
+        print(f"wrote {len(train_dets)} training-partition detections to "
+              f"{out_train}")
 
     if only:
         # Report the pilot fold's own numbers, so the decision whether to commit
@@ -215,5 +279,10 @@ if __name__ == "__main__":
                          "results go to a separate file and are not evaluated")
     ap.add_argument("--preprocess", default="none", choices=VARIANTS,
                     help="preprocessing variant; each writes its own file")
+    ap.add_argument("--upsample", type=int, default=1,
+                    help="magnify image and label by this factor with bicubic "
+                         "interpolation before training and inference; writes "
+                         "its own file")
     a = ap.parse_args()
-    run(a.protocol, a.iters, a.batch, a.lr, a.seed, a.folds, a.preprocess)
+    run(a.protocol, a.iters, a.batch, a.lr, a.seed, a.folds, a.preprocess,
+        a.upsample)

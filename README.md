@@ -59,10 +59,11 @@ MANUAL.md                             execution order, and what each run puts in
 | `data_io.py` | annotation loading, rasterisation, augmentation geometry — **no torch** |
 | `datasets.py`, `models.py` | PyTorch dataset; Mask R-CNN, Faster R-CNN and U-Net |
 | `preprocess.py` | the four input variants compared as an experimental factor |
+| `upsample.py` | the 3x bicubic magnification factor, and tiled inference for it |
 | `runtime.py` | step, epoch and wall-clock timing, device-synchronised |
 | `classical.py` | Otsu + watershed baseline |
 | `train_unet.py` | U-Net encoder–decoder, semantic, plus connected components |
-| `train_maskrcnn.py` | Mask R-CNN, and the preprocessing ablation via `--preprocess` |
+| `train_maskrcnn.py` | Mask R-CNN, plus the `--preprocess` and `--upsample` ablations |
 | `train_fasterrcnn.py` | Faster R-CNN, detection only, no mask branch |
 | `train_yolo.py` | both YOLO families, selected by `--weights` |
 | `predio.py` | shared prediction format (COCO RLE) for every method |
@@ -70,7 +71,7 @@ MANUAL.md                             execution order, and what each run puts in
 | `make_tables.py` | generates the Chapter 5 tables and two figures from the metrics |
 | `make_figures.py` | the figures that do not depend on a run, plus the counting figure |
 | `run_all.py` | end to end, with `--smoke` for a fast correctness check |
-| `tests.py` | 20 checks on geometry, annotations and preprocessing invariants |
+| `tests.py` | 31 checks on geometry, annotations, preprocessing and magnification |
 | `dataset_stats.py` | the descriptive figures of Chapter 3 |
 | `make_colab_bundle.py` | packages the 11 originals for upload |
 

@@ -29,7 +29,8 @@ METHOD_LABEL = {"classical": "Otsu + watershed", "unet": "U-Net + CC",
                 "yolov8": "YOLOv8", "yolov5": "YOLOv5u",
                 "maskrcnn_clahe": "Mask R-CNN + CLAHE",
                 "maskrcnn_background": "Mask R-CNN + background subtraction",
-                "maskrcnn_median": "Mask R-CNN + median filter"}
+                "maskrcnn_median": "Mask R-CNN + median filter",
+                "maskrcnn_x3": "Mask R-CNN, $3\\times$ bicubic"}
 
 # The preprocessing ablation: the same architecture, varying only the input
 # transform, so a difference is attributable to preprocessing alone.
@@ -39,6 +40,17 @@ PREPROCESS_NAME = {"maskrcnn": "None (baseline)",
                    "maskrcnn_median": "Median filter, 3x3",
                    "maskrcnn_clahe": "CLAHE",
                    "maskrcnn_background": "Background subtraction"}
+
+# The magnification ablation: the same architecture on the same folds, with the
+# dataset resampled to three times its size, image and label together.
+UPSAMPLE_ABLATION = ("maskrcnn", "maskrcnn_x3")
+UPSAMPLE_NAME = {"maskrcnn": "Native resolution",
+                 "maskrcnn_x3": "$3\\times$ bicubic, image and label"}
+
+# Methods for which a training partition is also scored. Ordered so that the two
+# architectures sharing a backbone sit next to each other, which is what makes
+# the mask-branch comparison readable.
+GENERALISATION_METHODS = ("maskrcnn", "fasterrcnn", "maskrcnn_x3")
 
 # Order used in every comparison table, coarsest method first.
 ALL_METHODS = ("classical", "unet", "maskrcnn", "fasterrcnn", "yolov8", "yolov5")
@@ -295,6 +307,102 @@ def table_preprocessing(m: dict) -> str:
         \\toprule
         Preprocessing & Contrast & $\\mathrm{{AP}}_{{50}}$ & $\\mathrm{{AP}}_S$ &
         AJI & Counting error (\\%) \\\\
+        \\midrule
+{chr(10).join(rows)}
+        \\bottomrule
+    \\end{{tabular}}
+\\end{{table}}"""
+
+
+def table_upsample(m: dict) -> str:
+    """The magnification ablation: one architecture, one protocol, one factor.
+
+    Returns empty when the magnified variant has not been run, so the table does
+    not appear at all rather than appearing with a single row.
+    """
+    rows = []
+    for key in UPSAMPLE_ABLATION:
+        r = m["loso"].get(key)
+        if not r:
+            continue
+        o = r["overall"]
+        rows.append(
+            f"        {UPSAMPLE_NAME[key]:28s} & {_pm(o['ap50'])} & "
+            f"{_f(o['ap_small']['mean']) if 'ap_small' in o else '---'} & "
+            f"{_pm(o['aji'])} & "
+            f"{_f(o['abs_counting_error']['mean'], 1)} \\\\")
+    if len(rows) < 2:
+        return ""
+    return f"""\\begin{{table}}[htbp]
+    \\centering
+    \\caption{{Effect of magnifying the dataset threefold by bicubic
+    interpolation, under the leave-one-specimen-out protocol. The image and its
+    annotation are resampled together, the network is trained and run at the
+    magnified scale, and its predictions are mapped back to native resolution
+    before scoring, so both rows are measured against the same ground truth in
+    the same coordinate frame. Architecture, schedule, folds and
+    threshold-selection rule are identical, so a difference is attributable to
+    the resampling alone. Resampling adds no information; what it changes is the
+    number of pixels the network is given per particle, and
+    Table~\\ref{{tab:coco_size}} shows how few that is at native resolution.}}
+    \\label{{tab:upsample}}
+    \\begin{{tabular}}{{lrrrr}}
+        \\toprule
+        Input scale & $\\mathrm{{AP}}_{{50}}$ & $\\mathrm{{AP}}_S$ & AJI &
+        Counting error (\\%) \\\\
+        \\midrule
+{chr(10).join(rows)}
+        \\bottomrule
+    \\end{{tabular}}
+\\end{{table}}"""
+
+
+def table_generalisation(m: dict) -> str:
+    """Training accuracy against test accuracy, for the methods that report both.
+
+    The gap is the quantity of interest, so it is a column rather than something
+    the reader is left to subtract. Both partitions are scored by the same code
+    on the same ground truth; the only difference is which micrographs the model
+    had already seen.
+    """
+    rows = []
+    for key in GENERALISATION_METHODS:
+        r = m["loso"].get(key)
+        if not r or "generalisation" not in r:
+            continue
+        g = r["generalisation"]
+
+        def cell(metric, nd=3):
+            if metric not in g:
+                return "--- & --- & ---"
+            v = g[metric]
+            return (f"{v['train']:.{nd}f} & {v['test']:.{nd}f} & "
+                    f"{v['gap']:+.{nd}f}")
+
+        rows.append(f"        {METHOD_LABEL[key]:24s} & {cell('ap50')} & "
+                    f"{cell('abs_counting_error', 1)} \\\\")
+    if not rows:
+        return ""
+    return f"""\\begin{{table}}[htbp]
+    \\centering
+    \\caption{{Training accuracy against test accuracy under the
+    leave-one-specimen-out protocol. Each fold's model is scored on the
+    micrographs it was trained on and on the specimen it was held out from, by
+    the same code and against the same annotations. A positive gap means the
+    model does better on what it has seen. The training figure is not a result in
+    its own right -- it is measured on data the optimiser was given -- but the
+    distance between the two columns is: it separates a model that has memorised
+    its training specimens from one that is limited by the difficulty of the
+    task. No pooled figure is given because a micrograph belongs to the training
+    partition of three of the four folds, so pooling would weight specimens by
+    how often they recur.}}
+    \\label{{tab:generalisation}}
+    \\begin{{tabular}}{{lrrrrrr}}
+        \\toprule
+        & \\multicolumn{{3}}{{c}}{{$\\mathrm{{AP}}_{{50}}$}} &
+        \\multicolumn{{3}}{{c}}{{Counting error (\\%)}} \\\\
+        \\cmidrule(lr){{2-4}} \\cmidrule(lr){{5-7}}
+        Method & Train & Test & Gap & Train & Test & Gap \\\\
         \\midrule
 {chr(10).join(rows)}
         \\bottomrule
@@ -601,6 +709,12 @@ def run() -> None:
     prep = table_preprocessing(m)
     if prep:
         tables["preprocessing"] = prep
+    upsampled = table_upsample(m)
+    if upsampled:
+        tables["upsample"] = upsampled
+    gap = table_generalisation(m)
+    if gap:
+        tables["generalisation"] = gap
 
     # One file per table, so Chapter 5 can \input each where it belongs and a
     # re-run updates the chapter in place. The combined file is kept as well,

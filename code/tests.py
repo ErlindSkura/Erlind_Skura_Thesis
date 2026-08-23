@@ -210,6 +210,136 @@ def test_preprocessing(records) -> None:
           pp.BACKGROUND_FOOTPRINT > 214, f"{pp.BACKGROUND_FOOTPRINT} px vs 214 px")
 
 
+# --- magnification factor --------------------------------------------------
+
+
+def test_magnification(records) -> None:
+    """The 3x factor: image and label must stay in the same coordinate frame.
+
+    The failure this guards against is silent. Scaling the image but not the
+    polygons, or scaling them by a rounded factor, produces a perfectly
+    well-formed dataset whose labels sit next to the objects instead of on them,
+    and training on it yields a plausible, worthless model.
+    """
+    print("magnification factor")
+    import upsample as up
+    from PIL import Image
+
+    rec = records["Z2-3"]
+    img = Image.open(rec.path).convert("RGB")
+    big, polys = up.magnify(img, [p.copy() for p in rec.polys], up.FACTOR)
+
+    check("the image grows by exactly the factor",
+          big.size == (img.size[0] * up.FACTOR, img.size[1] * up.FACTOR),
+          f"{img.size} -> {big.size}")
+
+    # Checked against the exact consequences of scaling rather than against the
+    # native mask upsampled, which is itself lossy: nearest-neighbour growth of
+    # an already-quantised boundary disagrees with the true magnified polygon by
+    # a pixel all the way round, so an IoU between the two measures the reference
+    # and not the code. Area and centroid have exact expected values instead.
+    native = rasterise(rec.polys, rec.width, rec.height)
+    scaled = rasterise(polys, rec.width * up.FACTOR, rec.height * up.FACTOR)
+
+    # The area tolerance is not a round number chosen to pass. Rasterising at
+    # native resolution decides a whole ring of boundary pixels by rounding, and
+    # the magnified rasterisation decides the same ring nine times more finely,
+    # so the two areas may legitimately differ by about the fraction of the
+    # particle that ring occupies. That fraction is measured per particle and
+    # used as the bound. A genuine scaling error would miss by a factor, not by
+    # a boundary.
+    from scipy import ndimage
+
+    worst_ratio, worst_centroid = 0.0, 0.0
+    for a, b in zip(native, scaled):
+        area_a, area_b = float(a.sum()), float(b.sum())
+        ring = float(((a > 0) & ~ndimage.binary_erosion(a > 0)).sum())
+        deviation = abs(area_b / (area_a * up.FACTOR ** 2) - 1.0)
+        worst_ratio = max(worst_ratio, deviation / (ring / area_a))
+        ys, xs = np.nonzero(a)
+        yb, xb = np.nonzero(b)
+        worst_centroid = max(worst_centroid,
+                             np.hypot(xb.mean() - xs.mean() * up.FACTOR,
+                                      yb.mean() - ys.mean() * up.FACTOR))
+
+    check("a magnified particle has the factor squared times its area",
+          worst_ratio < 1.0,
+          f"worst deviation is {worst_ratio:.2f} of its own boundary ring")
+    check("a magnified particle sits where the factor puts it",
+          worst_centroid < up.FACTOR,
+          f"worst centroid shift {worst_centroid:.2f} magnified px "
+          f"over {len(native)} particles")
+
+    check("magnification preserves the particle count",
+          len(polys) == len(rec.polys), f"{len(rec.polys)} particles")
+
+
+def test_tile_grid() -> None:
+    """Tiling must cover the frame and must not cut an object in every tile."""
+    print("tiled inference geometry")
+    import upsample as up
+    from config import FULL_W, WORK_H
+
+    width, height = FULL_W * up.FACTOR, WORK_H * up.FACTOR
+    grid = up.tile_grid(width, height)
+
+    covered = np.zeros((height, width), dtype=bool)
+    for x0, y0, x1, y1 in grid:
+        covered[y0:y1, x0:x1] = True
+    check("the tiles cover every pixel of the frame", bool(covered.all()),
+          f"{len(grid)} tiles over {width}x{height}")
+
+    check("every tile origin is a multiple of the factor",
+          all(x0 % up.FACTOR == 0 and y0 % up.FACTOR == 0
+              for x0, y0, _, _ in grid))
+
+    # 214 px is the largest annotated particle; magnified it is 642, and the
+    # overlap has to exceed that or an object could straddle every boundary.
+    check("the overlap exceeds the largest magnified particle",
+          up.OVERLAP > 214 * up.FACTOR,
+          f"{up.OVERLAP} px vs {214 * up.FACTOR} px")
+
+    check("an unusable tile geometry is rejected rather than silently used",
+          _raises(lambda: up.tile_grid(width, height, tile=1000, overlap=768))
+          and _raises(lambda: up.tile_grid(width, height, tile=768, overlap=768)))
+
+
+def test_tile_ownership() -> None:
+    """Each detection is claimed by exactly one tile, and by one that saw it."""
+    print("tile ownership")
+    import upsample as up
+
+    grid = up.tile_grid(3072, 2208)
+    centres = np.array([[(x0 + x1) / 2.0, (y0 + y1) / 2.0]
+                        for x0, y0, x1, y1 in grid], dtype=np.float64)
+
+    rng = np.random.default_rng(0)
+    x0 = rng.uniform(0, 3072 - 120, 600)
+    y0 = rng.uniform(0, 2208 - 120, 600)
+    size = rng.uniform(20, 120, 600)
+    boxes = np.column_stack([x0, y0, x0 + size, y0 + size])
+
+    owners = up._owners(boxes, grid, centres)
+    check("every detection gets exactly one owning tile",
+          owners.shape == (len(boxes),) and owners.min() >= 0
+          and owners.max() < len(grid))
+
+    g = np.asarray(grid, dtype=np.float64)
+    whole = 0
+    for b, o in zip(boxes, owners):
+        t = g[o]
+        if t[0] <= b[0] and t[1] <= b[1] and t[2] >= b[2] and t[3] >= b[3]:
+            whole += 1
+    check("the owning tile contains the whole detection", whole == len(boxes),
+          f"{whole}/{len(boxes)} boxes whole inside their owner")
+
+    # An object at the frame edge is contained by no tile in one axis; it must
+    # still get a single owner rather than being dropped or double-counted.
+    edge = np.array([[3060.0, 2196.0, 3080.0, 2216.0]])
+    check("a detection clipped by the frame still gets one owner",
+          up._owners(edge, grid, centres).shape == (1,))
+
+
 def _raises(fn) -> bool:
     try:
         fn()
@@ -228,6 +358,9 @@ def main() -> int:
     test_yolo_boxes_match_polygons(records)
     test_annotation_invariants(records)
     test_preprocessing(records)
+    test_magnification(records)
+    test_tile_grid()
+    test_tile_ownership()
     print()
     if FAILURES:
         print(f"{len(FAILURES)} check(s) failed: {', '.join(FAILURES)}")

@@ -25,7 +25,7 @@ class BeadDataset(Dataset):
     def __init__(self, records: dict[str, Record], names: list[str], *,
                  train: bool, samples: int = 400, crop: int = CROP,
                  scale_range: tuple[float, float] = SCALE_RANGE, seed: int = SEED,
-                 preprocess: str = "none"):
+                 preprocess: str = "none", upsample: int = 1):
         self.records = [records[n] for n in names]
         self.train = train
         self.samples = samples
@@ -33,7 +33,12 @@ class BeadDataset(Dataset):
         self.scale_range = scale_range
         self.seed = seed
         self.preprocess = preprocess
+        # Magnification of the whole dataset, image and label together. Left at
+        # 1 the class behaves exactly as before; the factor is an experimental
+        # variable and is documented in upsample.py.
+        self.upsample = int(upsample)
         self._cache: dict[str, Image.Image] = {}
+        self._polys: dict[str, list] = {}
 
     def __len__(self) -> int:
         return self.samples if self.train else len(self.records)
@@ -53,8 +58,43 @@ class BeadDataset(Dataset):
             if self.preprocess != "none":
                 import preprocess as pp
                 img = pp.apply(img, self.preprocess)
+            polys = [p.copy() for p in rec.polys]
+            if self.upsample != 1:
+                # After preprocessing, not before: the variants in preprocess.py
+                # are calibrated against measured pixel-scale properties of the
+                # micrograph -- a 3x3 median against shot noise, a footprint that
+                # must exceed the largest object -- and applying them to an image
+                # already magnified would silently change what each one means.
+                import upsample as up
+                img, polys = up.magnify(img, polys, self.upsample)
             self._cache[rec.name] = img
+            self._polys[rec.name] = polys
         return self._cache[rec.name]
+
+    def _source(self, rec: Record) -> tuple[Image.Image, list]:
+        """The image and the annotation that goes with it, in the same frame.
+
+        Returned together because the magnification factor moves both, and a
+        caller that took the image from here and the polygons from the record
+        would silently mix two coordinate frames.
+        """
+        img = self._image(rec)
+        return img, self._polys[rec.name]
+
+    def frame(self, idx: int) -> tuple[torch.Tensor, str]:
+        """The image tensor and its name, without rasterising the annotation.
+
+        Inference needs the pixels and the name; it does not need the ground
+        truth, which the evaluator reads from the annotation file rather than
+        from here. Building it anyway is merely wasteful at native resolution
+        and prohibitive under magnification: at 3x the mask stack for the
+        densest micrograph is over a gigabyte, allocated and discarded per call.
+        """
+        rec = self.records[idx]
+        img, _ = self._source(rec)
+        return torch.from_numpy(
+            np.asarray(img, dtype=np.float32).transpose(2, 0, 1) / 255.0
+        ), rec.name
 
     def __getitem__(self, idx: int):
         if self.train:
@@ -62,12 +102,13 @@ class BeadDataset(Dataset):
             # worker processes the DataLoader uses.
             rng = np.random.default_rng(self.seed * 1_000_003 + idx)
             rec = self.records[int(rng.integers(len(self.records)))]
-            img, polys = augment(self._image(rec), [p.copy() for p in rec.polys],
+            source, ann = self._source(rec)
+            img, polys = augment(source, [p.copy() for p in ann],
                                  rng, crop_size=self.crop,
                                  scale_range=self.scale_range)
         else:
             rec = self.records[idx]
-            img, polys = self._image(rec), rec.polys
+            img, polys = self._source(rec)
 
         w, h = img.size
         masks = rasterise(polys, w, h)

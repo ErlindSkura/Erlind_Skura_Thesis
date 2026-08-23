@@ -70,8 +70,14 @@ def infer(model, records, names, device, score_thresh: float):
 
 
 @torch.no_grad()
-def pick_threshold(model, records, train_names, device) -> float:
-    """Choose the score threshold on the training partition only."""
+def pick_threshold(model, records, train_names, device):
+    """Choose the score threshold on the training partition only.
+
+    Returns the threshold and the training-partition predictions it implies, for
+    the same reason as its counterpart in train_maskrcnn: the inference has
+    already been paid for, and the training-versus-test comparison needs exactly
+    this output.
+    """
     raw = infer(model, records, train_names, device, score_thresh=0.05)
     gt = {n: boxes_from_instances(
               as_instances(rasterise(records[n].polys, records[n].width,
@@ -87,7 +93,14 @@ def pick_threshold(model, records, train_names, device) -> float:
         mean_f1 = float(np.mean(scores))
         if mean_f1 > best_f1:
             best_f1, best_t = mean_f1, float(t)
-    return best_t
+
+    at_threshold = {}
+    for n in train_names:
+        boxes, sc = raw[n]
+        keep = [i for i, s in enumerate(sc) if s >= best_t]
+        at_threshold[n] = (boxes[keep] if len(boxes) else boxes,
+                           [sc[i] for i in keep])
+    return best_t, at_threshold
 
 
 def train_one_fold(records, fold, *, iters, batch, lr, device, seed):
@@ -152,6 +165,10 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
                           "thresholds": {}, "device": str(device),
                           "hardware": device_report(), "runtime": {},
                           "box_only": True}
+    # See the note in train_maskrcnn.run: a micrograph sits in three of the four
+    # training partitions and is predicted differently by each, so these are kept
+    # in their own file and tagged with the fold that produced them.
+    train_dets: list[dict] = []
 
     selected = folds_mod.load(protocol)
     if only:
@@ -171,9 +188,14 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
                                        lr=lr, device=device, seed=seed)
         meta["runtime"][fold["name"]] = timing
         print(format_summary(fold["name"], timing), flush=True)
-        thr = pick_threshold(model, records, fold["train"], device)
+        thr, on_train = pick_threshold(model, records, fold["train"], device)
         meta["thresholds"][fold["name"]] = thr
         print(f"    score threshold chosen on training partition: {thr:.2f}")
+
+        for name, (boxes, scores) in on_train.items():
+            for det in predio.encode_boxes(boxes, scores, records[name].image_id):
+                det["fold"] = fold["name"]
+                train_dets.append(det)
 
         preds = infer(model, records, fold["test"], device, score_thresh=thr)
         for name, (boxes, scores) in preds.items():
@@ -187,6 +209,12 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
     out = PREDICTIONS / protocol / f"{name}.json"
     predio.save(out, all_dets, meta)
     print(f"\nwrote {len(all_dets)} detections to {out}")
+
+    if train_dets and not only:
+        out_train = PREDICTIONS / protocol / f"{name}_train.json"
+        predio.save(out_train, train_dets, dict(meta, partition="train"))
+        print(f"wrote {len(train_dets)} training-partition detections to "
+              f"{out_train}")
 
     if only:
         for fold in selected:

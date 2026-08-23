@@ -79,6 +79,14 @@ python train_maskrcnn.py --protocol loso --iters 1500 --batch 4 --preprocess cla
 python train_maskrcnn.py --protocol loso --iters 1500 --batch 4 --preprocess background
 ```
 
+Ablacioni i zmadhimit — dataseti trefishohet me interpolim bikubik, imazhi dhe
+etiketa bashkë. Inferenca bëhet me pllaka, sepse një kuadër i zmadhuar është
+3072×2208 dhe nuk kalon me një herë; prit rreth dyfishin e kohës për fold:
+
+```bash
+python train_maskrcnn.py --protocol loso --iters 1500 --batch 4 --upsample 3
+```
+
 Kontrolli i rrjedhjes së të dhënave — ndarje e rastësishme në vend të LOSO:
 
 ```bash
@@ -116,6 +124,8 @@ përshkruajnë të dhënat, jo rezultatet.
 | Gabimi i numërimit | `evaluate.py` → `make_tables.py` | `table_counting.tex` |
 | Kohët e ekzekutimit | **ritrajnim** i çdo metode → `evaluate.py` → `make_tables.py` | `table_runtime.tex` |
 | Ablacioni i preprocessing-ut | `train_maskrcnn.py --preprocess` × 3 | `table_preprocessing.tex` |
+| Ablacioni i zmadhimit ×3 | `train_maskrcnn.py --upsample 3` | `table_upsample.tex` |
+| Trajnim kundrejt testim | `train_maskrcnn.py` / `train_fasterrcnn.py` (automatik) | `table_generalisation.tex` |
 | Kostoja e ndarjes naive | `train_maskrcnn.py --protocol random` | `table_leakage.tex` |
 | Sjellja sipas zmadhimit | `evaluate.py` → `make_tables.py` | `table_magnification.tex` |
 | Madhësitë në mikrometra | `evaluate.py` → `make_tables.py` | `table_physical.tex` |
@@ -148,7 +158,8 @@ Këta janë biblioteka. Kodi i tyre ekzekutohet, por përmes importimit:
 |---|---|
 | `config.py` | të gjithë — faktet e datasetit, kalibrimi, shtigjet |
 | `data_io.py` | ngarkimi i anotimeve, rasterizimi, gjeometria e augmentimit |
-| `datasets.py` | çdo trajnim — këtu aplikohet `--preprocess` |
+| `datasets.py` | çdo trajnim — këtu aplikohen `--preprocess` dhe `--upsample` |
+| `upsample.py` | `datasets.py` dhe `train_maskrcnn.py` — faktori ×3 dhe inferenca me pllaka |
 | `models.py` | Mask R-CNN, Faster R-CNN, U-Net |
 | `predio.py` | formati i përbashkët i parashikimeve (COCO RLE) |
 | `metrics.py` | `evaluate.py` — AP, AJI, PQ, numërimi, merge/split |
@@ -180,6 +191,7 @@ ekzekutimi i njërës nuk e prish tjetrën.
 skedar të veçantë dhe **nuk vlerësohen**. E dobishme për të matur kohën para se
 të nisësh të katërt.
 
-**Tabelat e kushtëzuara.** `table_preprocessing`, `table_runtime` dhe
+**Tabelat e kushtëzuara.** `table_preprocessing`, `table_upsample`,
+`table_generalisation`, `table_runtime` dhe
 `table_leakage` gjenerohen vetëm kur ekzistojnë të dhënat përkatëse, dhe
 Kapitulli 5 i merr me `\IfFileExists`. Teza kompilon edhe pa to.
