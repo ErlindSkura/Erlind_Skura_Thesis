@@ -49,7 +49,7 @@ Ngarko `bead_data.zip` në rrënjën e My Drive.
 cd code
 python prepare_data.py    # pret banderolën, LabelMe -> COCO
 python folds.py           # manifestet e folds për të dy protokollet
-python tests.py           # 20 kontrolle; duhen 20/20
+python tests.py           # 31 kontrolle; duhen 31/31
 ```
 
 **Rendi këtu është i detyruar:** `folds.py` lexon `work/coco_gt.json`, të cilin e

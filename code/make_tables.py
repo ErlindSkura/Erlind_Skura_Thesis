@@ -388,8 +388,10 @@ def table_generalisation(m: dict) -> str:
     \\caption{{Training accuracy against test accuracy under the
     leave-one-specimen-out protocol. Each fold's model is scored on the
     micrographs it was trained on and on the specimen it was held out from, by
-    the same code and against the same annotations. A positive gap means the
-    model does better on what it has seen. The training figure is not a result in
+    the same code and against the same annotations. The gap is train minus test
+    in each metric's own units, so the model favours what it has already seen
+    when the $\\mathrm{{AP}}_{{50}}$ gap is positive and when the counting gap is
+    negative. The training figure is not a result in
     its own right -- it is measured on data the optimiser was given -- but the
     distance between the two columns is: it separates a model that has memorised
     its training specimens from one that is limited by the difficulty of the
