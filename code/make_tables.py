@@ -44,8 +44,11 @@ PREPROCESS_NAME = {"maskrcnn": "None (baseline)",
 # The magnification ablation: the same architecture on the same folds, with the
 # dataset resampled to three times its size, image and label together.
 UPSAMPLE_ABLATION = ("maskrcnn", "maskrcnn_x3")
+# The caption already says the image and its annotation are resampled together,
+# so the row label does not repeat it: spelled out in full the row runs past the
+# text block.
 UPSAMPLE_NAME = {"maskrcnn": "Native resolution",
-                 "maskrcnn_x3": "$3\\times$ bicubic, image and label"}
+                 "maskrcnn_x3": "$3\\times$ bicubic"}
 
 # Methods for which a training partition is also scored. Ordered so that the two
 # architectures sharing a backbone sit next to each other, which is what makes

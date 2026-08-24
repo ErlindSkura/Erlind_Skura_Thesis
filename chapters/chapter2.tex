@@ -214,29 +214,62 @@ the empirical basis for preferring a pyramid-based two-stage model here.
 A second body of work studies domains where nearly every object is small, and it is
 these absolute numbers that set a realistic expectation for the present task.
 Table~\ref{tab:small_object_lit} collects studies whose stated aim, in the abstract,
-is the detection or segmentation of small objects. The aerial benchmark AI-TOD-v2
-\cite{xu2022tiny} is the most severe case reported: its objects average 12.7 pixels,
-comparable to the 14.3-pixel median of the $500\times$ micrographs here, and a
-standard Faster R-CNN reaches only 12.8 AP on it, scoring 0.0 on the very-tiny band
-of 2--8 pixels. Even the method proposed in that paper reaches 24.7 AP. Microscopy
-studies report far higher scores, but on a materially easier problem: both
-\cite{monchot2021titanium} and \cite{bals2023nanoparticles} image particles against a
-clean, uniform substrate rather than through an occluding fibre network, and both
-report region-overlap measures such as DICE or IoU rather than an average precision
-that must also assign every instance correctly.
+is the detection or segmentation of small objects, together with the figure this
+thesis reports, so that the two can be read on one scale.
+
+The first row is the plainest statement of the difficulty. Cheng et al.\
+\cite{cheng2023soda} quote, in their abstract, a single detector on a single
+benchmark scored by object size: on COCO test-dev, DyHead reaches 28.3 AP on small
+objects against 50.3 on medium and 57.5 on large. Small objects are not a variant
+of the same problem; they are roughly half as solvable with the same model on the
+same images. The mechanism is geometric, and the same paper quantifies it: a
+six-pixel displacement of a predicted box costs a small object almost all of its
+overlap, dropping IoU from 100\% to 32.5\%, while the same displacement leaves a
+medium or large object at 56.6\% or 71.8\%. A localisation error that is negligible
+for a large object is fatal for a small one.
+
+The dedicated benchmarks bear that out in absolute terms. On SODA-D, whose objects
+average 20.3 pixels, a standard Faster R-CNN reaches 28.9 AP \cite{cheng2023soda}.
+The aerial benchmark AI-TOD-v2 \cite{xu2022tiny} is more severe still: its objects
+average 12.7 pixels, comparable to the 14.3-pixel median of the $500\times$
+micrographs here, and a standard Faster R-CNN reaches only 12.8 AP on it, scoring
+0.0 on the very-tiny band of 2--8 pixels. Even the method proposed in that paper
+reaches 24.7 AP. TinyPerson \cite{yu2020tinyperson} defines its task in the same
+terms, targeting persons under 20 pixels in large-scale images and identifying the
+scale mismatch between pre-training and target data as the cause of the loss --
+which is the same argument the magnified-input experiment of
+Section~\ref{sec:upsample_results} tests directly.
+
+Microscopy studies report far higher scores, but on a materially easier problem:
+both \cite{monchot2021titanium} and \cite{bals2023nanoparticles} image particles
+against a clean, uniform substrate rather than through an occluding fibre network,
+and both report region-overlap measures such as DICE or IoU rather than an average
+precision that must also assign every instance correctly.
 
 \begin{table}[htbp]
     \centering
     \caption{Published results from studies that state small-object detection or
-    segmentation as their aim. The metrics are not mutually comparable -- AP
-    penalises every false positive and every missed instance, whereas DICE and IoU
-    measure region overlap once objects are found -- so the column reports each
-    study's own headline figure under its own name.}
+    segmentation as their aim, with the result of this thesis on the same scale.
+    Average precision is reported on the 0--100 scale used by those papers rather
+    than the 0--1 scale used elsewhere in this work. The metrics are not mutually
+    comparable -- AP penalises every false positive and every missed instance,
+    whereas DICE and IoU measure region overlap once objects are found -- so the
+    column reports each study's own headline figure under its own name.}
     \label{tab:small_object_lit}
     \begin{tabular}{p{3.0cm}p{2.9cm}p{2.4cm}p{3.2cm}}
         \toprule
         Study & Domain and object size & Method & Reported result \\
         \midrule
+        Cheng et al. \cite{cheng2023soda} &
+        COCO test-dev; by size band &
+        DyHead &
+        AP 28.3 small, 50.3 medium, 57.5 large \\
+        \addlinespace
+        Cheng et al. \cite{cheng2023soda} &
+        Driving (SODA-D); mean 20.3 px &
+        Faster R-CNN &
+        AP 28.9, AP$_{50}$ 59.7 \\
+        \addlinespace
         Xu et al. \cite{xu2022tiny} &
         Aerial imagery; mean 12.7 px &
         Faster R-CNN &
@@ -256,9 +289,23 @@ that must also assign every instance correctly.
         Nanoparticles, SEM and STEM &
         UNet++ &
         IoU 0.92, $F_1$ 0.96 \\
+        \addlinespace
+        This work (Ch.~\ref{ch:results}) &
+        Beads in SEM; median 14.3 px at $500\times$ &
+        Mask R-CNN &
+        AP 12.0, AP$_{50}$ 29.8 on masks \\
         \bottomrule
     \end{tabular}
 \end{table}
+
+The last row is why the table is placed here rather than in the results chapter.
+This work's $\mathrm{AP}_{50}$ of 29.8, computed on masks, sits within a tenth of a
+point of what a standard Faster R-CNN achieves on AI-TOD-v2 with boxes, on a
+benchmark built specifically for tiny-object detection and whose mean object size
+is within two pixels of the median here. That coincidence is not a claim of
+equivalence -- the datasets, the metrics and the task differ -- but it does locate
+the result. A figure that looks like a failure against pooled COCO numbers is
+ordinary against the literature that shares this object size.
 
 Two lessons carry into the methodology. The first is that a feature pyramid is not
 optional at this object size, since it is the mechanism by which small objects
@@ -308,13 +355,101 @@ the same four endpoints reported in Chapter~\ref{ch:results}. More recent work
 \cite{polisi2023pruning, polisi2025efficient} examines how far such models can be
 compressed by pruning and quantisation, and how the choice of optimiser and loss
 function affects segmentation quality, which bears on the training configuration
-justified in Section~\ref{sec:training_config}.
+justified in Section~\ref{sec:training_config}. Alongside the segmentation line,
+Polisi Duro et al.\ \cite{polisiduro2025optimizing} pair three pretrained feature
+extractors with six classifiers for cell-type classification, finding the deepest
+extractor and the most flexible classifier best in combination.
 
-% TODO(supervisor): question L1. The reported counting accuracy in
-% \cite{uka2020faster} could not be retrieved without institutional access to
-% IEEE Xplore. Obtain the exact figure and add it to
-% Table~\ref{tab:small_object_lit} as a directly comparable row -- it is the
-% closest published result to this work's counting endpoint.
+Closest of all is Ndreu Halili et al.\ \cite{halili2024nanobeads}, which applies
+deep learning to segmenting nanobeads on nanofibres in electron microscopy images.
+That is the same material system, the same imaging modality and the same object as
+this thesis, and it is the immediate antecedent of the present work rather than a
+parallel to it.
+
+Table~\ref{tab:epoka_results} collects the headline result of each of these where
+it could be obtained.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Reported results of the host institution's prior work on microscopy
+    image analysis. Where the result column is marked \emph{not retrieved}, the
+    publication is behind institutional access and the figure could not be
+    verified; those figures are deliberately left blank rather than approximated,
+    and the rows are retained so that the gap is visible.}
+    \label{tab:epoka_results}
+    \begin{tabular}{p{3.1cm}p{3.2cm}p{2.4cm}p{2.9cm}}
+        \toprule
+        Study & Task and data & Method & Reported result \\
+        \midrule
+        Uka et al. \cite{uka2020faster} &
+        Cell counting, unstained brightfield &
+        Faster R-CNN &
+        \emph{not retrieved} \\
+        \addlinespace
+        Uka et al. \cite{uka2020preprocessing} &
+        Microscopy image classification &
+        CNN, varied preprocessing &
+        \emph{not retrieved} \\
+        \addlinespace
+        Polisi Duro et al. \cite{polisi2024detection} &
+        Detection, segmentation, counting, mean area &
+        U-Net &
+        \emph{not retrieved} \\
+        \addlinespace
+        Polisi et al. \cite{polisi2023pruning} &
+        Cell segmentation under compression &
+        U-Net, pruned and quantised &
+        \emph{not retrieved} \\
+        \addlinespace
+        Polisi et al. \cite{polisi2025efficient} &
+        Cell segmentation; 1088 crops of $256 \times 256$ &
+        U-Net, BCE--Jaccard, RMSprop &
+        IoU 0.90--0.93; precision 0.973; under 1\% lost to quantisation \\
+        \addlinespace
+        Polisi Duro et al. \cite{polisiduro2025optimizing} &
+        Cell-type classification, three lines &
+        VGG16 features, neural network &
+        Accuracy 0.895, $F_1$ 0.896, AUC 0.981 \\
+        \addlinespace
+        Ndreu Halili et al. \cite{halili2024nanobeads} &
+        Nanobeads on nanofibres, electron microscopy &
+        Deep learning segmentation &
+        \emph{not retrieved} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+% TODO(supervisor): question L1. Five rows of Table~\ref{tab:epoka_results} are
+% blank because the publications are behind IEEE or institutional access. Ask the
+% supervisor for the PDFs -- he is an author on all of them -- and fill the rows
+% in. The counting figure in \cite{uka2020faster} and \cite{polisi2024detection}
+% matters most: it is the closest published result to this work's counting
+% endpoint. The abstract of \cite{halili2024nanobeads} matters second: it is the
+% same object in the same modality.
+
+One number in that table needs care, because it is the one a reader will reach for
+first. The segmentation work of this group reports an intersection over union
+between 0.90 and 0.93, against the $\mathrm{AP}_{50}$ of 0.298 reported in
+Chapter~\ref{ch:results}. The two are not on the same scale and cannot be
+subtracted. An IoU of that kind is a \emph{pixel-level} measure over a foreground
+that occupies a large fraction of the frame: it asks how well the predicted region
+overlaps the true region, and it is indifferent to whether two touching objects
+were separated. Average precision is an \emph{instance-level} measure: every object
+must be found, delineated and matched one-to-one, and every spurious detection is
+counted against the score. A model can hold an IoU near 0.9 while merging half the
+objects it finds, which is exactly the failure the U-Net baseline of
+Section~\ref{sec:comparison} exhibits.
+
+% Both figures are computed by code/evaluate.py and stored in results/metrics.json
+% under loso.<method>.pixel_agreement, pooled over the 11 held-out micrographs.
+Measured on the present dataset in the group's own metric, the same U-Net
+architecture reaches a pixel-level DICE of 0.667 and an IoU of 0.501, and Mask
+R-CNN 0.625 and 0.454. The gap against 0.90 is therefore not a gap between this
+work and that one; it is a gap between cells that are large, dense and imaged
+against a controlled background, and beads that are small, sparse and embedded in
+an occluding fibre network. The comparison is reported here so that the two bodies
+of work can be read together, and Section~\ref{sec:small_objects} gives the
+literature-wide version of the same caution.
 
 \subsection{Segmentation from Few Annotated Images}
 
@@ -386,9 +521,11 @@ determine laboratory usefulness alongside conventional segmentation metrics, and
 adopting a specimen-wise protocol whose effect relative to the naive alternative is
 measured rather than assumed.
 
-% TODO(supervisor): question 11 and the framing of this chapter.
-% Add the supervisor's own publications on electrospun nanofibre image analysis
-% here -- ask him directly which papers he wants cited, and do not guess.
+% Question 11 was answered on 2026-08-24: the supervisor asked for all of the
+% group's Epoka publications to be reviewed and their results included, which is
+% now Section~\ref{sec:epoka_prior} and Table~\ref{tab:epoka_results}. What
+% remains is not a framing question but a retrieval one, recorded at the TODO
+% above: five of those seven results are behind institutional access.
 
 \section{Summary}
 

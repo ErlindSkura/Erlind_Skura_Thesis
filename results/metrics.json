@@ -57,7 +57,10 @@
           "merge_rate": 18.309859154929576,
           "split_rate": 0.0,
           "n_merged": 13,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 7041,
+          "pixel_fp": 124207,
+          "pixel_fn": 8078
         },
         "Z2-2": {
           "specimen": "Z2",
@@ -79,7 +82,10 @@
           "merge_rate": 19.607843137254903,
           "split_rate": 0.0,
           "n_merged": 10,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 18884,
+          "pixel_fp": 203444,
+          "pixel_fn": 17411
         },
         "Z2-3": {
           "specimen": "Z2",
@@ -101,7 +107,10 @@
           "merge_rate": 0.0,
           "split_rate": 0.0,
           "n_merged": 0,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 24016,
+          "pixel_fp": 285020,
+          "pixel_fn": 28748
         },
         "Z4-2": {
           "specimen": "Z4",
@@ -123,7 +132,10 @@
           "merge_rate": 6.779661016949152,
           "split_rate": 0.0,
           "n_merged": 4,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 13483,
+          "pixel_fp": 208837,
+          "pixel_fn": 22867
         },
         "Z4-3": {
           "specimen": "Z4",
@@ -145,7 +157,10 @@
           "merge_rate": 50.0,
           "split_rate": 0.0,
           "n_merged": 2,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 7447,
+          "pixel_fp": 275084,
+          "pixel_fn": 5868
         },
         "Z5-1": {
           "specimen": "Z5",
@@ -167,7 +182,10 @@
           "merge_rate": 25.49019607843137,
           "split_rate": 0.9803921568627451,
           "n_merged": 26,
-          "n_split": 1
+          "n_split": 1,
+          "pixel_tp": 8515,
+          "pixel_fp": 91304,
+          "pixel_fn": 14708
         },
         "Z5-2": {
           "specimen": "Z5",
@@ -189,7 +207,10 @@
           "merge_rate": 17.54385964912281,
           "split_rate": 1.7543859649122806,
           "n_merged": 10,
-          "n_split": 1
+          "n_split": 1,
+          "pixel_tp": 14694,
+          "pixel_fp": 108022,
+          "pixel_fn": 20584
         },
         "Z5-3": {
           "specimen": "Z5",
@@ -211,7 +232,10 @@
           "merge_rate": 0.0,
           "split_rate": 0.0,
           "n_merged": 0,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 1582,
+          "pixel_fp": 60970,
+          "pixel_fn": 61870
         },
         "Z6-1": {
           "specimen": "Z6",
@@ -233,7 +257,10 @@
           "merge_rate": 15.789473684210526,
           "split_rate": 0.0,
           "n_merged": 24,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 20710,
+          "pixel_fp": 115066,
+          "pixel_fn": 27426
         },
         "Z6-2": {
           "specimen": "Z6",
@@ -255,7 +282,10 @@
           "merge_rate": 27.419354838709676,
           "split_rate": 0.0,
           "n_merged": 17,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 22011,
+          "pixel_fp": 137440,
+          "pixel_fn": 25388
         },
         "Z6-4": {
           "specimen": "Z6",
@@ -277,7 +307,10 @@
           "merge_rate": 0.0,
           "split_rate": 4.166666666666667,
           "n_merged": 0,
-          "n_split": 1
+          "n_split": 1,
+          "pixel_tp": 31937,
+          "pixel_fp": 56318,
+          "pixel_fn": 116706
         }
       },
       "per_fold": {
@@ -598,8 +631,17 @@
           6.723048071154853,
           10.989128256571652
         ],
-        "ks_statistic": 0.10515480119440515,
+        "ks_statistic": 0.10515480119440512,
         "ks_pvalue": 4.9237493015175014e-05
+      },
+      "pixel_agreement": {
+        "pixel_tp": 170320,
+        "pixel_fp": 1665712,
+        "pixel_fn": 349654,
+        "dice": 0.1445836725373365,
+        "iou": 0.07792519145019002,
+        "precision": 0.09276526770775237,
+        "recall": 0.32755483928042556
       }
     },
     "unet": {
@@ -718,7 +760,10 @@
           "merge_rate": 35.2112676056338,
           "split_rate": 0.0,
           "n_merged": 25,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 7795,
+          "pixel_fp": 3067,
+          "pixel_fn": 7324
         },
         "Z2-2": {
           "specimen": "Z2",
@@ -740,7 +785,10 @@
           "merge_rate": 25.49019607843137,
           "split_rate": 0.0,
           "n_merged": 13,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 13929,
+          "pixel_fp": 5146,
+          "pixel_fn": 22366
         },
         "Z2-3": {
           "specimen": "Z2",
@@ -762,7 +810,10 @@
           "merge_rate": 20.0,
           "split_rate": 0.0,
           "n_merged": 2,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 23997,
+          "pixel_fp": 6526,
+          "pixel_fn": 28767
         },
         "Z4-2": {
           "specimen": "Z4",
@@ -784,7 +835,10 @@
           "merge_rate": 40.67796610169491,
           "split_rate": 0.0,
           "n_merged": 24,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 16737,
+          "pixel_fp": 5302,
+          "pixel_fn": 19613
         },
         "Z4-3": {
           "specimen": "Z4",
@@ -806,7 +860,10 @@
           "merge_rate": 100.0,
           "split_rate": 0.0,
           "n_merged": 4,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 12261,
+          "pixel_fp": 1030,
+          "pixel_fn": 1054
         },
         "Z5-1": {
           "specimen": "Z5",
@@ -828,7 +885,10 @@
           "merge_rate": 26.470588235294116,
           "split_rate": 0.0,
           "n_merged": 27,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 6640,
+          "pixel_fp": 1823,
+          "pixel_fn": 16583
         },
         "Z5-2": {
           "specimen": "Z5",
@@ -850,7 +910,10 @@
           "merge_rate": 38.59649122807018,
           "split_rate": 0.0,
           "n_merged": 22,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 18198,
+          "pixel_fp": 3451,
+          "pixel_fn": 17080
         },
         "Z5-3": {
           "specimen": "Z5",
@@ -872,7 +935,10 @@
           "merge_rate": 71.42857142857143,
           "split_rate": 0.0,
           "n_merged": 10,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 44823,
+          "pixel_fp": 13689,
+          "pixel_fn": 18629
         },
         "Z6-1": {
           "specimen": "Z6",
@@ -894,7 +960,10 @@
           "merge_rate": 36.18421052631579,
           "split_rate": 0.0,
           "n_merged": 55,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 25155,
+          "pixel_fp": 18802,
+          "pixel_fn": 22981
         },
         "Z6-2": {
           "specimen": "Z6",
@@ -916,7 +985,10 @@
           "merge_rate": 58.064516129032256,
           "split_rate": 0.0,
           "n_merged": 36,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 37466,
+          "pixel_fp": 19215,
+          "pixel_fn": 9933
         },
         "Z6-4": {
           "specimen": "Z6",
@@ -938,7 +1010,10 @@
           "merge_rate": 62.5,
           "split_rate": 0.0,
           "n_merged": 15,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 104785,
+          "pixel_fp": 24519,
+          "pixel_fn": 43858
         }
       },
       "per_fold": {
@@ -1259,8 +1334,17 @@
           6.48498812594891,
           12.09173905446479
         ],
-        "ks_statistic": 0.15395277989337394,
+        "ks_statistic": 0.15395277989337397,
         "ks_pvalue": 7.519810130547161e-05
+      },
+      "pixel_agreement": {
+        "pixel_tp": 311786,
+        "pixel_fp": 102570,
+        "pixel_fn": 208188,
+        "dice": 0.6674001691051341,
+        "iou": 0.5008256444524403,
+        "precision": 0.7524592379499754,
+        "recall": 0.5996184424605846
       }
     },
     "maskrcnn": {
@@ -1370,7 +1454,10 @@
           "merge_rate": 15.492957746478874,
           "split_rate": 12.67605633802817,
           "n_merged": 11,
-          "n_split": 9
+          "n_split": 9,
+          "pixel_tp": 7535,
+          "pixel_fp": 5693,
+          "pixel_fn": 7584
         },
         "Z2-2": {
           "specimen": "Z2",
@@ -1392,7 +1479,10 @@
           "merge_rate": 25.49019607843137,
           "split_rate": 7.8431372549019605,
           "n_merged": 13,
-          "n_split": 4
+          "n_split": 4,
+          "pixel_tp": 16954,
+          "pixel_fp": 7630,
+          "pixel_fn": 19341
         },
         "Z2-3": {
           "specimen": "Z2",
@@ -1414,7 +1504,10 @@
           "merge_rate": 30.0,
           "split_rate": 0.0,
           "n_merged": 3,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 23346,
+          "pixel_fp": 10362,
+          "pixel_fn": 29418
         },
         "Z4-2": {
           "specimen": "Z4",
@@ -1436,7 +1529,10 @@
           "merge_rate": 25.423728813559322,
           "split_rate": 11.864406779661017,
           "n_merged": 15,
-          "n_split": 7
+          "n_split": 7,
+          "pixel_tp": 17188,
+          "pixel_fp": 5874,
+          "pixel_fn": 19162
         },
         "Z4-3": {
           "specimen": "Z4",
@@ -1458,7 +1554,10 @@
           "merge_rate": 50.0,
           "split_rate": 0.0,
           "n_merged": 2,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 10567,
+          "pixel_fp": 1129,
+          "pixel_fn": 2748
         },
         "Z5-1": {
           "specimen": "Z5",
@@ -1480,7 +1579,10 @@
           "merge_rate": 1.9607843137254901,
           "split_rate": 1.9607843137254901,
           "n_merged": 2,
-          "n_split": 2
+          "n_split": 2,
+          "pixel_tp": 3962,
+          "pixel_fp": 659,
+          "pixel_fn": 19261
         },
         "Z5-2": {
           "specimen": "Z5",
@@ -1502,7 +1604,10 @@
           "merge_rate": 14.035087719298245,
           "split_rate": 12.280701754385966,
           "n_merged": 8,
-          "n_split": 7
+          "n_split": 7,
+          "pixel_tp": 16057,
+          "pixel_fp": 4286,
+          "pixel_fn": 19221
         },
         "Z5-3": {
           "specimen": "Z5",
@@ -1524,7 +1629,10 @@
           "merge_rate": 42.857142857142854,
           "split_rate": 14.285714285714286,
           "n_merged": 6,
-          "n_split": 2
+          "n_split": 2,
+          "pixel_tp": 40472,
+          "pixel_fp": 28398,
+          "pixel_fn": 22980
         },
         "Z6-1": {
           "specimen": "Z6",
@@ -1546,7 +1654,10 @@
           "merge_rate": 17.105263157894736,
           "split_rate": 13.157894736842104,
           "n_merged": 26,
-          "n_split": 20
+          "n_split": 20,
+          "pixel_tp": 17291,
+          "pixel_fp": 9210,
+          "pixel_fn": 30845
         },
         "Z6-2": {
           "specimen": "Z6",
@@ -1568,7 +1679,10 @@
           "merge_rate": 30.64516129032258,
           "split_rate": 40.32258064516129,
           "n_merged": 19,
-          "n_split": 25
+          "n_split": 25,
+          "pixel_tp": 33708,
+          "pixel_fp": 19711,
+          "pixel_fn": 13691
         },
         "Z6-4": {
           "specimen": "Z6",
@@ -1590,7 +1704,10 @@
           "merge_rate": 8.333333333333334,
           "split_rate": 45.833333333333336,
           "n_merged": 2,
-          "n_split": 11
+          "n_split": 11,
+          "pixel_tp": 101980,
+          "pixel_fp": 23354,
+          "pixel_fn": 46663
         }
       },
       "per_fold": {
@@ -1913,6 +2030,15 @@
         ],
         "ks_statistic": 0.1385081568655086,
         "ks_pvalue": 2.3765272954684483e-05
+      },
+      "pixel_agreement": {
+        "pixel_tp": 289060,
+        "pixel_fp": 116306,
+        "pixel_fn": 230914,
+        "dice": 0.624764951261158,
+        "iou": 0.4542968504432011,
+        "precision": 0.71308397842937,
+        "recall": 0.5559124110051656
       },
       "train": {
         "per_fold": {
@@ -2376,7 +2502,10 @@
           "median_diam_pred": null,
           "tp": null,
           "fp": null,
-          "fn": null
+          "fn": null,
+          "pixel_tp": null,
+          "pixel_fp": null,
+          "pixel_fn": null
         },
         "Z2-2": {
           "specimen": "Z2",
@@ -2397,7 +2526,10 @@
           "median_diam_pred": null,
           "tp": null,
           "fp": null,
-          "fn": null
+          "fn": null,
+          "pixel_tp": null,
+          "pixel_fp": null,
+          "pixel_fn": null
         },
         "Z2-3": {
           "specimen": "Z2",
@@ -2418,7 +2550,10 @@
           "median_diam_pred": null,
           "tp": null,
           "fp": null,
-          "fn": null
+          "fn": null,
+          "pixel_tp": null,
+          "pixel_fp": null,
+          "pixel_fn": null
         },
         "Z4-2": {
           "specimen": "Z4",
@@ -2439,7 +2574,10 @@
           "median_diam_pred": null,
           "tp": null,
           "fp": null,
-          "fn": null
+          "fn": null,
+          "pixel_tp": null,
+          "pixel_fp": null,
+          "pixel_fn": null
         },
         "Z4-3": {
           "specimen": "Z4",
@@ -2460,7 +2598,10 @@
           "median_diam_pred": null,
           "tp": null,
           "fp": null,
-          "fn": null
+          "fn": null,
+          "pixel_tp": null,
+          "pixel_fp": null,
+          "pixel_fn": null
         },
         "Z5-1": {
           "specimen": "Z5",
@@ -2481,7 +2622,10 @@
           "median_diam_pred": null,
           "tp": null,
           "fp": null,
-          "fn": null
+          "fn": null,
+          "pixel_tp": null,
+          "pixel_fp": null,
+          "pixel_fn": null
         },
         "Z5-2": {
           "specimen": "Z5",
@@ -2502,7 +2646,10 @@
           "median_diam_pred": null,
           "tp": null,
           "fp": null,
-          "fn": null
+          "fn": null,
+          "pixel_tp": null,
+          "pixel_fp": null,
+          "pixel_fn": null
         },
         "Z5-3": {
           "specimen": "Z5",
@@ -2523,7 +2670,10 @@
           "median_diam_pred": null,
           "tp": null,
           "fp": null,
-          "fn": null
+          "fn": null,
+          "pixel_tp": null,
+          "pixel_fp": null,
+          "pixel_fn": null
         },
         "Z6-1": {
           "specimen": "Z6",
@@ -2544,7 +2694,10 @@
           "median_diam_pred": null,
           "tp": null,
           "fp": null,
-          "fn": null
+          "fn": null,
+          "pixel_tp": null,
+          "pixel_fp": null,
+          "pixel_fn": null
         },
         "Z6-2": {
           "specimen": "Z6",
@@ -2565,7 +2718,10 @@
           "median_diam_pred": null,
           "tp": null,
           "fp": null,
-          "fn": null
+          "fn": null,
+          "pixel_tp": null,
+          "pixel_fp": null,
+          "pixel_fn": null
         },
         "Z6-4": {
           "specimen": "Z6",
@@ -2586,7 +2742,10 @@
           "median_diam_pred": null,
           "tp": null,
           "fp": null,
-          "fn": null
+          "fn": null,
+          "pixel_tp": null,
+          "pixel_fp": null,
+          "pixel_fn": null
         }
       },
       "per_fold": {
@@ -2872,6 +3031,7 @@
         "n_gt": 0,
         "n_pred": 0
       },
+      "pixel_agreement": null,
       "train": {
         "per_fold": {
           "Z2": {
@@ -3285,7 +3445,10 @@
           "merge_rate": 19.718309859154928,
           "split_rate": 22.535211267605632,
           "n_merged": 14,
-          "n_split": 16
+          "n_split": 16,
+          "pixel_tp": 9098,
+          "pixel_fp": 8438,
+          "pixel_fn": 6021
         },
         "Z2-2": {
           "specimen": "Z2",
@@ -3307,7 +3470,10 @@
           "merge_rate": 23.529411764705884,
           "split_rate": 25.49019607843137,
           "n_merged": 12,
-          "n_split": 13
+          "n_split": 13,
+          "pixel_tp": 16400,
+          "pixel_fp": 6368,
+          "pixel_fn": 19895
         },
         "Z2-3": {
           "specimen": "Z2",
@@ -3329,7 +3495,10 @@
           "merge_rate": 0.0,
           "split_rate": 0.0,
           "n_merged": 0,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 4604,
+          "pixel_fp": 2817,
+          "pixel_fn": 48160
         },
         "Z4-2": {
           "specimen": "Z4",
@@ -3351,7 +3520,10 @@
           "merge_rate": 25.423728813559322,
           "split_rate": 16.949152542372882,
           "n_merged": 15,
-          "n_split": 10
+          "n_split": 10,
+          "pixel_tp": 17220,
+          "pixel_fp": 7531,
+          "pixel_fn": 19130
         },
         "Z4-3": {
           "specimen": "Z4",
@@ -3373,7 +3545,10 @@
           "merge_rate": 100.0,
           "split_rate": 25.0,
           "n_merged": 4,
-          "n_split": 1
+          "n_split": 1,
+          "pixel_tp": 10474,
+          "pixel_fp": 5240,
+          "pixel_fn": 2841
         },
         "Z5-1": {
           "specimen": "Z5",
@@ -3395,7 +3570,10 @@
           "merge_rate": 11.764705882352942,
           "split_rate": 21.568627450980394,
           "n_merged": 12,
-          "n_split": 22
+          "n_split": 22,
+          "pixel_tp": 9309,
+          "pixel_fp": 7714,
+          "pixel_fn": 13914
         },
         "Z5-2": {
           "specimen": "Z5",
@@ -3417,7 +3595,10 @@
           "merge_rate": 17.54385964912281,
           "split_rate": 22.80701754385965,
           "n_merged": 10,
-          "n_split": 13
+          "n_split": 13,
+          "pixel_tp": 19001,
+          "pixel_fp": 8518,
+          "pixel_fn": 16277
         },
         "Z5-3": {
           "specimen": "Z5",
@@ -3439,7 +3620,10 @@
           "merge_rate": 14.285714285714286,
           "split_rate": 50.0,
           "n_merged": 2,
-          "n_split": 7
+          "n_split": 7,
+          "pixel_tp": 39631,
+          "pixel_fp": 10608,
+          "pixel_fn": 23821
         },
         "Z6-1": {
           "specimen": "Z6",
@@ -3461,7 +3645,10 @@
           "merge_rate": 28.94736842105263,
           "split_rate": 33.55263157894737,
           "n_merged": 44,
-          "n_split": 51
+          "n_split": 51,
+          "pixel_tp": 34355,
+          "pixel_fp": 53939,
+          "pixel_fn": 13781
         },
         "Z6-2": {
           "specimen": "Z6",
@@ -3483,7 +3670,10 @@
           "merge_rate": 38.70967741935484,
           "split_rate": 53.225806451612904,
           "n_merged": 24,
-          "n_split": 33
+          "n_split": 33,
+          "pixel_tp": 38607,
+          "pixel_fp": 41611,
+          "pixel_fn": 8792
         },
         "Z6-4": {
           "specimen": "Z6",
@@ -3505,7 +3695,10 @@
           "merge_rate": 70.83333333333333,
           "split_rate": 50.0,
           "n_merged": 17,
-          "n_split": 12
+          "n_split": 12,
+          "pixel_tp": 137442,
+          "pixel_fp": 95243,
+          "pixel_fn": 11201
         }
       },
       "per_fold": {
@@ -3826,8 +4019,17 @@
           6.045869527232395,
           10.386955969932924
         ],
-        "ks_statistic": 0.07501841762262898,
+        "ks_statistic": 0.075018417622629,
         "ks_pvalue": 0.019555997141919773
+      },
+      "pixel_agreement": {
+        "pixel_tp": 336141,
+        "pixel_fp": 248027,
+        "pixel_fn": 183833,
+        "dice": 0.6088727717992795,
+        "iou": 0.43768302385022934,
+        "precision": 0.5754183727968667,
+        "recall": 0.6464573228661433
       }
     },
     "maskrcnn_clahe": {
@@ -3936,7 +4138,10 @@
           "merge_rate": 25.35211267605634,
           "split_rate": 15.492957746478874,
           "n_merged": 18,
-          "n_split": 11
+          "n_split": 11,
+          "pixel_tp": 9882,
+          "pixel_fp": 11736,
+          "pixel_fn": 5237
         },
         "Z2-2": {
           "specimen": "Z2",
@@ -3958,7 +4163,10 @@
           "merge_rate": 41.1764705882353,
           "split_rate": 17.647058823529413,
           "n_merged": 21,
-          "n_split": 9
+          "n_split": 9,
+          "pixel_tp": 20482,
+          "pixel_fp": 10388,
+          "pixel_fn": 15813
         },
         "Z2-3": {
           "specimen": "Z2",
@@ -3980,7 +4188,10 @@
           "merge_rate": 40.0,
           "split_rate": 20.0,
           "n_merged": 4,
-          "n_split": 2
+          "n_split": 2,
+          "pixel_tp": 24307,
+          "pixel_fp": 11909,
+          "pixel_fn": 28457
         },
         "Z4-2": {
           "specimen": "Z4",
@@ -4002,7 +4213,10 @@
           "merge_rate": 28.8135593220339,
           "split_rate": 10.169491525423728,
           "n_merged": 17,
-          "n_split": 6
+          "n_split": 6,
+          "pixel_tp": 19963,
+          "pixel_fp": 9005,
+          "pixel_fn": 16387
         },
         "Z4-3": {
           "specimen": "Z4",
@@ -4024,7 +4238,10 @@
           "merge_rate": 100.0,
           "split_rate": 25.0,
           "n_merged": 4,
-          "n_split": 1
+          "n_split": 1,
+          "pixel_tp": 11919,
+          "pixel_fp": 8158,
+          "pixel_fn": 1396
         },
         "Z5-1": {
           "specimen": "Z5",
@@ -4046,7 +4263,10 @@
           "merge_rate": 14.705882352941176,
           "split_rate": 1.9607843137254901,
           "n_merged": 15,
-          "n_split": 2
+          "n_split": 2,
+          "pixel_tp": 4126,
+          "pixel_fp": 1048,
+          "pixel_fn": 19097
         },
         "Z5-2": {
           "specimen": "Z5",
@@ -4068,7 +4288,10 @@
           "merge_rate": 22.80701754385965,
           "split_rate": 14.035087719298245,
           "n_merged": 13,
-          "n_split": 8
+          "n_split": 8,
+          "pixel_tp": 18635,
+          "pixel_fp": 4692,
+          "pixel_fn": 16643
         },
         "Z5-3": {
           "specimen": "Z5",
@@ -4090,7 +4313,10 @@
           "merge_rate": 42.857142857142854,
           "split_rate": 7.142857142857143,
           "n_merged": 6,
-          "n_split": 1
+          "n_split": 1,
+          "pixel_tp": 25304,
+          "pixel_fp": 59143,
+          "pixel_fn": 38148
         },
         "Z6-1": {
           "specimen": "Z6",
@@ -4112,7 +4338,10 @@
           "merge_rate": 12.5,
           "split_rate": 9.210526315789474,
           "n_merged": 19,
-          "n_split": 14
+          "n_split": 14,
+          "pixel_tp": 15469,
+          "pixel_fp": 6536,
+          "pixel_fn": 32667
         },
         "Z6-2": {
           "specimen": "Z6",
@@ -4134,7 +4363,10 @@
           "merge_rate": 30.64516129032258,
           "split_rate": 29.032258064516128,
           "n_merged": 19,
-          "n_split": 18
+          "n_split": 18,
+          "pixel_tp": 26812,
+          "pixel_fp": 14868,
+          "pixel_fn": 20587
         },
         "Z6-4": {
           "specimen": "Z6",
@@ -4156,7 +4388,10 @@
           "merge_rate": 8.333333333333334,
           "split_rate": 29.166666666666668,
           "n_merged": 2,
-          "n_split": 7
+          "n_split": 7,
+          "pixel_tp": 73509,
+          "pixel_fp": 15191,
+          "pixel_fn": 75134
         }
       },
       "per_fold": {
@@ -4477,8 +4712,17 @@
           6.094431508378972,
           9.21391437342115
         ],
-        "ks_statistic": 0.10800841146061509,
+        "ks_statistic": 0.10800841146061513,
         "ks_pvalue": 0.0019606600142515634
+      },
+      "pixel_agreement": {
+        "pixel_tp": 250408,
+        "pixel_fp": 152674,
+        "pixel_fn": 269566,
+        "dice": 0.5425629647605346,
+        "iou": 0.3722719758328279,
+        "precision": 0.6212333966785915,
+        "recall": 0.48157792505009867
       }
     },
     "maskrcnn_background": {
@@ -4587,7 +4831,10 @@
           "merge_rate": 18.309859154929576,
           "split_rate": 12.67605633802817,
           "n_merged": 13,
-          "n_split": 9
+          "n_split": 9,
+          "pixel_tp": 7755,
+          "pixel_fp": 5752,
+          "pixel_fn": 7364
         },
         "Z2-2": {
           "specimen": "Z2",
@@ -4609,7 +4856,10 @@
           "merge_rate": 11.764705882352942,
           "split_rate": 5.882352941176471,
           "n_merged": 6,
-          "n_split": 3
+          "n_split": 3,
+          "pixel_tp": 12347,
+          "pixel_fp": 5613,
+          "pixel_fn": 23948
         },
         "Z2-3": {
           "specimen": "Z2",
@@ -4631,7 +4881,10 @@
           "merge_rate": 20.0,
           "split_rate": 0.0,
           "n_merged": 2,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 12140,
+          "pixel_fp": 3197,
+          "pixel_fn": 40624
         },
         "Z4-2": {
           "specimen": "Z4",
@@ -4653,7 +4906,10 @@
           "merge_rate": 18.64406779661017,
           "split_rate": 10.169491525423728,
           "n_merged": 11,
-          "n_split": 6
+          "n_split": 6,
+          "pixel_tp": 16922,
+          "pixel_fp": 6037,
+          "pixel_fn": 19428
         },
         "Z4-3": {
           "specimen": "Z4",
@@ -4675,7 +4931,10 @@
           "merge_rate": 100.0,
           "split_rate": 25.0,
           "n_merged": 4,
-          "n_split": 1
+          "n_split": 1,
+          "pixel_tp": 12580,
+          "pixel_fp": 2338,
+          "pixel_fn": 735
         },
         "Z5-1": {
           "specimen": "Z5",
@@ -4697,7 +4956,10 @@
           "merge_rate": 5.882352941176471,
           "split_rate": 1.9607843137254901,
           "n_merged": 6,
-          "n_split": 2
+          "n_split": 2,
+          "pixel_tp": 4317,
+          "pixel_fp": 858,
+          "pixel_fn": 18906
         },
         "Z5-2": {
           "specimen": "Z5",
@@ -4719,7 +4981,10 @@
           "merge_rate": 3.508771929824561,
           "split_rate": 12.280701754385966,
           "n_merged": 2,
-          "n_split": 7
+          "n_split": 7,
+          "pixel_tp": 16368,
+          "pixel_fp": 3418,
+          "pixel_fn": 18910
         },
         "Z5-3": {
           "specimen": "Z5",
@@ -4741,7 +5006,10 @@
           "merge_rate": 42.857142857142854,
           "split_rate": 0.0,
           "n_merged": 6,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 43409,
+          "pixel_fp": 24005,
+          "pixel_fn": 20043
         },
         "Z6-1": {
           "specimen": "Z6",
@@ -4763,7 +5031,10 @@
           "merge_rate": 9.210526315789474,
           "split_rate": 5.921052631578948,
           "n_merged": 14,
-          "n_split": 9
+          "n_split": 9,
+          "pixel_tp": 11895,
+          "pixel_fp": 4780,
+          "pixel_fn": 36241
         },
         "Z6-2": {
           "specimen": "Z6",
@@ -4785,7 +5056,10 @@
           "merge_rate": 19.35483870967742,
           "split_rate": 27.419354838709676,
           "n_merged": 12,
-          "n_split": 17
+          "n_split": 17,
+          "pixel_tp": 22323,
+          "pixel_fp": 10680,
+          "pixel_fn": 25076
         },
         "Z6-4": {
           "specimen": "Z6",
@@ -4807,7 +5081,10 @@
           "merge_rate": 8.333333333333334,
           "split_rate": 20.833333333333332,
           "n_merged": 2,
-          "n_split": 5
+          "n_split": 5,
+          "pixel_tp": 79048,
+          "pixel_fp": 14247,
+          "pixel_fn": 69595
         }
       },
       "per_fold": {
@@ -5130,6 +5407,15 @@
         ],
         "ks_statistic": 0.13262155708658424,
         "ks_pvalue": 0.000239912895894965
+      },
+      "pixel_agreement": {
+        "pixel_tp": 239104,
+        "pixel_fp": 80925,
+        "pixel_fn": 280870,
+        "dice": 0.5692932049052206,
+        "iou": 0.3979104641545418,
+        "precision": 0.7471322911361158,
+        "recall": 0.45983837653421133
       }
     },
     "maskrcnn_median": {
@@ -5238,7 +5524,10 @@
           "merge_rate": 19.718309859154928,
           "split_rate": 16.901408450704224,
           "n_merged": 14,
-          "n_split": 12
+          "n_split": 12,
+          "pixel_tp": 7612,
+          "pixel_fp": 7719,
+          "pixel_fn": 7507
         },
         "Z2-2": {
           "specimen": "Z2",
@@ -5260,7 +5549,10 @@
           "merge_rate": 37.254901960784316,
           "split_rate": 9.803921568627452,
           "n_merged": 19,
-          "n_split": 5
+          "n_split": 5,
+          "pixel_tp": 17870,
+          "pixel_fp": 9874,
+          "pixel_fn": 18425
         },
         "Z2-3": {
           "specimen": "Z2",
@@ -5282,7 +5574,10 @@
           "merge_rate": 20.0,
           "split_rate": 0.0,
           "n_merged": 2,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 28942,
+          "pixel_fp": 5957,
+          "pixel_fn": 23822
         },
         "Z4-2": {
           "specimen": "Z4",
@@ -5304,7 +5599,10 @@
           "merge_rate": 22.033898305084747,
           "split_rate": 13.559322033898304,
           "n_merged": 13,
-          "n_split": 8
+          "n_split": 8,
+          "pixel_tp": 15898,
+          "pixel_fp": 5699,
+          "pixel_fn": 20452
         },
         "Z4-3": {
           "specimen": "Z4",
@@ -5326,7 +5624,10 @@
           "merge_rate": 100.0,
           "split_rate": 25.0,
           "n_merged": 4,
-          "n_split": 1
+          "n_split": 1,
+          "pixel_tp": 13252,
+          "pixel_fp": 12982,
+          "pixel_fn": 63
         },
         "Z5-1": {
           "specimen": "Z5",
@@ -5348,7 +5649,10 @@
           "merge_rate": 8.823529411764707,
           "split_rate": 2.9411764705882355,
           "n_merged": 9,
-          "n_split": 3
+          "n_split": 3,
+          "pixel_tp": 6123,
+          "pixel_fp": 2111,
+          "pixel_fn": 17100
         },
         "Z5-2": {
           "specimen": "Z5",
@@ -5370,7 +5674,10 @@
           "merge_rate": 22.80701754385965,
           "split_rate": 12.280701754385966,
           "n_merged": 13,
-          "n_split": 7
+          "n_split": 7,
+          "pixel_tp": 17900,
+          "pixel_fp": 5487,
+          "pixel_fn": 17378
         },
         "Z5-3": {
           "specimen": "Z5",
@@ -5392,7 +5699,10 @@
           "merge_rate": 35.714285714285715,
           "split_rate": 14.285714285714286,
           "n_merged": 5,
-          "n_split": 2
+          "n_split": 2,
+          "pixel_tp": 40972,
+          "pixel_fp": 22620,
+          "pixel_fn": 22480
         },
         "Z6-1": {
           "specimen": "Z6",
@@ -5414,7 +5724,10 @@
           "merge_rate": 23.68421052631579,
           "split_rate": 11.18421052631579,
           "n_merged": 36,
-          "n_split": 17
+          "n_split": 17,
+          "pixel_tp": 21346,
+          "pixel_fp": 12535,
+          "pixel_fn": 26790
         },
         "Z6-2": {
           "specimen": "Z6",
@@ -5436,7 +5749,10 @@
           "merge_rate": 38.70967741935484,
           "split_rate": 38.70967741935484,
           "n_merged": 24,
-          "n_split": 24
+          "n_split": 24,
+          "pixel_tp": 33856,
+          "pixel_fp": 19051,
+          "pixel_fn": 13543
         },
         "Z6-4": {
           "specimen": "Z6",
@@ -5458,7 +5774,10 @@
           "merge_rate": 8.333333333333334,
           "split_rate": 41.666666666666664,
           "n_merged": 2,
-          "n_split": 10
+          "n_split": 10,
+          "pixel_tp": 102616,
+          "pixel_fp": 24828,
+          "pixel_fn": 46027
         }
       },
       "per_fold": {
@@ -5779,8 +6098,17 @@
           5.9887162028806005,
           9.362023520982385
         ],
-        "ks_statistic": 0.08731502182476313,
+        "ks_statistic": 0.08731502182476314,
         "ks_pvalue": 0.01717806448522011
+      },
+      "pixel_agreement": {
+        "pixel_tp": 306387,
+        "pixel_fp": 128863,
+        "pixel_fn": 213587,
+        "dice": 0.6414977010627874,
+        "iou": 0.47220950716435717,
+        "precision": 0.7039333716255026,
+        "recall": 0.5892352309923189
       }
     },
     "maskrcnn_x3": {
@@ -5890,7 +6218,10 @@
           "merge_rate": 22.535211267605632,
           "split_rate": 22.535211267605632,
           "n_merged": 16,
-          "n_split": 16
+          "n_split": 16,
+          "pixel_tp": 9290,
+          "pixel_fp": 6597,
+          "pixel_fn": 5829
         },
         "Z2-2": {
           "specimen": "Z2",
@@ -5912,7 +6243,10 @@
           "merge_rate": 11.764705882352942,
           "split_rate": 13.72549019607843,
           "n_merged": 6,
-          "n_split": 7
+          "n_split": 7,
+          "pixel_tp": 20079,
+          "pixel_fp": 7041,
+          "pixel_fn": 16216
         },
         "Z2-3": {
           "specimen": "Z2",
@@ -5934,7 +6268,10 @@
           "merge_rate": 50.0,
           "split_rate": 10.0,
           "n_merged": 5,
-          "n_split": 1
+          "n_split": 1,
+          "pixel_tp": 26208,
+          "pixel_fp": 13639,
+          "pixel_fn": 26556
         },
         "Z4-2": {
           "specimen": "Z4",
@@ -5956,7 +6293,10 @@
           "merge_rate": 15.254237288135593,
           "split_rate": 11.864406779661017,
           "n_merged": 9,
-          "n_split": 7
+          "n_split": 7,
+          "pixel_tp": 16871,
+          "pixel_fp": 5637,
+          "pixel_fn": 19479
         },
         "Z4-3": {
           "specimen": "Z4",
@@ -5978,7 +6318,10 @@
           "merge_rate": 50.0,
           "split_rate": 0.0,
           "n_merged": 2,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 9569,
+          "pixel_fp": 400,
+          "pixel_fn": 3746
         },
         "Z5-1": {
           "specimen": "Z5",
@@ -6000,7 +6343,10 @@
           "merge_rate": 20.58823529411765,
           "split_rate": 12.745098039215685,
           "n_merged": 21,
-          "n_split": 13
+          "n_split": 13,
+          "pixel_tp": 10959,
+          "pixel_fp": 4889,
+          "pixel_fn": 12264
         },
         "Z5-2": {
           "specimen": "Z5",
@@ -6022,7 +6368,10 @@
           "merge_rate": 33.333333333333336,
           "split_rate": 19.29824561403509,
           "n_merged": 19,
-          "n_split": 11
+          "n_split": 11,
+          "pixel_tp": 26522,
+          "pixel_fp": 7134,
+          "pixel_fn": 8756
         },
         "Z5-3": {
           "specimen": "Z5",
@@ -6044,7 +6393,10 @@
           "merge_rate": 21.428571428571427,
           "split_rate": 14.285714285714286,
           "n_merged": 3,
-          "n_split": 2
+          "n_split": 2,
+          "pixel_tp": 47414,
+          "pixel_fp": 17528,
+          "pixel_fn": 16038
         },
         "Z6-1": {
           "specimen": "Z6",
@@ -6066,7 +6418,10 @@
           "merge_rate": 27.63157894736842,
           "split_rate": 17.105263157894736,
           "n_merged": 42,
-          "n_split": 26
+          "n_split": 26,
+          "pixel_tp": 24069,
+          "pixel_fp": 11352,
+          "pixel_fn": 24067
         },
         "Z6-2": {
           "specimen": "Z6",
@@ -6088,7 +6443,10 @@
           "merge_rate": 40.32258064516129,
           "split_rate": 33.87096774193548,
           "n_merged": 25,
-          "n_split": 21
+          "n_split": 21,
+          "pixel_tp": 41063,
+          "pixel_fp": 26464,
+          "pixel_fn": 6336
         },
         "Z6-4": {
           "specimen": "Z6",
@@ -6110,7 +6468,10 @@
           "merge_rate": 20.833333333333332,
           "split_rate": 54.166666666666664,
           "n_merged": 5,
-          "n_split": 13
+          "n_split": 13,
+          "pixel_tp": 92339,
+          "pixel_fp": 49551,
+          "pixel_fn": 56304
         }
       },
       "per_fold": {
@@ -6431,8 +6792,17 @@
           6.1565817928846664,
           9.675564867607116
         ],
-        "ks_statistic": 0.13929358196365543,
+        "ks_statistic": 0.13929358196365538,
         "ks_pvalue": 2.535212783434797e-06
+      },
+      "pixel_agreement": {
+        "pixel_tp": 324383,
+        "pixel_fp": 150232,
+        "pixel_fn": 195591,
+        "dice": 0.6522955713365018,
+        "iou": 0.4840049178909171,
+        "precision": 0.6834655457581408,
+        "recall": 0.6238446537711501
       },
       "train": {
         "per_fold": {
@@ -6899,7 +7269,10 @@
           "merge_rate": 23.943661971830984,
           "split_rate": 16.901408450704224,
           "n_merged": 17,
-          "n_split": 12
+          "n_split": 12,
+          "pixel_tp": 9321,
+          "pixel_fp": 12176,
+          "pixel_fn": 5798
         },
         "Z2-2": {
           "specimen": "Z2",
@@ -6921,7 +7294,10 @@
           "merge_rate": 27.45098039215686,
           "split_rate": 9.803921568627452,
           "n_merged": 14,
-          "n_split": 5
+          "n_split": 5,
+          "pixel_tp": 21304,
+          "pixel_fp": 11543,
+          "pixel_fn": 14991
         },
         "Z2-3": {
           "specimen": "Z2",
@@ -6943,7 +7319,10 @@
           "merge_rate": 50.0,
           "split_rate": 30.0,
           "n_merged": 5,
-          "n_split": 3
+          "n_split": 3,
+          "pixel_tp": 35500,
+          "pixel_fp": 14974,
+          "pixel_fn": 17264
         },
         "Z4-2": {
           "specimen": "Z4",
@@ -6965,7 +7344,10 @@
           "merge_rate": 20.338983050847457,
           "split_rate": 13.559322033898304,
           "n_merged": 12,
-          "n_split": 8
+          "n_split": 8,
+          "pixel_tp": 17480,
+          "pixel_fp": 6903,
+          "pixel_fn": 18870
         },
         "Z4-3": {
           "specimen": "Z4",
@@ -6987,7 +7369,10 @@
           "merge_rate": 50.0,
           "split_rate": 0.0,
           "n_merged": 2,
-          "n_split": 0
+          "n_split": 0,
+          "pixel_tp": 10771,
+          "pixel_fp": 5043,
+          "pixel_fn": 2544
         },
         "Z5-1": {
           "specimen": "Z5",
@@ -7009,7 +7394,10 @@
           "merge_rate": 5.882352941176471,
           "split_rate": 5.882352941176471,
           "n_merged": 6,
-          "n_split": 6
+          "n_split": 6,
+          "pixel_tp": 5630,
+          "pixel_fp": 1988,
+          "pixel_fn": 17593
         },
         "Z5-2": {
           "specimen": "Z5",
@@ -7031,7 +7419,10 @@
           "merge_rate": 19.29824561403509,
           "split_rate": 15.789473684210526,
           "n_merged": 11,
-          "n_split": 9
+          "n_split": 9,
+          "pixel_tp": 21385,
+          "pixel_fp": 6879,
+          "pixel_fn": 13893
         },
         "Z5-3": {
           "specimen": "Z5",
@@ -7053,7 +7444,10 @@
           "merge_rate": 42.857142857142854,
           "split_rate": 14.285714285714286,
           "n_merged": 6,
-          "n_split": 2
+          "n_split": 2,
+          "pixel_tp": 42178,
+          "pixel_fp": 33657,
+          "pixel_fn": 21274
         },
         "Z6-1": {
           "specimen": "Z6",
@@ -7075,7 +7469,10 @@
           "merge_rate": 15.789473684210526,
           "split_rate": 13.157894736842104,
           "n_merged": 24,
-          "n_split": 20
+          "n_split": 20,
+          "pixel_tp": 18462,
+          "pixel_fp": 9561,
+          "pixel_fn": 29674
         },
         "Z6-2": {
           "specimen": "Z6",
@@ -7097,7 +7494,10 @@
           "merge_rate": 32.25806451612903,
           "split_rate": 33.87096774193548,
           "n_merged": 20,
-          "n_split": 21
+          "n_split": 21,
+          "pixel_tp": 31184,
+          "pixel_fp": 15169,
+          "pixel_fn": 16215
         },
         "Z6-4": {
           "specimen": "Z6",
@@ -7119,7 +7519,10 @@
           "merge_rate": 16.666666666666668,
           "split_rate": 54.166666666666664,
           "n_merged": 4,
-          "n_split": 13
+          "n_split": 13,
+          "pixel_tp": 116258,
+          "pixel_fp": 38712,
+          "pixel_fn": 32385
         }
       },
       "per_fold": {
@@ -7440,8 +7843,17 @@
           5.737328333694965,
           9.21391437342115
         ],
-        "ks_statistic": 0.12943075329430753,
+        "ks_statistic": 0.1294307532943075,
         "ks_pvalue": 3.661404619900204e-05
+      },
+      "pixel_agreement": {
+        "pixel_tp": 329473,
+        "pixel_fp": 156605,
+        "pixel_fn": 190501,
+        "dice": 0.6549820486416209,
+        "iou": 0.48696900140264476,
+        "precision": 0.6778191977419262,
+        "recall": 0.6336336047571609
       }
     }
   }

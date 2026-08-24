@@ -190,6 +190,49 @@ def merge_split(gts, preds, thr: float = 0.5) -> dict:
             "n_merged": len(merged), "n_split": n_split}
 
 
+def pixel_confusion(gts, preds) -> dict:
+    """Pixel counts of the predicted foreground against the annotated one.
+
+    Instance identity is deliberately discarded here: both sides are flattened to
+    a single binary mask before comparison. That is the whole point of the
+    measure. Semantic segmentation work -- including the prior work this thesis
+    is compared against in Section 2.4 -- reports DICE and IoU computed this way,
+    and those numbers cannot be read against an average precision, which requires
+    every object to be matched one-to-one. Reporting both from the same
+    predictions is the only way to make the two literatures commensurable.
+
+    Counts rather than ratios are returned, because a DICE pooled over eleven
+    micrographs is not the mean of eleven per-micrograph DICEs, and the caller
+    that pools them needs the numerators and denominators to do it correctly.
+    """
+    gts, preds = as_instances(gts), as_instances(preds)
+    shape = (gts or preds)[0].shape if (gts or preds) else None
+    if shape is None:
+        return {"pixel_tp": 0, "pixel_fp": 0, "pixel_fn": 0}
+    g = np.zeros(shape, dtype=bool)
+    for i in gts:
+        g |= i.full()
+    p = np.zeros(shape, dtype=bool)
+    for i in preds:
+        p |= i.full()
+    return {"pixel_tp": int((g & p).sum()),
+            "pixel_fp": int((~g & p).sum()),
+            "pixel_fn": int((g & ~p).sum())}
+
+
+def pooled_pixel_agreement(tp: int, fp: int, fn: int) -> dict:
+    """DICE, IoU, precision and recall from pooled pixel counts."""
+    denom_dice = 2 * tp + fp + fn
+    denom_iou = tp + fp + fn
+    return {
+        "pixel_tp": int(tp), "pixel_fp": int(fp), "pixel_fn": int(fn),
+        "dice": 2.0 * tp / denom_dice if denom_dice else 0.0,
+        "iou": float(tp) / denom_iou if denom_iou else 0.0,
+        "precision": float(tp) / (tp + fp) if tp + fp else 0.0,
+        "recall": float(tp) / (tp + fn) if tp + fn else 0.0,
+    }
+
+
 def f1_at_iou(gts, preds, thr: float = 0.5) -> float:
     gts, preds = as_instances(gts), as_instances(preds)
     if len(gts) == 0 or len(preds) == 0:

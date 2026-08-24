@@ -23,7 +23,7 @@ from data_io import load_records, rasterise
 from metrics import (
     aji, areal_density, as_instances, boxes_from_instances, coco_ap,
     counting_error, equivalent_diameters, f1_at_iou_boxes, merge_split,
-    panoptic_quality, summarise,
+    panoptic_quality, pixel_confusion, pooled_pixel_agreement, summarise,
 )
 
 # The preprocessing variants are separate entries because each is a separate
@@ -77,7 +77,8 @@ def score_image(rec, gts, dets, box_only: bool) -> tuple[dict, np.ndarray, np.nd
         row["f1_box"] = f1_at_iou_boxes(gt_boxes, pred_boxes)
         row.update(dict.fromkeys(MASK_ONLY_METRICS, None))
         row.update({"median_diam_gt": None, "median_diam_pred": None,
-                    "tp": None, "fp": None, "fn": None})
+                    "tp": None, "fp": None, "fn": None,
+                    "pixel_tp": None, "pixel_fp": None, "pixel_fn": None})
         return row, empty, empty
 
     # Converted once here; every metric below then reuses the same objects.
@@ -93,6 +94,7 @@ def score_image(rec, gts, dets, box_only: bool) -> tuple[dict, np.ndarray, np.nd
     row["median_diam_pred"] = float(np.median(d_pred)) if len(d_pred) else 0.0
     row.update(panoptic_quality(gts, pred_masks))
     row.update(merge_split(gts, pred_masks))
+    row.update(pixel_confusion(gts, pred_masks))
     return row, d_gt, d_pred
 
 
@@ -271,11 +273,20 @@ def evaluate_method(coco_gt, records, gt_masks, protocol: str, method: str) -> d
             "ks_statistic": float(ks.statistic), "ks_pvalue": float(ks.pvalue),
         })
 
+    # Pooled from counts rather than averaged over micrographs, so that a frame
+    # with four particles does not weigh as much as one with 152.
+    pixels = None
+    if not box_only:
+        pixels = pooled_pixel_agreement(
+            *(sum(r[k] for r in per_image.values())
+              for k in ("pixel_tp", "pixel_fp", "pixel_fn")))
+
     all_ids = sorted(r.image_id for r in records.values())
     return {"meta": meta, "per_image": per_image, "per_fold": per_fold,
             "overall": overall, "box_only": box_only, "iou_type": iou_type,
             "pooled_ap": coco_ap(coco_gt, detections, all_ids, iou_type=iou_type),
-            "by_magnification": by_mag, "size_agreement": size}
+            "by_magnification": by_mag, "size_agreement": size,
+            "pixel_agreement": pixels}
 
 
 def run(protocols=("loso", "random"), force: bool = False) -> dict:
