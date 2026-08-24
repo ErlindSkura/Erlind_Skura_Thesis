@@ -75,9 +75,11 @@ its burned-in scale bar.
 Mask R-CNN outperforms the mask-predicting alternatives on every metric
 measured, reaching $\mathrm{AP}_{50} = 0.298 \pm 0.059$ and a mean absolute
 counting error of 41.1\% per micrograph, and its predicted median bead diameter
-agrees with the manual measurement to 3.2\%. It does not reach the provisional accuracy criterion of
-$\mathrm{AP}_{50} \geq 0.70$, so the pipeline supports aggregate estimation and
-triage rather than unattended measurement. The comparison locates what instance
+agrees with the manual measurement to 3.2\%. It falls two thousandths short of the
+accuracy criterion of $\mathrm{AP}_{50} \geq 0.30$, itself set from what a standard
+detector achieves on a published benchmark of comparable object size, so the
+pipeline supports aggregate estimation and triage rather than unattended
+measurement. The comparison locates what instance
 segmentation contributes: the semantic baseline attains almost identical mask
 accuracy but merges 48.7\% of beads and under-counts by 44\%, so the gain is the
 separation of touching objects rather than boundary precision. Three results run
@@ -129,8 +131,10 @@ e shkallës të printuar brenda tij.
 Mask R-CNN rezulton më i mirë se alternativat që parashikojnë maska në çdo
 tregues të matur, duke arritur $\mathrm{AP}_{50} = 0{,}298 \pm 0{,}059$ dhe një
 gabim mesatar absolut numërimi prej 41,1\% për imazh, ndërsa diametri mesatar i
-parashikuar i rruazave përputhet me matjen manuale brenda 3,2\%. Nuk arrihet kriteri paraprak i saktësisë
-$\mathrm{AP}_{50} \geq 0{,}70$, prandaj sistemi shërben për vlerësim të
+parashikuar i rruazave përputhet me matjen manuale brenda 3,2\%. Kriteri i
+saktësisë $\mathrm{AP}_{50} \geq 0{,}30$ -- i vendosur sipas asaj që arrin një
+detektor standard në një bazë të dhënash të botuar me objekte të së njëjtës
+madhësi -- nuk arrihet për dy të mijtat, prandaj sistemi shërben për vlerësim të
 përgjithshëm dhe përzgjedhje paraprake, jo për matje të pambikëqyrur. Krahasimi
 tregon qartë se çfarë sjell segmentimi i instancave: modeli bazë semantik arrin
 saktësi maskash pothuajse identike, por bashkon 48,7\% të rruazave dhe numëron

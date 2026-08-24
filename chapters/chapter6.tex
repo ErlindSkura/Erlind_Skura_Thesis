@@ -26,8 +26,10 @@ throughout.
 Under that protocol, Mask R-CNN outperforms the mask-predicting alternatives on
 every metric measured, reaching $\mathrm{AP}_{50} = 0.298 \pm 0.059$, an
 Aggregated Jaccard Index of $0.325 \pm 0.053$ and a mean absolute counting error
-of 41.1\%. It does not reach the provisional success criterion of
-$\mathrm{AP}_{50} \geq 0.70$ set in Section~\ref{sec:objectives}, and the pipeline
+of 41.1\%. It reaches neither success criterion of Section~\ref{sec:objectives}:
+it is far short of the $\mathrm{AP}_{50} \geq 0.70$ recorded at the proposal stage,
+and two thousandths short of the 0.30 that a standard detector reaches on a
+published benchmark matched to this object size. The pipeline
 as it stands is therefore not a replacement for a human operator. Its decomposed
 Panoptic Quality -- a Segmentation Quality of 0.719 against a Recognition Quality
 of 0.486 -- locates the deficit precisely: the model delineates well the beads it

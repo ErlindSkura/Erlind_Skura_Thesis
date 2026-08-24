@@ -360,11 +360,13 @@ Polisi Duro et al.\ \cite{polisiduro2025optimizing} pair three pretrained featur
 extractors with six classifiers for cell-type classification, finding the deepest
 extractor and the most flexible classifier best in combination.
 
-Closest of all is Ndreu Halili et al.\ \cite{halili2024nanobeads}, which applies
-deep learning to segmenting nanobeads on nanofibres in electron microscopy images.
-That is the same material system, the same imaging modality and the same object as
-this thesis, and it is the immediate antecedent of the present work rather than a
-parallel to it.
+% TODO(supervisor): a conference abstract by this group on segmenting nanobeads
+% on nanofibres -- the same object in the same modality as this thesis, and so
+% its closest antecedent -- was reported by a literature search and attributed to
+% NanoBalkan 2024. It could not be confirmed: the conference's full abstract book
+% was searched and contains no such abstract and none of those authors. Ask the
+% supervisor whether the work exists and where, then cite it here. Until then
+% nothing is claimed about it.
 
 Table~\ref{tab:epoka_results} collects the headline result of each of these where
 it could be obtained.
@@ -372,10 +374,13 @@ it could be obtained.
 \begin{table}[htbp]
     \centering
     \caption{Reported results of the host institution's prior work on microscopy
-    image analysis. Where the result column is marked \emph{not retrieved}, the
-    publication is behind institutional access and the figure could not be
-    verified; those figures are deliberately left blank rather than approximated,
-    and the rows are retained so that the gap is visible.}
+    image analysis. Two rows are taken from the papers themselves, which are open
+    access. Two report what the indexed abstract states and no more, because the
+    full text is behind institutional access. One is marked \emph{not retrieved}:
+    neither its text nor an indexed abstract could be obtained. The counting
+    accuracy in the first row is a secondary attribution, taken from a paper that
+    cites it. No figure here is approximated, and the incomplete rows are kept so
+    that the gap is visible rather than hidden.}
     \label{tab:epoka_results}
     \begin{tabular}{p{3.1cm}p{3.2cm}p{2.4cm}p{2.9cm}}
         \toprule
@@ -384,12 +389,12 @@ it could be obtained.
         Uka et al. \cite{uka2020faster} &
         Cell counting, unstained brightfield &
         Faster R-CNN &
-        \emph{not retrieved} \\
+        Counting accuracy 78\%, as reported by \cite{ferreira2024classification} \\
         \addlinespace
         Uka et al. \cite{uka2020preprocessing} &
-        Microscopy image classification &
+        Classification of 20\,000 cell images; test sets of 300 to 8000 &
         CNN, varied preprocessing &
-        \emph{not retrieved} \\
+        No headline figure in the abstract \\
         \addlinespace
         Polisi Duro et al. \cite{polisi2024detection} &
         Detection, segmentation, counting, mean area &
@@ -397,9 +402,9 @@ it could be obtained.
         \emph{not retrieved} \\
         \addlinespace
         Polisi et al. \cite{polisi2023pruning} &
-        Cell segmentation under compression &
-        U-Net, pruned and quantised &
-        \emph{not retrieved} \\
+        Cell segmentation from small input data &
+        U-Net, augmented, pruned and quantised &
+        No numeric result in the abstract \\
         \addlinespace
         Polisi et al. \cite{polisi2025efficient} &
         Cell segmentation; 1088 crops of $256 \times 256$ &
@@ -411,21 +416,17 @@ it could be obtained.
         VGG16 features, neural network &
         Accuracy 0.895, $F_1$ 0.896, AUC 0.981 \\
         \addlinespace
-        Ndreu Halili et al. \cite{halili2024nanobeads} &
-        Nanobeads on nanofibres, electron microscopy &
-        Deep learning segmentation &
-        \emph{not retrieved} \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-% TODO(supervisor): question L1. Five rows of Table~\ref{tab:epoka_results} are
-% blank because the publications are behind IEEE or institutional access. Ask the
-% supervisor for the PDFs -- he is an author on all of them -- and fill the rows
-% in. The counting figure in \cite{uka2020faster} and \cite{polisi2024detection}
-% matters most: it is the closest published result to this work's counting
-% endpoint. The abstract of \cite{halili2024nanobeads} matters second: it is the
-% same object in the same modality.
+% TODO(supervisor): question L1. Three rows of Table~\ref{tab:epoka_results} are
+% still incomplete because the full texts are behind IEEE or institutional
+% access. Ask the supervisor for the PDFs -- he is an author on all of them.
+% \cite{polisi2024detection} matters most, since it reports a counting endpoint
+% and is the closest published comparison to Section~\ref{sec:counting}. The 78%
+% for \cite{uka2020faster} is currently taken from a paper that cites it, not
+% from the paper itself; confirm it against the original.
 
 One number in that table needs care, because it is the one a reader will reach for
 first. The segmentation work of this group reports an intersection over union
