@@ -31,6 +31,7 @@ import torch
 from torch.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
 
+import checkpoints as ckpt
 import folds as folds_mod
 import predio
 from config import CROP, PREDICTIONS, SEED, WORK_H, FULL_W, ensure_dirs
@@ -155,7 +156,7 @@ def train_one_fold(records, fold, *, iters, batch, lr, device, seed):
 
 
 def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
-        only: list[str] | None = None) -> None:
+        only: list[str] | None = None, save_checkpoints: bool = True) -> None:
     ensure_dirs()
     device = _device()
     print(f"device: {device}  protocol: {protocol}  iters: {iters}  batch: {batch}")
@@ -191,6 +192,11 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
         thr, on_train = pick_threshold(model, records, fold["train"], device)
         meta["thresholds"][fold["name"]] = thr
         print(f"    score threshold chosen on training partition: {thr:.2f}")
+
+        ckpt.save(model, "fasterrcnn", protocol, fold["name"], threshold=thr,
+                  enabled=save_checkpoints,
+                  extra={"iters": iters, "batch": batch, "lr": lr, "seed": seed,
+                         "box_only": True})
 
         for name, (boxes, scores) in on_train.items():
             for det in predio.encode_boxes(boxes, scores, records[name].image_id):
@@ -238,5 +244,10 @@ if __name__ == "__main__":
     ap.add_argument("--folds", nargs="*", default=None,
                     help="run only these folds (e.g. --folds Z2) as a pilot; "
                          "results go to a separate file and are not evaluated")
+    ap.add_argument("--no-checkpoints", action="store_true",
+                    help="do not save the trained weights; saves about 650 MB "
+                         "per four-fold run, at the cost of having to retrain "
+                         "before any later question about the models")
     a = ap.parse_args()
-    run(a.protocol, a.iters, a.batch, a.lr, a.seed, a.folds)
+    run(a.protocol, a.iters, a.batch, a.lr, a.seed, a.folds,
+        save_checkpoints=not a.no_checkpoints)

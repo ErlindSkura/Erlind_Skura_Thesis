@@ -340,6 +340,46 @@ def test_tile_ownership() -> None:
           up._owners(edge, grid, centres).shape == (1,))
 
 
+def test_checkpoint_paths() -> None:
+    """Save and load must agree on where a fold's weights live.
+
+    The two are written in different modules and called from four training
+    scripts. If the naming ever drifts, nothing fails loudly: training still
+    writes a file and the loader simply reports that no checkpoint exists, which
+    reads as "you never saved it" rather than "the name changed". That failure
+    would only surface months later, when the weights are actually wanted.
+    """
+    print("checkpoint naming")
+    import json
+
+    import checkpoints as ckpt
+    from config import CHECKPOINTS
+
+    check("the variant is part of the name",
+          ckpt.name("maskrcnn_x3", "loso", "Z4") == "maskrcnn_x3_loso_Z4",
+          ckpt.name("maskrcnn_x3", "loso", "Z4"))
+    check("the protocol is part of the name",
+          ckpt.name("maskrcnn", "loso", "Z2") != ckpt.name("maskrcnn", "random", "Z2"))
+    check("path and name agree",
+          ckpt.path("unet", "random", "R1") == CHECKPOINTS / "unet_random_R1.pt")
+
+    # An unreadable sidecar must not hide the readable ones: the listing exists
+    # to answer "what do I already have", and one corrupt file should not make
+    # the answer "nothing".
+    CHECKPOINTS.mkdir(parents=True, exist_ok=True)
+    bad = CHECKPOINTS / "_test_broken.json"
+    good = CHECKPOINTS / "_test_probe_loso_Z2.json"
+    try:
+        bad.write_text("{not json")
+        good.write_text(json.dumps({"method": "_test_probe"}))
+        listed = {c.get("method") for c in ckpt.available()}
+        check("a corrupt sidecar does not hide the rest",
+              "_test_probe" in listed, f"listed: {sorted(m for m in listed if m)}")
+    finally:
+        bad.unlink(missing_ok=True)
+        good.unlink(missing_ok=True)
+
+
 def _raises(fn) -> bool:
     try:
         fn()
@@ -361,6 +401,7 @@ def main() -> int:
     test_magnification(records)
     test_tile_grid()
     test_tile_ownership()
+    test_checkpoint_paths()
     print()
     if FAILURES:
         print(f"{len(FAILURES)} check(s) failed: {', '.join(FAILURES)}")

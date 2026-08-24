@@ -20,6 +20,7 @@ import torch
 from torch.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
 
+import checkpoints as ckpt
 import folds as folds_mod
 from config import CROP, PREDICTIONS, SEED, WORK_H, FULL_W, ensure_dirs
 from datasets import BeadDataset, collate, load_records, rasterise
@@ -176,9 +177,19 @@ def train_one_fold(records, fold, *, iters, batch, lr, device, seed,
     return model, timer.summary()
 
 
+def _method_name(preprocess: str, upsample: int) -> str:
+    """The name this variant writes under, for predictions and checkpoints alike.
+
+    One function rather than two copies, so that a checkpoint is always findable
+    from the prediction file it produced.
+    """
+    name = "maskrcnn" if preprocess == "none" else f"maskrcnn_{preprocess}"
+    return name if upsample == 1 else f"{name}_x{upsample}"
+
+
 def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
         only: list[str] | None = None, preprocess: str = "none",
-        upsample: int = 1) -> None:
+        upsample: int = 1, save_checkpoints: bool = True) -> None:
     ensure_dirs()
     device = _device()
     print(f"device: {device}  protocol: {protocol}  iters: {iters}  batch: {batch}"
@@ -221,6 +232,13 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
         meta["thresholds"][fold["name"]] = thr
         print(f"    score threshold chosen on training partition: {thr:.2f}")
 
+        # Saved with the threshold, and after it has been chosen: the weights on
+        # their own reproduce none of the reported numbers.
+        ckpt.save(model, _method_name(preprocess, upsample), protocol,
+                  fold["name"], threshold=thr, enabled=save_checkpoints,
+                  extra={"iters": iters, "batch": batch, "lr": lr, "seed": seed,
+                         "preprocess": preprocess, "upsample": upsample})
+
         for name, (masks, scores) in on_train.items():
             for det in predio.encode(masks, scores, records[name].image_id):
                 det["fold"] = fold["name"]
@@ -237,9 +255,7 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
 
     # Each variant is a separate result, so it gets a separate file. Without this
     # the ablations would overwrite the baseline run.
-    name = "maskrcnn" if preprocess == "none" else f"maskrcnn_{preprocess}"
-    if upsample != 1:
-        name += f"_x{upsample}"
+    name = _method_name(preprocess, upsample)
     if only:
         name += "_partial"
     out = PREDICTIONS / protocol / f"{name}.json"
@@ -283,6 +299,10 @@ if __name__ == "__main__":
                     help="magnify image and label by this factor with bicubic "
                          "interpolation before training and inference; writes "
                          "its own file")
+    ap.add_argument("--no-checkpoints", action="store_true",
+                    help="do not save the trained weights; saves about 700 MB "
+                         "per four-fold run, at the cost of having to retrain "
+                         "before any later question about the models")
     a = ap.parse_args()
     run(a.protocol, a.iters, a.batch, a.lr, a.seed, a.folds, a.preprocess,
-        a.upsample)
+        a.upsample, save_checkpoints=not a.no_checkpoints)

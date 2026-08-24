@@ -19,6 +19,7 @@ import torch
 from torch.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
 
+import checkpoints as ckpt
 import folds as folds_mod
 import predio
 from config import MIN_INSTANCE_PX, PREDICTIONS, SEED, ensure_dirs
@@ -123,7 +124,7 @@ def pick_params(model, records, train_names, device):
 
 
 def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
-        only: list[str] | None = None) -> None:
+        only: list[str] | None = None, save_checkpoints: bool = True) -> None:
     ensure_dirs()
     device = _device()
     print(f"device: {device}  protocol: {protocol}  iters: {iters}  batch: {batch}")
@@ -151,6 +152,14 @@ def run(protocol: str, iters: int, batch: int, lr: float, seed: int = SEED,
         meta["params"][fold["name"]] = {"prob_threshold": thr, "min_area_px": min_area}
         print(f"    chosen on training partition: prob>={thr:.2f}, min_area={min_area}px")
 
+        # This model has two operating points, not one: a probability cut and a
+        # minimum component area. Both are stored, since dropping either leaves a
+        # checkpoint that cannot reproduce the fold's predictions.
+        ckpt.save(model, "unet", protocol, fold["name"], threshold=thr,
+                  enabled=save_checkpoints,
+                  extra={"iters": iters, "batch": batch, "lr": lr, "seed": seed,
+                         "min_area_px": min_area})
+
         for n, prob in probability_maps(model, records, fold["test"], device).items():
             masks, scores = instances_from_probability(prob, thr, min_area)
             all_dets += predio.encode(masks, scores, records[n].image_id)
@@ -172,5 +181,10 @@ if __name__ == "__main__":
     ap.add_argument("--seed", type=int, default=SEED)
     ap.add_argument("--folds", nargs="*", default=None,
                     help="run only these folds as a pilot")
+    ap.add_argument("--no-checkpoints", action="store_true",
+                    help="do not save the trained weights; saves about 350 MB "
+                         "per four-fold run, at the cost of having to retrain "
+                         "before any later question about the models")
     a = ap.parse_args()
-    run(a.protocol, a.iters, a.batch, a.lr, a.seed, a.folds)
+    run(a.protocol, a.iters, a.batch, a.lr, a.seed, a.folds,
+        save_checkpoints=not a.no_checkpoints)

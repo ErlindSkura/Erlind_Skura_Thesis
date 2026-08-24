@@ -23,7 +23,7 @@ parazgjedhjet nga `config.py`:
 BEAD_DATA     …/Segmentations   (Images/ dhe Labels/)
 BEAD_WORK     thesis/work       (imazhet e përgatitura, folds, parashikimet)
 BEAD_RESULTS  thesis/results    (metrics.json dhe tabelat .tex)
-BEAD_SCRATCH  disku lokal       (dataseti i eksportuar i YOLO-s dhe checkpoint-et)
+BEAD_SCRATCH  disku lokal       (dataseti i eksportuar i YOLO-s)
 ```
 
 `BEAD_SCRATCH` nuk vendoset nga notebook-u dhe nuk duhet vendosur me dorë. Është
@@ -49,7 +49,7 @@ Ngarko `bead_data.zip` në rrënjën e My Drive.
 cd code
 python prepare_data.py    # pret banderolën, LabelMe -> COCO
 python folds.py           # manifestet e folds për të dy protokollet
-python tests.py           # 31 kontrolle; duhen 31/31
+python tests.py           # 35 kontrolle; duhen 35/35
 ```
 
 **Rendi këtu është i detyruar:** `folds.py` lexon `work/coco_gt.json`, të cilin e
@@ -165,6 +165,32 @@ Këta janë biblioteka. Kodi i tyre ekzekutohet, por përmes importimit:
 | `metrics.py` | `evaluate.py` — AP, AJI, PQ, numërimi, merge/split |
 | `preprocess.py` | `datasets.py` dhe `make_figures.py` |
 | `runtime.py` | çdo trajnim — matja e kohës |
+| `checkpoints.py` | çdo trajnim — ruajtja e peshave bashkë me pragun e tyre |
+
+---
+
+## 4b · Checkpoint-et
+
+Çdo skript trajnimi ruan një skedar për fold në `work/checkpoints/`, me emrin
+`{metoda}_{protokolli}_{foldi}.pt` dhe një `.json` shoqërues që lexohet pa
+ngarkuar peshat dhe pa pasur torch të instaluar.
+
+**Pragu ruhet bashkë me peshat.** Asnjë numër i raportuar në tezë nuk
+riprodhohet nga një `state_dict` i vetëm: çdo figurë vjen nga parashikime të
+filtruara me një prag të zgjedhur mbi ndarjen e trajnimit të atij foldi. U-Net-i
+ruan dy pragje — probabilitetin dhe sipërfaqen minimale.
+
+Shkruhen nën `WORK`, jo nën `SCRATCH`, dhe kjo është e qëllimshme. `SCRATCH`
+është i përkohshëm; e gjithë poenta është që fold-i t'i mbijetojë rifillimit të
+runtime-it. Rregulli që ndalon shkrimet e Ultralytics mbi Drive vlen për shkrime
+pas çdo epoke; këtu shkruhet një herë për fold.
+
+Kushton rreth 3 GB për fushatën e plotë. Çdo skript pranon `--no-checkpoints`.
+Një ekzekutim `--smoke` nuk ruan asgjë: tetë iteracione prodhojnë pesha pa vlerë.
+
+Mungesa e këtij moduli kushtoi dy orë e gjysmë më 2026-08-24: kur supervizori
+kërkoi saktësinë e trajnimit kundrejt testimit, çdo model që mund t'i përgjigjej
+ishte fshirë, dhe ritrajnimi i lëvizi numrat që Kapitulli 5 kishte cituar.
 
 ---
 

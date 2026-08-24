@@ -57,6 +57,7 @@ from pathlib import Path
 
 import numpy as np
 
+import checkpoints as ckpt
 import folds as folds_mod
 import predio
 from config import PREDICTIONS, SCRATCH, SEED, ensure_dirs
@@ -221,7 +222,8 @@ def pick_threshold(model, records, train_names, segment: bool, imgsz: int) -> fl
 
 
 def run(protocol: str, iters: int, batch: int, weights: str, imgsz: int,
-        mosaic: float, seed: int = SEED, only: list[str] | None = None) -> None:
+        mosaic: float, seed: int = SEED, only: list[str] | None = None,
+        save_checkpoints: bool = True) -> None:
     YOLO = _require_ultralytics()
     ensure_dirs()
     records = load_records()
@@ -285,6 +287,15 @@ def run(protocol: str, iters: int, batch: int, weights: str, imgsz: int,
         meta["thresholds"][fold["name"]] = thr
         print(f"    confidence threshold chosen on training partition: {thr:.2f}")
 
+        # Ultralytics writes its own weights under the scratch directory, which
+        # is temporary by design. Copied out so the fold survives the runtime.
+        ckpt.save_file(root / "runs" / "train" / "weights" / "last.pt",
+                       method, protocol, fold["name"], threshold=thr,
+                       enabled=save_checkpoints,
+                       extra={"weights": weights, "imgsz": imgsz,
+                              "mosaic": mosaic, "seed": seed,
+                              "segment": segment})
+
         for n, (items, scores) in predict(model, records, fold["test"], thr,
                                           segment, imgsz).items():
             if segment:
@@ -317,6 +328,9 @@ if __name__ == "__main__":
                          "roughly halves apparent object size")
     ap.add_argument("--seed", type=int, default=SEED)
     ap.add_argument("--folds", nargs="*", default=None)
+    ap.add_argument("--no-checkpoints", action="store_true",
+                    help="do not copy the trained weights out of the scratch "
+                         "directory, where they do not survive the runtime")
     a = ap.parse_args()
     run(a.protocol, a.iters, a.batch, a.weights, a.imgsz, a.mosaic,
-        a.seed, a.folds)
+        a.seed, a.folds, save_checkpoints=not a.no_checkpoints)

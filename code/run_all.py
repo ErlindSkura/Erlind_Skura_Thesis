@@ -39,6 +39,11 @@ def _parse():
     ap.add_argument("--unet-batch", type=int, default=8)
     ap.add_argument("--skip-random", action="store_true",
                     help="skip the naive-split control")
+    ap.add_argument("--no-checkpoints", action="store_true",
+                    help="do not save trained weights. The full campaign stores "
+                         "roughly 3 GB of them; keeping them is what makes a "
+                         "later question about the models answerable without "
+                         "retraining everything")
     ap.add_argument("--upsample", type=int, default=0, metavar="FACTOR",
                     help="also train Mask R-CNN on the dataset magnified by this "
                          "factor, image and label together, with bicubic "
@@ -88,6 +93,9 @@ def main() -> None:
     from config import RESULTS, WORK
 
     iters = 8 if a.smoke else a.iters
+    # A smoke run trains for eight iterations; its weights are worthless and
+    # would only take up space next to the real ones.
+    keep = not a.no_checkpoints and not a.smoke
     t0 = time.time()
 
     print("=" * 70, "\n1/6  preparing data", flush=True)
@@ -102,15 +110,18 @@ def main() -> None:
     classical.run("loso", quick=a.smoke)
 
     print("=" * 70, "\n4/6  U-Net baseline (leave-one-specimen-out)", flush=True)
-    train_unet.run("loso", iters=iters, batch=a.unet_batch, lr=3e-4)
+    train_unet.run("loso", iters=iters, batch=a.unet_batch, lr=3e-4,
+                   save_checkpoints=keep)
 
     print("=" * 70, "\n5/7  Mask R-CNN (leave-one-specimen-out)", flush=True)
-    train_maskrcnn.run("loso", iters=iters, batch=a.maskrcnn_batch, lr=0.005)
+    train_maskrcnn.run("loso", iters=iters, batch=a.maskrcnn_batch, lr=0.005,
+                       save_checkpoints=keep)
 
     if not a.skip_fasterrcnn:
         print("=" * 70, "\n6/7  Faster R-CNN, detection only (leave-one-specimen-out)",
               flush=True)
-        train_fasterrcnn.run("loso", iters=iters, batch=a.maskrcnn_batch, lr=0.005)
+        train_fasterrcnn.run("loso", iters=iters, batch=a.maskrcnn_batch, lr=0.005,
+                             save_checkpoints=keep)
 
     if a.yolo:
         import train_yolo
@@ -119,20 +130,22 @@ def main() -> None:
                   f"\n6b/7 {train_yolo.method_name(w)} ({w}, leave-one-specimen-out)",
                   flush=True)
             train_yolo.run("loso", iters=iters, batch=a.maskrcnn_batch,
-                           weights=w, imgsz=1024, mosaic=0.0)
+                           weights=w, imgsz=1024, mosaic=0.0,
+                           save_checkpoints=keep)
 
     if a.upsample:
         print("=" * 70,
               f"\n6c/7 Mask R-CNN on the {a.upsample}x magnified dataset "
               f"(leave-one-specimen-out)", flush=True)
         train_maskrcnn.run("loso", iters=iters, batch=a.maskrcnn_batch, lr=0.005,
-                           upsample=a.upsample)
+                           upsample=a.upsample, save_checkpoints=keep)
 
     protocols = ["loso"]
     if not a.skip_random:
         print("=" * 70, "\n6b/7 Mask R-CNN under the naive random split (control)",
               flush=True)
-        train_maskrcnn.run("random", iters=iters, batch=a.maskrcnn_batch, lr=0.005)
+        train_maskrcnn.run("random", iters=iters, batch=a.maskrcnn_batch, lr=0.005,
+                           save_checkpoints=keep)
         protocols.append("random")
 
     print("=" * 70, "\n7/7  evaluating and tabulating", flush=True)

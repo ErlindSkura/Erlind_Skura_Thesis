@@ -61,6 +61,7 @@ MANUAL.md                             execution order, and what each run puts in
 | `preprocess.py` | the four input variants compared as an experimental factor |
 | `upsample.py` | the 3x bicubic magnification factor, and tiled inference for it |
 | `runtime.py` | step, epoch and wall-clock timing, device-synchronised |
+| `checkpoints.py` | one saved model per fold, stored with the threshold it needs |
 | `classical.py` | Otsu + watershed baseline |
 | `train_unet.py` | U-Net encoder–decoder, semantic, plus connected components |
 | `train_maskrcnn.py` | Mask R-CNN, plus the `--preprocess` and `--upsample` ablations |
@@ -71,7 +72,7 @@ MANUAL.md                             execution order, and what each run puts in
 | `make_tables.py` | generates the Chapter 5 tables and two figures from the metrics |
 | `make_figures.py` | the figures that do not depend on a run, plus the counting figure |
 | `run_all.py` | end to end, with `--smoke` for a fast correctness check |
-| `tests.py` | 31 checks on geometry, annotations, preprocessing and magnification |
+| `tests.py` | 35 checks on geometry, annotations, preprocessing, magnification and checkpoint naming |
 | `dataset_stats.py` | the descriptive figures of Chapter 3 |
 | `make_colab_bundle.py` | packages the 11 originals for upload |
 
