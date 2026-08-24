@@ -584,6 +584,29 @@ found beads are outlined, and recognition quality $\mathrm{RQ}$ measures how man
 were found at all. A method can be strong on one and weak on the other, and
 Chapter~\ref{ch:results} shows that the distinction matters here.
 
+Finally, one measure is reported that deliberately discards instance identity.
+Flattening each side to a single binary mask, $\hat{G} = \bigcup_i g_i$ and
+$\hat{P} = \bigcup_j p_j$, gives the pixel-level agreement
+%
+\begin{equation}
+    \mathrm{DICE} = \frac{2\,|\hat{G} \cap \hat{P}|}{|\hat{G}| + |\hat{P}|},
+    \qquad
+    \mathrm{IoU}_{\text{px}} = \frac{|\hat{G} \cap \hat{P}|}
+                                    {|\hat{G} \cup \hat{P}|}.
+    \label{eq:pixel_dice}
+\end{equation}
+%
+This is the weakest measure in the chapter and it is not used to rank anything:
+it cannot distinguish a method that separates two touching beads from one that
+fuses them, which is the distinction this whole work turns on. It is reported for
+one reason. The semantic segmentation literature, including the prior work of
+Section~\ref{sec:epoka_prior}, reports DICE and IoU computed this way, and those
+values cannot be read against an average precision. Computing both from the same
+predictions is what makes the two comparable, and
+Section~\ref{sec:epoka_prior} carries out that comparison. The counts are pooled
+over micrographs before the ratio is formed, so that a frame holding four beads
+does not weigh as much as one holding 152.
+
 \subsection{Laboratory Metrics}
 
 Segmentation metrics do not by themselves establish that a method is usable. The
