@@ -261,23 +261,23 @@ as iterations, which is the quantity that was actually controlled.
 \section{Challenges and Solutions}
 \label{sec:challenges}
 
-Three problems were encountered during data preparation. Each is recorded here
+Six problems were encountered while building the pipeline. Each is recorded here
 because each changed a design decision.
 
-\textbf{The augmented copies could not be used as supplied.} The dataset arrives as
-143 image--annotation pairs, which initially appears to be a usable sample size. The
-filenames reveal that these are 11 originals with 12 transformed copies each.
-Verifying the copies by overlaying their polygons on their images confirmed that the
-transformations are correctly applied, so the copies are not defective -- but they
-are not independent either, and allowing them to cross a partition boundary would
-have produced optimistic results. The resolution was to discard them and augment
-after partitioning.
+\textbf{The augmented copies could not be used as supplied.} The dataset arrives
+as 143 image--annotation pairs, which initially appears to be a usable sample
+size; the filenames reveal 11 originals with 12 transformed copies each.
+Overlaying their polygons on their images confirmed the transformations are
+correctly applied, so the copies are not defective -- but they are not
+independent either, and letting them cross a partition boundary would have
+produced optimistic results. They were discarded in favour of augmenting after
+partitioning.
 
-\textbf{The banner is augmented along with the image.} Inspecting the flipped copies
-showed the instrument banner mirrored, with the burned-in text reversed, and the
-translated copies contain black padding where the image was shifted away from the
-edge. This confirmed that the banner had not been accounted for during augmentation,
-and reinforced the decision to crop it before any processing.
+\textbf{The banner is augmented along with the image.} The flipped copies show
+the instrument banner mirrored, with the burned-in text reversed, and the
+translated copies carry black padding along the vacated edge. The banner had not
+been accounted for during augmentation, which reinforced the decision to crop it
+before any processing.
 
 \textbf{Object size varies sixfold across the dataset.} The median bead is 14 pixels
 across at $500\times$ and 76 at $3000\times$. This drove the choice of a feature
@@ -285,18 +285,16 @@ pyramid backbone, the resetting of anchor scales, and the wide random-scaling ra
 in the augmentation policy.
 
 \textbf{Augmentation initially shifted every mask by one pixel.} Reflections were
-first implemented as $x \mapsto W - 1 - x$, which is the correct transformation for
-an integer pixel index. Polygon vertices are not indices but continuous
-coordinates, for which the correct reflection is $x \mapsto W - x$. The error is
-half a pixel at each edge and would be invisible on a large object. Here it is not:
-the mean bead is 17 pixels across, so a one-pixel boundary shift moves roughly 13\%
-of its area, and it would have been applied to every horizontally or vertically
-flipped training sample. The fault was found by rasterising the transformed
-polygons and comparing them against the directly transformed raster mask, which
-agree to an intersection over union of 0.9995 under the correct convention and only
-0.87 under the incorrect one. That check is now a permanent part of the test suite,
-because the failure produced no error message and no visibly wrong image -- only
-slightly wrong labels.
+first implemented as $x \mapsto W - 1 - x$, correct for an integer pixel index but
+not for polygon vertices, which are continuous coordinates and reflect as
+$x \mapsto W - x$. Half a pixel at each edge is invisible on a large object; here
+the mean bead is 17 pixels across, so a one-pixel boundary shift moves roughly
+13\% of its area, on every flipped training sample. The fault was found by
+rasterising the transformed polygons and comparing them against the directly
+transformed raster mask: they agree to an intersection over union of 0.9995 under
+the correct convention and 0.87 under the incorrect one. That check is now
+permanent in the test suite, because the failure produced no error message and no
+visibly wrong image -- only slightly wrong labels.
 
 \textbf{Evaluating a thousand objects per image was forty times slower than
 necessary.} Instances were initially held as full-frame masks, one
@@ -308,18 +306,17 @@ plus a mask covering only that box, and computing intersections only for pairs
 whose boxes overlap, reduced that to 0.02 seconds and the full parameter search
 from over an hour to a few minutes.
 
-\textbf{The smoke run destroyed a completed set of results.} The fast
-correctness check described in Section~\ref{sec:deployment} originally wrote its predictions to
-the same directory as a real run. Re-running it after a completed four-fold
-experiment therefore overwrote several hours of predictions with output from eight
-training iterations, and did so silently: a smoke run produces a perfectly
-well-formed predictions file, so nothing fails, nothing warns, and the only
-symptom is that every subsequently reported number is wrong. The fix is
-structural rather than procedural --- a smoke run now redirects its working and
-results directories before any pipeline module is imported, so it cannot reach the
-real predictions at all. The episode is recorded here because the failure mode is
-general: a verification mechanism that shares mutable state with the thing it
-verifies can destroy what it was meant to protect.
+\textbf{The smoke run destroyed a completed set of results.} The fast correctness
+check of Section~\ref{sec:deployment} originally wrote its predictions to the same
+directory as a real run, so re-running it after a completed four-fold experiment
+overwrote several hours of predictions with output from eight training
+iterations, silently: a smoke run produces a perfectly well-formed predictions
+file, so nothing fails and nothing warns, and the only symptom is that every
+subsequently reported number is wrong. The fix is structural rather than
+procedural -- a smoke run now redirects its working and results directories
+before any pipeline module is imported. The failure mode is general: a
+verification mechanism sharing mutable state with the thing it verifies can
+destroy what it was meant to protect.
 
 \section{Code Organization}
 

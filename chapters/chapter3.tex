@@ -294,20 +294,12 @@ combination, and two horizontal stretches of 20\% and 40\%. The polygon coordina
 were transformed along with the images, and inspection confirms that they remain
 correctly registered in every variant.
 
-These copies are nevertheless excluded from the analysis in this thesis, for two
-reasons.
+These copies are nevertheless excluded from the analysis, for three reasons.
 
-The first is statistical. Thirteen copies of one micrograph contain the information
-of one micrograph. Reporting 143 images, or 7\,878 bead instances, would misstate
-the size of the sample by a factor of 13, and any metric computed over the augmented
-set would be dominated by repeated content.
-
-There is also a third reason, visible in Figure~\ref{fig:augmentation_problem}:
-the transformations were applied to the whole file, including the instrument
-banner. In the flipped copies the burned-in text is mirrored, and in the
-translated copies the banner has been displaced and black fill occupies the
-vacated region. No real micrograph looks like this, so the copies are not merely
-redundant but carry an artefact that a model could learn to key on.
+The first is statistical. Thirteen copies of one micrograph contain the
+information of one micrograph. Reporting 143 images, or 7\,878 bead instances,
+would misstate the sample size by a factor of 13, and any metric computed over
+the augmented set would be dominated by repeated content.
 
 \begin{figure}[htbp]
     \centering
@@ -320,20 +312,20 @@ redundant but carry an artefact that a model could learn to key on.
     \label{fig:augmentation_problem}
 \end{figure}
 
-The second reason is methodological, and more serious. Because the copies were generated
+The second is methodological, and more serious. Because the copies were generated
 before partitioning, a random split over the 143 files would place transformed
-versions of the same source micrograph in both the training and the test partition.
-The test score would then partly measure memorisation. Augmentation is still used in
-this thesis -- it is essential at this sample size -- but it is applied on the fly
-during training, after partitioning, so that no test image has a transformed relative
-in the training set. The augmentations actually used are described in
-Chapter~\ref{ch:implementation}.
+versions of the same source micrograph in both the training and the test
+partition, and the test score would then partly measure memorisation.
+Augmentation is still used -- it is essential at this sample size -- but applied
+on the fly during training, after partitioning, so that no test image has a
+transformed relative in the training set. The augmentations actually used are
+described in Chapter~\ref{ch:implementation}.
 
-Two artefacts in the supplied copies reinforce this decision. The flipped variants
-contain a mirrored instrument banner, in which the burned-in text is reversed, and
-the translated variants contain black padding along the edge vacated by the shift.
-Neither is a plausible micrograph, and both introduce structure that a network can
-exploit.
+The third is visible in Figure~\ref{fig:augmentation_problem}: the
+transformations were applied to the whole file, including the instrument banner.
+The flipped copies carry mirrored burned-in text and the translated copies carry
+black fill along the vacated edge. Neither is a plausible micrograph, so the
+copies are not merely redundant but carry an artefact a network can key on.
 
 \section{Evaluation Protocol}
 \label{sec:protocol}
@@ -441,29 +433,25 @@ is defined identically for both.
 YOLOv8 \cite{redmon2016yolo, jocher2023ultralytics} is the one-stage family of
 Section~\ref{sec:onestage}, included to answer a different question from the
 ablation above: whether a different family of architecture does better on this
-data. It is not a
-controlled comparison and is not read as one. It shares nothing with the
-region-based models -- a different backbone, an anchor-free head, a different
-label assignment rule, a different loss, and its own augmentation and optimiser
-schedule -- so a difference between it and Mask R-CNN identifies no component as
-responsible. The segmentation variant is used, so it predicts masks and is scored
-on every metric the region-based instance model is.
+data. It is not a controlled comparison and is not read as one, since it shares
+nothing with the region-based models -- a different backbone, an anchor-free
+head, a different label assignment rule, a different loss and its own
+augmentation and optimiser schedule -- so a gap between it and Mask R-CNN
+identifies no component as responsible. The segmentation variant is used, so it
+predicts masks and is scored on every metric the region-based instance model is.
 
-A second model of the same family is included alongside it. YOLOv5u shares the
-Ultralytics training loop, the same three departures from its defaults and the
-same gradient budget, and differs from YOLOv8 in its backbone and in carrying no
-mask branch: the package ships no segmentation weights for YOLOv5, so it is
-scored on boxes and on counting only. Two models rather than one make the family
-comparison less dependent on a single checkpoint, and the pair is the closest
-thing in this work to a controlled comparison across a change of backbone.
+YOLOv5u is included alongside it, sharing the Ultralytics training loop, the same
+three departures from its defaults and the same gradient budget, and differing in
+backbone and in carrying no mask branch: the package ships no segmentation
+weights for YOLOv5, so it is scored on boxes and counting only. Two models rather
+than one make the family comparison less dependent on a single checkpoint.
 
-The name needs one qualification, because the version numbers suggest a
-comparison the weights do not support. The checkpoint is \texttt{yolov5su}: the
-YOLOv5 backbone fitted by Ultralytics with YOLOv8's anchor-free,
-objectness-free split head, and not the anchor-based YOLOv5 of the original
-release. What separates \texttt{yolov5su} from \texttt{yolov8s-seg} is therefore
-mostly the backbone and the mask branch, and the pair should not be read as
-anchor-based against anchor-free. The results are labelled YOLOv5u throughout.
+The name needs one qualification. The checkpoint is \texttt{yolov5su}: the YOLOv5
+backbone fitted by Ultralytics with YOLOv8's anchor-free, objectness-free split
+head, not the anchor-based YOLOv5 of the original release. What separates it from
+\texttt{yolov8s-seg} is therefore mostly the backbone and the mask branch, and
+the pair should not be read as anchor-based against anchor-free. The results are
+labelled YOLOv5u throughout.
 
 Three settings depart from the package defaults, each for a measured property of
 this dataset rather than by search. The input size is held at 1024 rather than
@@ -522,10 +510,10 @@ the input transform alone:
 \end{itemize}
 
 Each variant is applied to the whole micrograph before cropping, at the single
-point where the training and inference paths share code. This is a correctness
-requirement rather than a convenience. A model trained on equalised images and
-evaluated on raw ones would still produce numbers, and those numbers would be
-wrong in a way no metric would reveal.
+point where the training and inference paths share code -- a correctness
+requirement rather than a convenience, since a model trained on equalised images
+and evaluated on raw ones would still produce numbers, wrong in a way no metric
+would reveal.
 
 \section{Evaluation Metrics}
 
@@ -612,16 +600,15 @@ $\hat{P} = \bigcup_j p_j$, gives the pixel-level agreement
     \label{eq:pixel_dice}
 \end{equation}
 %
-This is the weakest measure in the chapter and it is not used to rank anything:
-it cannot distinguish a method that separates two touching beads from one that
-fuses them, which is the distinction this whole work turns on. It is reported for
-one reason. The semantic segmentation literature, including the prior work of
+This is the weakest measure in the chapter and is not used to rank anything: it
+cannot distinguish a method that separates two touching beads from one that fuses
+them, which is the distinction this work turns on. It is reported for one reason.
+The semantic segmentation literature, including the prior work of
 Section~\ref{sec:epoka_prior}, reports DICE and IoU computed this way, and those
-values cannot be read against an average precision. Computing both from the same
-predictions is what makes the two comparable, and
-Section~\ref{sec:epoka_prior} carries out that comparison. The counts are pooled
-over micrographs before the ratio is formed, so that a frame holding four beads
-does not weigh as much as one holding 152.
+values cannot be read against an average precision; computing both from the same
+predictions is what makes them comparable. The counts are pooled over micrographs
+before the ratio is formed, so a frame holding four beads does not weigh as much
+as one holding 152.
 
 \subsection{Laboratory Metrics}
 
@@ -704,7 +691,9 @@ agreement of the physical bead size distribution across magnifications. Because 
 specimen is the only independent unit in the data, evaluation uses
 leave-one-specimen-out cross-validation, and the pre-computed augmented copies
 supplied with the dataset are excluded in favour of augmentation applied after
-partitioning. Three methods -- classical thresholding, semantic U-Net and Mask R-CNN
--- are compared under this protocol, assessed both by segmentation metrics and by
-the counting and sizing errors that determine laboratory usefulness. The next
-chapter describes how this design is realised in software.
+partitioning. Six methods -- classical thresholding, a semantic U-Net, Mask
+R-CNN, the same detector without its mask branch, and the YOLOv8 and YOLOv5u
+one-stage models -- are compared under this protocol, assessed both by
+segmentation metrics and by the counting and sizing errors that determine
+laboratory usefulness. The next chapter describes how this design is realised in
+software.

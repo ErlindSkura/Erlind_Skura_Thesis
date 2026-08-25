@@ -24,26 +24,23 @@ solid fibre deposited as a randomly oriented non-woven mat
 Reneker and Yarin \cite{reneker2008electrospinning} give a detailed account of the jet dynamics that
 govern this process.
 
-The morphology of the deposit depends on a balance of forces. Surface tension acts
-to minimise the surface area of the jet and therefore favours the break-up of a
-cylindrical thread into droplets; viscoelastic stress and charge repulsion oppose
-this. When the solution has low viscosity, low charge density or high surface
-tension, the instability is not fully suppressed and the jet partially collapses,
-producing ellipsoidal swellings distributed along the fibres. Fong, Chun and Reneker
-\cite{fong1999beaded} established the now-standard account of this behaviour,
-showing that higher solution viscosity and higher net charge density produce fewer
-and more elongated beads, and that increasing surface tension has the opposite
-effect. Bhardwaj and Kundu \cite{bhardwaj2010electrospinning} review how the same
-parameters -- concentration, conductivity, applied voltage, flow rate and
-tip-to-collector distance -- interact in practice.
+The morphology of the deposit depends on a balance of forces: surface tension
+favours the break-up of a cylindrical thread into droplets, while viscoelastic
+stress and charge repulsion oppose it. At low viscosity, low charge density or
+high surface tension the instability is not fully suppressed and the jet
+partially collapses, producing ellipsoidal swellings along the fibres. Fong, Chun
+and Reneker \cite{fong1999beaded} established the standard account, showing that
+higher viscosity and higher net charge density produce fewer and more elongated
+beads while higher surface tension does the opposite; Bhardwaj and Kundu
+\cite{bhardwaj2010electrospinning} review how concentration, conductivity,
+voltage, flow rate and tip-to-collector distance interact in practice.
 
-Because bead content responds so directly to these parameters, bead count and bead
-size are used as the diagnostic output of a parameter sweep: a recipe is refined
-until the mat is bead-free, or until the bead population is acceptably small.
-Beads matter physically as well as diagnostically. They reduce the specific surface
-area that makes nanofibre mats useful for filtration and catalysis, they perturb the
-pore-size distribution that governs permeability, and they act as stress
-concentrators that lower tensile strength.
+Because bead content responds so directly to these parameters, bead count and
+size are the diagnostic output of a parameter sweep: a recipe is refined until
+the mat is bead-free or the bead population acceptably small. Beads also matter
+physically -- they reduce the specific surface area that makes these mats useful
+for filtration and catalysis, perturb the pore-size distribution that governs
+permeability, and act as stress concentrators that lower tensile strength.
 
 \subsection{Scanning Electron Microscopy of Nanofibre Mats}
 
@@ -502,19 +499,19 @@ discrete defects. DiameterJ and comparable tools do not count beads, and the
 quantification of bead defects is consequently still performed by hand.
 
 Second, where deep segmentation has been applied to fibrous microscopy it has
-usually been semantic, reporting pixel-level overlap. For a task whose output is a
-count, pixel overlap is the wrong figure of merit: it does not distinguish a model
-that separates two touching beads from one that merges them, even though only the
-former produces a usable count. Studies that report counting error against a manual
-ground truth, and that compare instance-level against semantic-level modelling on
-the same images, are scarce.
+usually been semantic, reporting pixel-level overlap. For a task whose output is
+a count that is the wrong figure of merit: it does not distinguish a model that
+separates two touching beads from one that merges them, though only the former
+counts correctly. Studies reporting counting error against a manual ground truth,
+and comparing instance-level against semantic-level modelling on the same images,
+are scarce.
 
 Third, and most consequential for the credibility of any result in this area,
-evaluation protocols are frequently not matched to the structure of the data. Small
-microscopy datasets are hierarchical -- many images per specimen, many augmented
-copies per image -- and a partition that ignores this structure allows the same
-specimen, or the same source image, to appear on both sides of the split. Reported
-scores are then optimistic by an unknown margin.
+evaluation protocols are frequently not matched to the structure of the data.
+Small microscopy datasets are hierarchical -- many images per specimen, many
+augmented copies per image -- and a partition that ignores this allows the same
+specimen, or the same source image, to appear on both sides of the split, leaving
+reported scores optimistic by an unknown margin.
 
 This thesis addresses these gaps by treating bead quantification as an instance
 segmentation problem, by evaluating it with the counting and sizing errors that

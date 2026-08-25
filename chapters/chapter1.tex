@@ -121,30 +121,28 @@ each has been met.
     what a standard region-based detector achieves on a published benchmark of
     comparable object size.
 
-    That criterion replaces the $\mathrm{AP}_{50} \geq 0.70$ recorded when this
+        That criterion replaces the $\mathrm{AP}_{50} \geq 0.70$ recorded when this
     work was proposed, and the grounds are given here rather than left implicit,
-    because a success criterion revised once results are known is worth nothing
-    unless the grounds for revising it are independent of those results. The
-    original figure was set before the small-object literature of
-    Section~\ref{sec:small_objects} was surveyed, and that survey shows 0.70 to be
-    above what any published detector reaches at this object size. On AI-TOD-v2,
-    whose objects average 12.7 pixels against the 14.3-pixel median here, a
-    standard Faster R-CNN reaches $\mathrm{AP}_{50} = 0.299$ and the method
-    introduced in that paper 0.574 \cite{xu2022tiny}. The revised criterion is the
-    first of those, rounded. It is stated in full awareness that
-    Chapter~\ref{ch:results} reports 0.298, two thousandths below it: a threshold
-    chosen in order to be cleared would not have been set there. The outcome is
-    reported against both figures.
+    because a criterion revised once results are known is worth nothing unless
+    the grounds for revising it are independent of those results. The original
+    figure was set before the small-object literature of
+    Section~\ref{sec:small_objects} was surveyed, and that survey shows 0.70 to
+    be above what any published detector reaches at this object size. On
+    AI-TOD-v2, whose objects average 12.7 pixels against the 14.3-pixel median
+    here, a standard Faster R-CNN reaches $\mathrm{AP}_{50} = 0.299$ and the
+    method introduced in that paper 0.574 \cite{xu2022tiny}. The revised
+    criterion is the first of those, rounded, and it is stated in full awareness
+    that Chapter~\ref{ch:results} reports 0.298, two thousandths below it: a
+    threshold chosen in order to be cleared would not have been set there.
 
-    One qualification belongs with that number, and it is stated here rather
-    than used, because it would soften the result. The AI-TOD-v2 figure is a
-    \emph{box} average precision, while the 0.298 reported here is a \emph{mask}
-    average precision -- the stricter of the two, since a mask has to agree in
-    shape as well as in position. Measured on boxes, as the reference is, the
-    detection-only methods of Chapter~\ref{ch:results} do clear the criterion:
-    Faster R-CNN reaches 0.305 and YOLOv5u 0.315. It is nevertheless kept at the
-    mask level, where it is not met, because the objective stated here is
-    instance segmentation rather than detection.
+    One qualification belongs with that number, and it would soften the result.
+    The AI-TOD-v2 figure is a \emph{box} average precision while the 0.298 here
+    is a \emph{mask} average precision, the stricter of the two, since a mask
+    must agree in shape as well as position. Measured on boxes, as the reference
+    is, the detection-only methods of Chapter~\ref{ch:results} do clear the
+    criterion, at 0.305 and 0.315. It is nevertheless kept at the mask level,
+    where it is not met, because the objective stated here is instance
+    segmentation rather than detection.
     % TODO(supervisor): question 10. The supervisor has still not set a threshold.
     % The criterion above is derived from the literature and is this work's own
     % proposal, not an agreed one. Ask him to confirm it or replace it.
