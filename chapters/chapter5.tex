@@ -14,7 +14,7 @@
 \section{Introduction}
 
 This chapter reports the experimental results. It first establishes the dataset
-characterisation and calibration, then reports the five segmentation methods
+characterisation and calibration, then reports the six segmentation methods
 under the leave-one-specimen-out protocol of Section~\ref{sec:protocol} together
 with two ablations of the input -- preprocessing and threefold magnification --
 then tests the protocol itself against its naive alternative and separates
@@ -102,17 +102,26 @@ applied to each detector's output was chosen by maximising $F_1$ at an
 intersection over union of 0.5 on each fold's own \emph{training} partition. For
 Mask R-CNN the selected values were 0.65, 0.65, 0.70 and 0.60 on folds Z2, Z4, Z5
 and Z6; for Faster R-CNN, 0.60, 0.60, 0.65 and 0.65; for YOLOv8, 0.15, 0.30, 0.15
-and 0.15. This is the one free parameter of each learned pipeline, and selecting
+and 0.15; for YOLOv5u, 0.20, 0.35, 0.20 and 0.10. This is the one free parameter
+of each learned pipeline, and selecting
 it on test data would have inflated every number in this chapter. The U-Net's
 probability threshold and minimum object area were chosen the same way, as were
 the three parameters of the classical pipeline.
 
 The gap between the two families is itself a finding rather than a detail. The
-region-based detectors settle between 0.60 and 0.70 while YOLOv8 maximises
-training $F_1$ at 0.15, so the same criterion applied to the same folds selects
-an operating point four times lower. That is a statement about how the two families calibrate their
-confidence scores, not about their accuracy, and it means raw detection counts
-are not comparable across the families without it.
+region-based detectors settle between 0.60 and 0.70, while the two YOLO models
+maximise training $F_1$ between 0.10 and 0.35, so the same criterion applied to
+the same folds selects an operating point three to four times lower. That is a
+statement about how the two families calibrate their confidence scores, not
+about their accuracy, and it means raw detection counts are not comparable
+across the families without it.
+
+Within the YOLO family the selected value is also the least stable. Both models
+pick their lowest threshold on the fold that holds out Z6 -- 0.15 for YOLOv8 and
+0.10 for YOLOv5u -- and that is the fold on which both over-count most severely.
+Section~\ref{sec:yolov5_results} takes that coincidence apart, because it decides
+how much of the YOLO counting failure is the model and how much is the operating
+point.
 
 The number of training iterations, 1500, was set by the available GPU budget
 rather than by a convergence criterion. This is a limitation and is recorded as
@@ -160,17 +169,22 @@ per-instance masks. Every mask-level quantity reported in this work -- the
 Aggregated Jaccard Index, the merge and split rates, the size distribution in
 micrometres -- is bought with that 15\%.
 
-\textbf{YOLOv8 costs three times as much as Mask R-CNN.} At 32.0 minutes per fold
-and 1.280 seconds per step against 0.396 at the same batch size, it is the most
-expensive method measured. The difference is one of input size rather than of
-architecture: its data pipeline expects a fixed image directory rather than the
-crops drawn on demand by the torchvision models, so it was trained on whole
-$1024$-pixel micrographs against their $512 \times 512$ crops. Its accuracy
-results should not be read as though it had been given the smaller budget.
+\textbf{Both YOLO models cost about three times as much as Mask R-CNN.} At 32.0
+minutes per fold for YOLOv8 and 29.6 for YOLOv5u, against 10.3, they are the two
+most expensive methods measured, at 1.280 and 1.183 seconds per step against
+0.396 at the same batch size. The difference is one of input size rather than of
+architecture: their data pipeline expects a fixed image directory rather than the
+crops drawn on demand by the torchvision models, so both were trained on whole
+$1024$-pixel micrographs against the others' $512 \times 512$ crops. Their
+accuracy results should not be read as though they had been given the smaller
+budget. The two YOLO runs differ by 7\% in training time, but they differ in
+backbone as well as in the mask branch, so that gap is not attributable to
+either; the region-based pair, which differs in the mask branch alone, is the
+place where the 15\% figure above can be attributed.
 
 \textbf{The campaign as a whole is small.} Summed over every run reported in this
-chapter -- five methods, three preprocessing variants, the threefold-magnified
-run and the random-split control, four folds each -- training consumed 8.8 hours
+chapter -- six methods, three preprocessing variants, the threefold-magnified
+run and the random-split control, four folds each -- training consumed 10.8 hours
 of T4 time. That figure
 matters for reproducibility rather than for performance: the complete set of
 results can be regenerated within a day on freely available hardware, which is a
@@ -183,14 +197,16 @@ specimen out. The eleven per-image results are therefore mutually independent in
 the sense that no model contributed a score for a specimen it had seen, and
 pooling them gives a single estimate over the whole dataset.
 
-All five methods are evaluated by the same code, on the same predictions
+All six methods are evaluated by the same code, on the same predictions
 format, against the same ground truth. This is not a convenience: a controlled
 comparison is only meaningful if the differences between the methods come from the
 methods. Each writes run-length-encoded masks in COCO results format, and the
-evaluation module has no branch on which method produced them. The one exception
-is declared rather than absorbed: Faster R-CNN predicts boxes and no masks, so its
-average precision is computed at box overlap and it is absent from every
-mask-level column. That is a different statement from scoring zero on them.
+evaluation module has no branch on which method produced them. The two exceptions
+are declared rather than absorbed: Faster R-CNN and YOLOv5u predict boxes and no
+masks, so their average precision is computed at box overlap and they are absent
+from every mask-level column. That is a different statement from scoring zero on
+them, and it also means their average precisions are comparable with each other
+and with nothing else in this chapter.
 
 Metrics are computed at three levels, because a single number conceals the
 failure modes that matter here. Average precision measures detection and
@@ -322,6 +338,87 @@ twice as large. For a laboratory that counts particles, the second of those
 decides the matter. For a laboratory that wanted a candidate-generation stage
 ahead of manual review, the first might.
 
+\subsection{YOLOv5u}
+\label{sec:yolov5_results}
+
+YOLOv5u is the second member of the YOLO family in this comparison, and it goes
+through the box-only path: Ultralytics ships no segmentation weights for it, so
+it is scored on boxes and on counting and appears in no mask-level column. Its
+average precision is comparable with Faster R-CNN's and with nothing else in this
+chapter.
+
+On that footing it is the strongest detector measured. It reaches
+$\mathrm{AP}_{50} = 0.315 \pm 0.049$ against Faster R-CNN's $0.305 \pm 0.073$,
+and an $\mathrm{AP}_S$ of 0.132, the highest of the six methods -- though below
+the 0.158 that Mask R-CNN reaches on the threefold-magnified dataset of
+Section~\ref{sec:upsample_results}, which is a different input rather than a
+different method. Its between-fold spread is also the narrower of the two box
+methods, 0.049 against 0.073. Neither difference is resolved by four folds, and
+neither should be read as a ranking. What the pair does establish is narrower and
+worth stating: two detectors that share nothing except a box-only output --
+different backbone, different head, different loss, different training loop --
+land within 0.010 of each other, which is a fifth of the spread over folds. At
+this training budget the architecture choice is worth less than which specimen is
+held out.
+
+The counting result is the one that matters here, and it splits cleanly in two.
+
+On three of the four folds YOLOv5u counts better than anything else in this work:
+18.3\% on Z2, 15.0\% on Z4 and 8.2\% on Z5, against the best of 21.9\%, 20.1\%
+and 31.9\% respectively from the other five methods. On the fourth it fails
+outright, at 212.5\% on Z6, where it reports 591 objects for 238 annotated
+beads. The mean over the four folds, 63.5\%, describes neither behaviour: it
+averages three good folds with one bad one, and its between-fold standard
+deviation of 99.4 points is larger than the mean it accompanies. Quoting 63.5\%
+without the split would misrepresent the method in both directions at once.
+
+The Z6 failure can be taken apart, and the operating point is the obvious
+suspect: that fold selected a confidence threshold of 0.10, half of what Z2 and
+Z5 selected and less than a third of Z4's. Re-scoring the same Z6 predictions at
+a higher cut is not a result -- the threshold would then have been chosen on
+held-out data, which is exactly what Section~\ref{sec:training_config} refuses to
+do -- but it is a legitimate diagnostic of where the error comes from, and it is
+reported as one. At 0.20, the value two other folds selected, the fold's counting
+error falls from 212.5\% to 101.4\%; at 0.30, to 64.0\%. The lowest any threshold
+in the range reaches is 34.7\%, at 0.51, and it gets there by under-counting
+Z6-1 by three quarters while counting Z6-4 almost exactly.
+
+So the operating point accounts for most of the failure and not for all of it.
+The residue is a scale effect within the specimen. At the selected threshold the
+model over-counts Z6-1 at $500\times$ by 92\%, Z6-2 at $1000\times$ by 216\% and
+Z6-4 at $3000\times$ by 329\%, and no single cut corrects all three, because
+raising it drives the $500\times$ micrograph into under-counting before the
+$3000\times$ one is corrected. What fails on Z6 is not the model's ability to
+find beads but the comparability of its confidence scores across magnification
+within one specimen. That is a narrower claim than ``YOLO over-counts'', and it
+points at a specific remedy -- calibrating the threshold per magnification rather
+than per fold -- instead of at the architecture.
+
+The comparison against YOLOv8 is the most nearly controlled cross-architecture
+pair in this chapter: both models were trained by the same package, on the same
+folds, with the same gradient budget and the same three departures from the
+package defaults. They differ in two things at once, the backbone and the mask
+branch, so no single component can be held responsible for what follows. On counting error, which is defined
+identically for both, YOLOv5u is ahead on all four folds -- 18.3 against 38.9 on
+Z2, 15.0 against 26.7 on Z4, 8.2 against 66.0 on Z5, and 212.5 against 241.4 on
+Z6 -- and it is 7\% cheaper to train. Their average precisions, 0.315 and 0.254,
+are not comparable, because one is measured on boxes and the other on masks. The
+two also share a failure mode: each posts its worst count on Z6 and each selects
+its lowest threshold on that same fold. Whatever makes Z6 hard for this family is
+not specific to one backbone. The detection cap does not bind for YOLOv5u on any
+micrograph -- its largest output is 292 objects on Z6-1, where YOLOv8 returns the
+full 400 -- so its over-count is a measurement rather than a lower bound.
+
+For the laboratory the reading is genuinely mixed, and stating it plainly is more
+useful than averaging it away. On three specimens out of four this is the most
+accurate counter in the study, by a wide margin on Z5. On the fourth it is the
+second worst of the six. A method that is excellent on three specimens and
+unusable on a fourth cannot be deployed unattended, and four folds are too few to
+say which of the two behaviours is the typical one. What the result does
+establish is that a far smaller counting error is attainable on this data than
+the study's previous best of 37.8\%: 8.2\% on a held-out specimen is an existence
+proof, and it was reached without any tuning against the test partitions.
+
 \subsection{Faster R-CNN and the Value of the Mask Branch}
 \label{sec:mask_branch}
 
@@ -405,16 +502,18 @@ it almost never matches one.
 Among the methods that predict masks, Mask R-CNN leads on every metric measured
 -- average precision, Aggregated Jaccard Index, counting error -- and the
 classical pipeline is last on every one of them. The fourth objective of
-Section~\ref{sec:objectives} is met. The one qualification is Faster R-CNN, which
-predicts no masks and is therefore absent from the mask-level columns: on the
-counting endpoint, the only one defined identically for both, it is 3.3 points
-ahead of Mask R-CNN, for the reasons set out in Section~\ref{sec:mask_branch}.
-The ordering in between depends on which metric is asked for, and that dependence
+Section~\ref{sec:objectives} is met. The qualification is the two box-only
+methods, which predict no masks and are therefore absent from the mask-level
+columns. On the counting endpoint, the only one defined identically for all six,
+Faster R-CNN is 3.3 points ahead of Mask R-CNN for the reasons set out in
+Section~\ref{sec:mask_branch}, and YOLOv5u is ahead of both on three folds and
+far behind both on the fourth, for the reasons set out in
+Section~\ref{sec:yolov5_results}. The ordering in between depends on which metric is asked for, and that dependence
 is a result rather than an inconvenience: YOLOv8 beats the U-Net on average
 precision, 0.254 against 0.152, and loses to it on counting error, 93.2\% against
 44.2\%.
 
-The methods fail in four distinguishable ways, and the counting column separates
+The methods fail in five distinguishable ways, and the counting column separates
 them more clearly than the accuracy columns do.
 
 \begin{itemize}
@@ -428,8 +527,14 @@ them more clearly than the accuracy columns do.
     over-counts by 93\%, with the highest recall and the highest split rate,
     28.5\%, of any method.
 
+    \item \textbf{YOLOv5u counts well until it does not.} It is the most
+    accurate counter measured on three folds -- 18.3\%, 15.0\% and 8.2\% -- and
+    the second worst of the six on the fourth, at 212.5\%. Its failure is not a
+    bias in one direction but a loss of score calibration on one specimen.
+
     \item \textbf{Mask R-CNN errs in both directions.} Its mean absolute counting
-    error of 41.1\% is the lowest of the four, and its mean signed error is
+    error of 41.1\% is the lowest of the four mask-predicting methods, and its
+    mean signed error is
     $-6.1\%$: most of its absolute error cancels between micrographs that over-
     and under-count, against a U-Net whose error cancels not at all.
 \end{itemize}
@@ -460,15 +565,17 @@ COCO figures usually quoted.
 
 \input{results/table_ap_bands}
 
-Two features of that table are worth stating. First, every learned method scores
-higher on the medium and large bands than on the small one, which is the expected
-direction and is the same effect Section~\ref{sec:magnification} measures against
-magnification. Second, the large-band column rests on the thinnest evidence in the
-chapter: 1.2\% of the annotations are large, fold Z4 contains none at all, and the
-column is therefore averaged over three folds rather than four. YOLOv8's
-$\mathrm{AP}_L$ of 0.040 against Faster R-CNN's 0.166 is a difference between two
-numbers each computed from a handful of objects, and nothing in this work should
-be concluded from it.
+Two features of that table are worth stating. First, four of the five learned
+methods score higher on the medium band than on the small one, which is the
+expected direction and is the same effect Section~\ref{sec:magnification}
+measures against magnification. The exception is YOLOv5u, at 0.126 against 0.132
+-- a reversal of 0.006, which is nothing on its own, but it belongs to the method
+with the highest $\mathrm{AP}_S$ in the table. Second, the large-band column
+rests on the thinnest evidence in the chapter: 1.2\% of the annotations are
+large, fold Z4 contains none at all, and the column is therefore averaged over
+three folds rather than four. Both YOLO models score lowest there, at 0.040 and
+0.070 against Faster R-CNN's 0.166, and each of those figures is computed from a
+handful of objects. Nothing in this work should be concluded from that column.
 
 \subsection{Effect of Input Preprocessing}
 \label{sec:preprocessing_results}
@@ -850,6 +957,17 @@ micrograph is therefore not a reliable measurement, and an aggregate over many
 micrographs is considerably better than any one of them -- 7.3\% against 41.1\% is
 a factor of six, and none of that improvement comes from the model being right.
 
+That cancellation is a property of the method rather than of aggregation, and the
+other methods show that it is not guaranteed. Faster R-CNN aggregates to
+$-0.7\%$ against a per-fold mean of 37.8\%, a wider gap still and for the same
+reason. YOLOv5u gains nothing from aggregation: its aggregate is $+63.5\%$
+against a per-fold mean of 63.5\%, because its error is one-signed and
+concentrated on a single specimen, and YOLOv8's aggregate of $+101.8\%$ is worse
+than its per-fold mean of 93.2\%. A laboratory pooling many micrographs would
+therefore gain roughly a factor of six from Mask R-CNN, more from Faster R-CNN,
+and nothing at all from either YOLO model. That distinction appears in no
+accuracy column in this chapter.
+
 Figure~\ref{fig:counting} plots the two counts against each other. Four of the
 eleven micrographs fall within 25\% of the annotated count, and the largest errors
 lie on both sides: Z5-1, the second most densely populated micrograph in the
@@ -940,6 +1058,16 @@ tested here separates touching beads without also fragmenting some of them, and
 the counting error of every method is dominated by whichever of the two it does
 more of.
 
+\textbf{Counting can be far more accurate on this data than the mean figures
+suggest, and the obstacle is score calibration rather than detection.} YOLOv5u
+counts three of the four held-out specimens to within 8.2\%, 15.0\% and 18.3\%,
+each better than any other method reaches on any fold, and misses the fourth by
+212.5\%. Most of that failure is traceable to a confidence threshold that the
+training partition set at 0.10 on that fold against 0.20 to 0.35 on the others,
+and the residue to the fact that no single threshold suits all three
+magnifications of that specimen. What is scarce here is a stable operating point
+rather than detection capability.
+
 \textbf{Classical thresholding is not a viable baseline for this modality.} At
 $\mathrm{AP}_{50} = 0.001$ it is not merely worse than the learned methods but
 unusable, and the measured bead-to-background separation of about 20 grey levels
@@ -1002,8 +1130,13 @@ pyramid \cite{lin2017feature} was introduced to address. The results of
 Table~\ref{tab:ap_bands} and Table~\ref{tab:magnification} are consistent with the
 general finding that performance degrades with object size in pixels, and the
 one-stage detector's weakness on small objects reported for the YOLO family
-\cite{redmon2016yolo, lin2020focal} appears here as an $\mathrm{AP}_S$ of 0.091
-against Mask R-CNN's 0.116.
+\cite{redmon2016yolo, lin2020focal} appears in one of the two models tested and
+not in the other. YOLOv8 reaches an $\mathrm{AP}_S$ of 0.091 against Mask
+R-CNN's 0.116, which is the reported direction; YOLOv5u reaches 0.132, the
+highest of the six methods. At this object size and this training budget the
+weakness is therefore not a property of the family as such. The two models
+differ both in backbone and in whether they carry a mask branch, and four folds
+cannot separate which of the two accounts for the gap.
 
 The absolute values reported here are well below those typically reported on
 nuclei benchmarks such as the dataset of Kumar et al.\ \cite{kumar2017dataset}.
@@ -1046,15 +1179,26 @@ reported figures are what that configuration produces, not the best achievable,
 and the training budget was set by the available GPU time rather than by
 convergence.
 
-\textbf{YOLOv8 was not given a matched input budget.} It was trained on whole
-$1024$-pixel micrographs where the region-based models saw $512 \times 512$ crops,
-because its data pipeline expects a fixed image directory. Its accuracy figures
-are therefore not a like-for-like architectural comparison, and its threefold
-training cost is largely a consequence of that difference.
+\textbf{Neither YOLO model was given a matched input budget.} Both were trained
+on whole $1024$-pixel micrographs where the region-based models saw
+$512 \times 512$ crops, because their data pipeline expects a fixed image
+directory. Their accuracy figures are therefore not a like-for-like architectural
+comparison, and their threefold training cost is largely a consequence of that
+difference.
 
 \textbf{The detection cap binds for YOLOv8 on one micrograph.} It returns exactly
 400 objects on Z6-1, so its over-count there, and hence its pooled counting error,
-is a lower bound rather than a measurement.
+is a lower bound rather than a measurement. It does not bind for any other method:
+YOLOv5u's largest output on the same micrograph is 292.
+
+\textbf{The YOLOv5u counting figure averages two different behaviours.} Its mean
+of 63.5\% over four folds describes neither of them: three folds fall between
+8.2\% and 18.3\% and the fourth at 212.5\%. Quoted as a single number it
+understates the method on three specimens and overstates it on the fourth, and
+four folds cannot establish which case is the typical one. The threshold
+diagnostic of Section~\ref{sec:yolov5_results} is reported as a diagnostic for
+the same reason: it re-scores held-out predictions, so it locates the failure
+without licensing a better number.
 
 \subsection{Reliability of the Reported Numbers}
 \label{sec:reliability}
@@ -1097,7 +1241,9 @@ direction and magnitude of the merge, split and counting biases, which are large
 and systematically signed; and the gap between per-micrograph and aggregate
 counting error, which is a factor of six. What cannot be stated robustly is any
 small difference between two similar numbers, including the ordering of Mask R-CNN
-against YOLOv8 on average precision.
+against YOLOv8 on average precision, and that of YOLOv5u against Faster R-CNN,
+where 0.315 against 0.305 is a difference of 0.010 set against between-fold
+spreads of 0.049 and 0.073.
 
 \section{Summary}
 
@@ -1107,7 +1253,9 @@ counting error of 41.1\% under leave-one-specimen-out cross-validation. It does
 not reach either criterion of Section~\ref{sec:objectives}: it is far short of the
 $\mathrm{AP}_{50} \geq 0.70$ recorded at the proposal stage, and two thousandths
 short of the 0.30 that a standard detector reaches on a benchmark matched to this
-object size.
+object size. Measured on boxes, as that benchmark figure is, the two
+detection-only methods do clear it, at 0.305 and 0.315; the criterion is kept at
+the mask level, where the objective was stated.
 
 The U-Net baseline merges 48.7\% of beads and under-counts by 44\% with an error
 that never changes sign, which identifies object separation rather than mask
@@ -1116,7 +1264,14 @@ real beads than any other method, at a recall of 0.696, and reports twice as man
 objects as exist. Faster R-CNN shows that removing the mask branch costs none of
 the counting accuracy -- it is 3.3 points ahead, well inside the fold-to-fold
 spread of either model -- and all of the mask-level measurements, for 15\% less
-training time. The classical pipeline fails outright, at
+training time. YOLOv5u, the other box-only method, posts the highest box
+$\mathrm{AP}_{50}$ in the study at $0.315 \pm 0.049$ and the highest
+$\mathrm{AP}_S$ at 0.132, and counts three of the four specimens to within
+8.2\%, 15.0\% and 18.3\% -- each better than any other method on any fold --
+before failing on the fourth at 212.5\%. Most of that failure is the confidence
+threshold its own training partition selected for that fold; the rest is that no
+single threshold suits all three of that specimen's magnifications. The classical
+pipeline fails outright, at
 $\mathrm{AP}_{50} = 0.001$, for a reason measurable in the images themselves.
 
 Detection improves with magnification despite the smallest sample being at the

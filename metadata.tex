@@ -64,10 +64,10 @@ micrographs of four specimens imaged at 500$\times$, 1000$\times$ and
 beads span a sixfold range in apparent size and the four specimens are the only
 independent units in the data, the evaluation uses leave-one-specimen-out
 cross-validation, which prevents the same specimen from appearing in both the
-training and the test partition. Mask R-CNN is compared against four alternatives under an
-identical protocol: the same detector with its mask branch removed, a one-stage
-YOLOv8 segmentation model, a U-Net semantic baseline, and a classical
-Otsu-plus-watershed pipeline representing current manual practice. Beyond detection quality, the pipeline reports the quantities the
+training and the test partition. Mask R-CNN is compared against five alternatives under an
+identical protocol: the same detector with its mask branch removed, one-stage
+YOLOv8 and YOLOv5u models from the YOLO family, a U-Net semantic baseline, and a
+classical Otsu-plus-watershed pipeline representing current manual practice. Beyond detection quality, the pipeline reports the quantities the
 laboratory actually uses: bead count, bead areal density, and the bead size
 distribution in physical units, obtained by calibrating each micrograph against
 its burned-in scale bar.
@@ -79,7 +79,12 @@ agrees with the manual measurement to 3.2\%. It falls two thousandths short of t
 accuracy criterion of $\mathrm{AP}_{50} \geq 0.30$, itself set from what a standard
 detector achieves on a published benchmark of comparable object size, so the
 pipeline supports aggregate estimation and triage rather than unattended
-measurement. The comparison locates what instance
+measurement. That benchmark figure is measured on boxes, and the two
+detection-only methods do clear it there, at 0.305 and 0.315. The stronger of
+them, YOLOv5u, counts three of the four held-out specimens to within 18.3\% --
+better than any other method on any fold -- and over-counts the fourth by
+212.5\%, a failure traceable to a confidence threshold selected once per specimen
+where its three magnifications require different ones. The comparison locates what instance
 segmentation contributes: the semantic baseline attains almost identical mask
 accuracy but merges 48.7\% of beads and under-counts by 44\%, so the gain is the
 separation of touching objects rather than boundary precision. Three results run
@@ -119,10 +124,10 @@ manualisht. Duke qenë se rruazat shfaqen me përmasa që ndryshojnë deri në g
 herë dhe se katër mostrat janë njësitë e vetme të pavarura në të dhëna,
 vlerësimi kryhet me validim të kryqëzuar duke lënë jashtë një mostër të plotë
 (\emph{leave-one-specimen-out}), çka pengon shfaqjen e së njëjtës mostër njëkohësisht
-në trajnim dhe në testim. Mask R-CNN krahasohet me katër alternativa nën të njëjtin protokoll: i njëjti
-detektor pa degën e maskave, një model një-fazësh YOLOv8 me segmentim, një model
-bazë U-Net dhe një metodë klasike Otsu me \emph{watershed}, e cila përfaqëson
-praktikën aktuale manuale.
+në trajnim dhe në testim. Mask R-CNN krahasohet me pesë alternativa nën të njëjtin protokoll: i njëjti
+detektor pa degën e maskave, dy modele një-fazëshe të familjes YOLO -- YOLOv8 me
+segmentim dhe YOLOv5u me kuti -- një model bazë U-Net dhe një metodë klasike Otsu
+me \emph{watershed}, e cila përfaqëson praktikën aktuale manuale.
 Përveç cilësisë së detektimit, sistemi raporton madhësitë që laboratori i përdor
 vërtet: numrin e rruazave, dendësinë e tyre për njësi sipërfaqeje dhe shpërndarjen
 e madhësisë në njësi fizike, e llogaritur duke kalibruar secilin imazh me shiritin
@@ -135,7 +140,13 @@ parashikuar i rruazave përputhet me matjen manuale brenda 3,2\%. Kriteri i
 saktësisë $\mathrm{AP}_{50} \geq 0{,}30$ -- i vendosur sipas asaj që arrin një
 detektor standard në një bazë të dhënash të botuar me objekte të së njëjtës
 madhësi -- nuk arrihet për dy të mijtat, prandaj sistemi shërben për vlerësim të
-përgjithshëm dhe përzgjedhje paraprake, jo për matje të pambikëqyrur. Krahasimi
+përgjithshëm dhe përzgjedhje paraprake, jo për matje të pambikëqyrur. Ai kriter
+matet mbi kuti, dhe të dy metodat që parashikojnë vetëm kuti e kalojnë atje, me
+0,305 dhe 0,315. Më i miri prej tyre, YOLOv5u, i numëron tri nga katër mostrat e
+lëna jashtë brenda 18,3\% -- më mirë se çdo metodë tjetër në çdo fold -- dhe e
+mbinumëron të katërtën me 212,5\%, dështim që rrjedh nga një prag besimi i
+zgjedhur një herë për mostër, ndërkohë që tri zmadhimet e saj kërkojnë pragje të
+ndryshëm. Krahasimi
 tregon qartë se çfarë sjell segmentimi i instancave: modeli bazë semantik arrin
 saktësi maskash pothuajse identike, por bashkon 48,7\% të rruazave dhe numëron
 44\% më pak, pra përfitimi qëndron në ndarjen e objekteve që preken me njëri-tjetrin

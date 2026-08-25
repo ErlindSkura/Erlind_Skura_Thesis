@@ -436,7 +436,7 @@ quantities, and filling each box to manufacture one would score the method on
 something it never predicted. What the ablation can compare is the count, which
 is defined identically for both.
 
-\subsection{A One-Stage Alternative: YOLOv8}
+\subsection{One-Stage Alternatives: YOLOv8 and YOLOv5u}
 
 YOLOv8 \cite{redmon2016yolo, jocher2023ultralytics} is the one-stage family of
 Section~\ref{sec:onestage}, included to answer a different question from the
@@ -449,6 +449,22 @@ schedule -- so a difference between it and Mask R-CNN identifies no component as
 responsible. The segmentation variant is used, so it predicts masks and is scored
 on every metric the region-based instance model is.
 
+A second model of the same family is included alongside it. YOLOv5u shares the
+Ultralytics training loop, the same three departures from its defaults and the
+same gradient budget, and differs from YOLOv8 in its backbone and in carrying no
+mask branch: the package ships no segmentation weights for YOLOv5, so it is
+scored on boxes and on counting only. Two models rather than one make the family
+comparison less dependent on a single checkpoint, and the pair is the closest
+thing in this work to a controlled comparison across a change of backbone.
+
+The name needs one qualification, because the version numbers suggest a
+comparison the weights do not support. The checkpoint is \texttt{yolov5su}: the
+YOLOv5 backbone fitted by Ultralytics with YOLOv8's anchor-free,
+objectness-free split head, and not the anchor-based YOLOv5 of the original
+release. What separates \texttt{yolov5su} from \texttt{yolov8s-seg} is therefore
+mostly the backbone and the mask branch, and the pair should not be read as
+anchor-based against anchor-free. The results are labelled YOLOv5u throughout.
+
 Three settings depart from the package defaults, each for a measured property of
 this dataset rather than by search. The input size is held at 1024 rather than
 the default 640, since downscaling a $1024 \times 736$ micrograph by 0.625 would
@@ -460,10 +476,10 @@ is raised for the region-based models.
 
 One consequence of the first of those settings has to be stated with the results.
 The package's data pipeline expects a fixed directory of images rather than the
-crops the region-based models draw on demand, so YOLOv8 trains on whole
-micrographs at 1024 pixels where they train on $512 \times 512$ crops. Its
-training cost is therefore not comparable with theirs, and
-Chapter~\ref{ch:results} reports it on that footing.
+crops the region-based models draw on demand, so both YOLO models train on whole
+micrographs at 1024 pixels where the region-based models train on
+$512 \times 512$ crops. Their training cost is therefore not comparable with the
+region-based ones, and Chapter~\ref{ch:results} reports them on that footing.
 
 \subsection{Preprocessing as an Experimental Factor}
 \label{sec:preprocessing_method}

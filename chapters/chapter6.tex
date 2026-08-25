@@ -29,7 +29,10 @@ Aggregated Jaccard Index of $0.325 \pm 0.053$ and a mean absolute counting error
 of 41.1\%. It reaches neither success criterion of Section~\ref{sec:objectives}:
 it is far short of the $\mathrm{AP}_{50} \geq 0.70$ recorded at the proposal stage,
 and two thousandths short of the 0.30 that a standard detector reaches on a
-published benchmark matched to this object size. The pipeline
+published benchmark matched to this object size -- a figure measured on boxes,
+which the two detection-only methods here do clear, at 0.305 and 0.315, and which
+is kept at the stricter mask level because the objective was stated there. The
+pipeline
 as it stands is therefore not a replacement for a human operator. Its decomposed
 Panoptic Quality -- a Segmentation Quality of 0.719 against a Recognition Quality
 of 0.486 -- locates the deficit precisely: the model delineates well the beads it
@@ -38,7 +41,7 @@ at an overlap of 0.5. Scored on the micrographs it was trained on it reaches
 0.437, which is a gap of 0.139 but still far short of the criterion, so the
 shortfall is one of capacity and training budget rather than of generalisation.
 
-The comparison against the four alternatives answers the question the thesis was
+The comparison against the five alternatives answers the question the thesis was
 built around, and each of them fails in a way that isolates a different component.
 
 The U-Net semantic baseline merges 48.7\% of ground-truth beads and never splits
@@ -61,6 +64,20 @@ YOLOv8 finds more of the real beads than any other method tested -- a recall of
 0.696 against Mask R-CNN's 0.447 -- and reports 1223 objects against 606
 annotated, for a counting error of 93.2\%. A method can be the best detector
 measured and the worst instrument measured, and this one is both.
+
+YOLOv5u, the second model of that family and the last method added, gives the
+clearest result of the comparison and the least usable one. It reaches the
+highest box $\mathrm{AP}_{50}$ in the study, $0.315 \pm 0.049$, and the highest
+$\mathrm{AP}_S$ of any method, 0.132, and it counts three of the four held-out
+specimens to within 8.2\%, 15.0\% and 18.3\% -- each of the three better than
+any other method achieves on any fold. On the fourth it reports 591 objects for
+238 beads, an error of 212.5\%. Re-scoring that fold's predictions at the
+threshold the other folds selected cuts the error by half, and no threshold at
+all brings it below 34.7\%, because the three magnifications of that specimen
+need different cuts. The obstacle is not that the model cannot find these
+particles; it is that its confidence scores are not comparable across
+magnifications within a specimen. That is a solvable problem, and it is a
+different problem from the one the rest of this work is about.
 
 The classical Otsu-plus-watershed pipeline fails outright at
 $\mathrm{AP}_{50} = 0.001$, for a reason measurable in the micrographs: beads are
@@ -109,10 +126,11 @@ same objective.
     fold-to-fold spread 1.7 times as wide, which is a more useful result to report
     than the inflation that was expected.
 
-    \item A controlled comparison of five methods -- two-stage instance
-    segmentation, the same detector without its mask branch, a one-stage
-    alternative, semantic segmentation with connected components, and classical
-    thresholding -- on identical micrographs under an identical protocol. It
+    \item A controlled comparison of six methods -- two-stage instance
+    segmentation, the same detector without its mask branch, two one-stage
+    alternatives from the same family, semantic segmentation with connected
+    components, and classical thresholding -- on identical micrographs under an
+    identical protocol. It
     isolates object separation, rather than mask accuracy, as what instance-level
     modelling contributes on this modality, and quantifies it as a 23.8
     percentage point difference in merge rate; and it isolates the mask branch as
@@ -169,12 +187,20 @@ micrographs, so the recognition ceiling is higher than Mask R-CNN's 0.447 -- and
 the magnified run of Section~\ref{sec:upsample_results} reaches 0.655 with the
 same architecture.
 
+\textbf{Calibrate the score threshold per magnification, not per fold.} This is
+now the cheapest experiment suggested by any result in this work, and the one
+with the largest measured headroom. YOLOv5u's single catastrophic fold is mostly
+an operating point: one threshold was selected for a specimen whose three
+magnifications need different ones, and the same fold's error falls by half at
+the value the other folds chose. Selecting a threshold per magnification group,
+still on training data only, is a few lines of change to the existing selection
+code and costs no additional training. If it holds, it converts a method that
+counts three specimens to within 18\% into one that may count all four.
+
 \textbf{Suppress false positives rather than chase recall.} The complementary
 reading of the same comparison is that YOLOv8's recall advantage is bought with
-801 spurious detections. A post-hoc classifier over detections, or the
-score-calibration the two families were shown to differ in, would test whether the
-recall of one method and the precision of the other can be had together. This is
-the cheapest experiment suggested by any result in this work.
+801 spurious detections. A post-hoc classifier over detections would test whether
+the recall of one method and the precision of another can be had together.
 
 \textbf{Extend the specimen count.} The single most valuable addition to the data is
 more specimens rather than more images of the same ones. Four specimens support four
@@ -255,8 +281,10 @@ without adding a single new observation.
 
 One methodological result deserves to outlive the specific numbers. Across this
 comparison, the ranking of the methods depends on which quantity is asked for.
-YOLOv8 beats the U-Net on average precision and loses to it on counting. The two
-methods with the best agreement to the manual size distribution, by the
+YOLOv8 beats the U-Net on average precision and loses to it on counting. YOLOv5u
+posts the best detection scores in the study and a counting error that is either
+the best measured or the second worst, depending on which specimen is held out.
+The two methods with the best agreement to the manual size distribution, by the
 Kolmogorov--Smirnov statistic, are the two that over-count most severely. A study
 of this problem that reported a single accuracy figure would have ranked the
 methods wrongly for the laboratory that has to use them, and would not have been

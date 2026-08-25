@@ -170,7 +170,7 @@ every mask-level metric unset for this method rather than filling each box with 
 rectangle to score. "Did not segment" and "segmented badly" are different claims,
 and a zero would report the second while meaning the first.
 
-\subsection{YOLOv8}
+\subsection{YOLOv8 and YOLOv5u}
 
 YOLOv8 is trained through the Ultralytics package rather than through the
 torchvision path, which imposes two implementation differences that the results
@@ -192,10 +192,24 @@ predictions are converted to the same run-length-encoded mask format every other
 method writes, so the evaluation code sees no difference between them.
 
 Both YOLO families are handled by one script, which selects the family from the
-weights filename and writes each to its own prediction file. Only YOLOv8 is
-reported in Chapter~\ref{ch:results}: the package ships no segmentation variant
-of YOLOv5, so that family would enter the comparison on the box-only path
-alongside Faster R-CNN, and it was not run.
+weights filename and writes each to its own prediction file, so that neither
+overwrites the other. Both are reported in Chapter~\ref{ch:results}, but not on
+the same footing: the package ships no segmentation variant of YOLOv5, so that
+family enters the comparison on the box-only path alongside Faster R-CNN, with
+box average precision and counting error but no Aggregated Jaccard Index, no
+merge or split rate and no size distribution in micrometres.
+
+One point of nomenclature has to be stated, because the version numbers invite a
+reading the weights do not support. The checkpoint used is \texttt{yolov5su.pt},
+which is not the YOLOv5 of the original release: Ultralytics distributes the
+YOLOv5 backbone fitted with YOLOv8's anchor-free, objectness-free split head.
+Comparing \texttt{yolov5su} against \texttt{yolov8s-seg} therefore varies mostly
+the backbone and the presence of a mask branch, and is not the anchor-based
+against anchor-free comparison the version numbers suggest. Reproducing the
+published anchor-based YOLOv5 would require the separate
+\texttt{ultralytics/yolov5} repository and its own training entry point, which
+was not done. The results are labelled YOLOv5u throughout, so that the
+distinction stays visible in every table that reports them.
 
 \subsection{Classical Baseline}
 

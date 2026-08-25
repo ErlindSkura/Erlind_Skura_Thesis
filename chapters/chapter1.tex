@@ -135,19 +135,30 @@ each has been met.
     Chapter~\ref{ch:results} reports 0.298, two thousandths below it: a threshold
     chosen in order to be cleared would not have been set there. The outcome is
     reported against both figures.
+
+    One qualification belongs with that number, and it is stated here rather
+    than used, because it would soften the result. The AI-TOD-v2 figure is a
+    \emph{box} average precision, while the 0.298 reported here is a \emph{mask}
+    average precision -- the stricter of the two, since a mask has to agree in
+    shape as well as in position. Measured on boxes, as the reference is, the
+    detection-only methods of Chapter~\ref{ch:results} do clear the criterion:
+    Faster R-CNN reaches 0.305 and YOLOv5u 0.315. It is nevertheless kept at the
+    mask level, where it is not met, because the objective stated here is
+    instance segmentation rather than detection.
     % TODO(supervisor): question 10. The supervisor has still not set a threshold.
     % The criterion above is derived from the literature and is this work's own
     % proposal, not an agreed one. Ask him to confirm it or replace it.
 
-    \item \textbf{Comparison against four alternatives.} Quantify what
+    \item \textbf{Comparison against five alternatives.} Quantify what
     instance-level modelling buys, and what within it is responsible, by comparing
     Mask R-CNN against the same detector with its mask branch removed -- Faster
-    R-CNN \cite{ren2015faster}, which isolates that branch -- a one-stage YOLOv8
-    \cite{jocher2023ultralytics} segmentation model (which varies the whole
-    architecture family), a U-Net \cite{ronneberger2015unet} semantic baseline with
-    connected-component labelling, and an Otsu \cite{otsu1979threshold} plus
-    watershed \cite{vincent1991watersheds} pipeline representing current manual
-    practice. Success criterion: a clear ranking on counting error, with the merge
+    R-CNN \cite{ren2015faster}, which isolates that branch -- two one-stage
+    detectors of the YOLO family \cite{jocher2023ultralytics}, a YOLOv8
+    segmentation model and a YOLOv5u detector, which vary the architecture family
+    as a whole and each other's backbone, a U-Net \cite{ronneberger2015unet}
+    semantic baseline with connected-component labelling, and an Otsu
+    \cite{otsu1979threshold} plus watershed \cite{vincent1991watersheds} pipeline
+    representing current manual practice. Success criterion: a clear ranking on counting error, with the merge
     behaviour of each method reported explicitly.
 
     \item \textbf{Physical quantification.} Report bead count, areal density
@@ -169,10 +180,11 @@ each has been met.
     partitioning, together with a measurement of what a naive split actually costs
     on a dataset of this shape.
 
-    \item A controlled comparison of five methods -- two-stage instance
-    segmentation, the same detector without its mask branch, a one-stage
-    alternative, semantic segmentation with connected components, and classical
-    thresholding -- on the same micrographs under the same protocol, evaluated
+    \item A controlled comparison of six methods -- two-stage instance
+    segmentation, the same detector without its mask branch, two one-stage
+    alternatives from the same family, semantic segmentation with connected
+    components, and classical thresholding -- on the same micrographs under the
+    same protocol, evaluated
     both by segmentation metrics and by the counting and sizing errors that
     determine whether the method is usable in the laboratory.
 
