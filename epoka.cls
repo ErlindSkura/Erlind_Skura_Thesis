@@ -460,8 +460,6 @@
     \th@abstractcontent
     
     \vspace{\baselineskip}
-    \vspace{\baselineskip}
-    \vspace{\baselineskip}
     
     \noindent
     \textbf{Keywords:} \textit{\th@keywordsenglish}
