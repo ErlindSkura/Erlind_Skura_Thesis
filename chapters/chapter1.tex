@@ -96,7 +96,7 @@ The scope is restricted to bead defects in micrographs of a single material
 system, imaged on one instrument. Fibre diameter measurement, three-dimensional
 structure and the relation between spinning parameters and bead formation are
 outside it, although they are discussed as possible extensions in
-Section~ef{sec:futurework}.
+Section~\ref{sec:futurework}.
 
 \section{Research Objectives}
 \label{sec:objectives}
@@ -174,12 +174,10 @@ have been met.
     the unit of partitioning, together with a measurement of what a naive split
     actually costs on a dataset of this shape.
 
-    \item A controlled comparison of six methods, namely two-stage instance
-    segmentation, the same detector without its mask branch, two one-stage
-    alternatives from the same family, semantic segmentation with connected
-    components and classical thresholding, on the same micrographs under the same
-    protocol, evaluated both by segmentation metrics and by the counting and
-    sizing errors that determine whether a method is usable in the laboratory.
+    \item A controlled comparison of six methods on the same micrographs under
+    the same protocol, evaluated both by segmentation metrics and by the
+    counting and sizing errors that determine whether a method is usable in the
+    laboratory.
 
     \item An open implementation covering annotation conversion, scale
     calibration, training, evaluation and the reporting of physical quantities.
@@ -187,13 +185,10 @@ have been met.
 
 \section{Thesis Organization}
 
-	extbf{Chapter 2} reviews electrospinning and bead formation, classical image
+\textbf{Chapter 2} reviews electrospinning and bead formation, classical image
 analysis for fibrous microscopy and deep segmentation architectures, and
-identifies the gap this thesis addresses. 	extbf{Chapter 3} presents the
-methodology: the dataset and its structure, the scale calibration, the
-specimen-wise evaluation protocol, the six methods under comparison and the
-metrics. 	extbf{Chapter 4} describes the implementation, including annotation
-conversion, the handling of the burned-in information banner, the augmentation
-strategy and the training setup. 	extbf{Chapter 5} reports the experimental
-results and discusses them, and 	extbf{Chapter 6} concludes and sets out
-directions for future work.
+identifies the gap this thesis addresses. \textbf{Chapter 3} presents the
+methodology: the dataset, the scale calibration, the specimen-wise evaluation
+protocol, the six methods and the metrics. \textbf{Chapter 4} describes the
+implementation, \textbf{Chapter 5} the results, and \textbf{Chapter 6} the
+conclusions and future work.

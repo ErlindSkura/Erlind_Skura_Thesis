@@ -1,75 +1,17 @@
 \chapter{SOURCE CODE}
 \label{app:code}
 
-This appendix lists the three places where a design decision is embedded in the
-code rather than in prose. The complete repository, including the training,
-evaluation, partitioning and reporting scripts together with the Colab notebook
-used to run them, is available at
-\url{https://github.com/ErlindSkura/Erlind_Skura_Thesis}.
-
-The listings are trimmed to their substantive parts, since imports and argument
-parsing add pages without adding information.
-
-\section*{A.1 \quad Polygon Area and Physical Calibration}
-
-The object area is computed analytically from the polygon vertices rather than
-from a rasterised mask, for the reason given in Section~\ref{sec:parsing}.
-
-\begin{lstlisting}[language=Python, caption={Calibration constants and shoelace area (\texttt{code/config.py}, \texttt{code/prepare\_data.py})}]
-# Calibrated from the burned-in scale bars: the field width is 284.4 um
-# at 1000x and scales inversely with magnification, over 1024 px.
-NM_PER_PX = {500: 555.6, 1000: 277.8, 3000: 92.6}
-
-BANNER_H = 32  # burned-in Zeiss info bar at the bottom of every micrograph
-
-
-def polygon_area(points):
-    """Shoelace area of a closed polygon, in px^2."""
-    n = len(points)
-    return abs(
-        sum(
-            points[i][0] * points[(i + 1) % n][1]
-            - points[(i + 1) % n][0] * points[i][1]
-            for i in range(n)
-        )
-    ) / 2.0
-\end{lstlisting}
-
-\section*{A.2 \quad Augmentation Geometry}
-
-Augmentation transforms the polygon vertices and the image together and
-rasterises only afterwards, so overlapping beads remain separable. Vertices
-are continuous coordinates, so a reflection is $x \mapsto W - x$ and not
-$x \mapsto W - 1 - x$. The check below is the one that found that error
-(Section~\ref{sec:challenges}): it rasterises the transformed polygons and
-compares them against the directly transformed raster mask, and the two agree to
-an intersection over union of 0.9995 under the correct convention and of only
-0.87 under the incorrect one.
-
-\begin{lstlisting}[language=Python, caption={Vertex-space reflection and the check that verifies it (\texttt{code/data\_io.py})}]
-def flip_h(img, polys):
-    w = img.size[0]
-    return (img.transpose(Image.FLIP_LEFT_RIGHT),
-            [np.column_stack([w - p[:, 0], p[:, 1]]) for p in polys])
-
-
-for name, transform in [("flip_h", flip_h), ("flip_v", flip_v),
-                        ("rot90", rot90)]:
-    moved_img, moved_polys = transform(image, record.polys)
-    from_vertices = rasterise(moved_polys, *moved_img.size).any(0)
-    from_raster = np.asarray(
-        transform(mask_as_image, [])[0].convert("L")) > 127
-    print(name, iou(from_vertices, from_raster))
-\end{lstlisting}
-
-\section*{A.3 \quad Instance-Level Agreement}
-
-The listing below gives the Aggregated Jaccard Index together with the merge and
-split rates that make the counting failure modes explicit. Intersections are
-computed only for pairs whose bounding boxes overlap, since a micrograph can hold
-152 annotated beads and several hundred predictions, so evaluating every
-pair over the full frame would be prohibitive while almost every pair is
-disjoint.
+The complete implementation, including the data preparation, partitioning,
+training, evaluation and reporting scripts together with the Colab notebook used
+to run them, is available at
+\url{https://github.com/ErlindSkura/Erlind_Skura_Thesis}. Reproduced below is the
+one part where a design decision is embedded in the code rather than in prose:
+the instance-level agreement metrics, whose definitions of a merge and a split
+are what Chapter~\ref{ch:results} reports as the two failure modes that corrupt a
+count. Intersections are computed only for pairs whose bounding boxes overlap,
+since a micrograph can hold 152 annotated beads and several hundred predictions,
+so evaluating every pair over the full frame would be prohibitive while almost
+every pair is disjoint.
 
 \begin{lstlisting}[language=Python, caption={AJI and merge/split rates (\texttt{code/metrics.py})}]
 def aji(gts, preds):

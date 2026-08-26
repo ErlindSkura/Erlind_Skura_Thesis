@@ -105,7 +105,7 @@ counting error from 41.1\% to 31.3\%.
 
 \section{Limitations}
 
-The limitations are set out in full in Section~ef{sec:limitations}: four specimens of a single material system, 52 annotated beads at the highest magnification, a single annotator, a single annotation class, no hyperparameter search, two one-stage methods without a matched input budget, and a single training run per configuration at a fixed seed.
+The limitations are set out in full in Section~\ref{sec:limitations}: four specimens of a single material system, 52 annotated beads at the highest magnification, a single annotator, a single annotation class, no hyperparameter search, two one-stage methods without a matched input budget, and a single training run per configuration at a fixed seed.
 
 \section{Future Work}
 \label{sec:futurework}
@@ -161,15 +161,13 @@ as the central difficulty.
 gives better boundaries, while a count is only as good as the number of objects in
 the field, so a mixed protocol, a wide field for density and several high-power
 fields for size, may measure both better than any single setting. Testing it
-requires micrographs acquired for the purpose, which would also give the counting
-comparison across magnifications the sample size three or four micrographs per
-group denied it here.
+requires micrographs acquired for the purpose.
 
 \textbf{Joint fibre and bead analysis.} Bead quantification is one half of the
 morphological characterisation of a nanofibre mat, the fibre diameter distribution
-being the other, and tools such as DiameterJ \cite{hotaling2015diameterj} address
-it separately. A single model reporting both from one micrograph would cover the
-characterisation a laboratory actually needs.
+being the other, which tools such as DiameterJ \cite{hotaling2015diameterj}
+address separately. A single model reporting both from one micrograph would cover
+what a laboratory actually needs.
 
 \textbf{From measurement to process feedback.} If bead statistics could be linked
 to the spinning parameters that produced them, the pipeline would move from

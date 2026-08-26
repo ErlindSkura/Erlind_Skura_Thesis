@@ -243,8 +243,8 @@ Table~\ref{tab:runtime}.
 \section{Challenges and Solutions}
 \label{sec:challenges}
 
-Six problems were encountered while building the pipeline, and each is recorded
-because each changed a design decision.
+Six problems were encountered while building the pipeline, and each changed a
+design decision.
 
 \textbf{The augmented copies could not be used as supplied.} The dataset arrives
 as 143 image--annotation pairs, which initially appears to be a usable sample
@@ -258,31 +258,30 @@ instrument banner mirrored and the translated copies carry black padding along t
 vacated edge, which reinforced the decision to crop it before any processing.
 
 \textbf{Object size varies sixfold across the dataset.} The median bead is 14
-pixels across at $500\times$ and 76 at $3000\times$. This drove the choice of a
+pixels across at $500\times$ and 76 at $3000\times$, which drove the choice of a
 feature pyramid backbone, the resetting of the anchor scales and the wide
 random-scaling range in the augmentation policy.
 
 \textbf{Augmentation initially shifted every mask by one pixel.} Reflections were
-first implemented as $x \mapsto W - 1 - x$, which is correct for an integer pixel
-index but not for polygon vertices, as the latter are continuous coordinates and
-reflect as $x \mapsto W - x$. Half a pixel at each edge is invisible on a large
-object, but here the mean bead is 17 pixels across, so a one-pixel boundary shift
-moves roughly 13\% of its area on every flipped training sample. The fault was
-found by rasterising the transformed polygons and comparing them against the
-directly transformed raster mask, which agree to an intersection over union of
-0.9995 under the correct convention and 0.87 under the incorrect one. That check
-is now permanent in the test suite, since the failure produced no error message
-and no visibly wrong image, only slightly wrong labels.
+first implemented as $x \mapsto W - 1 - x$, correct for an integer pixel index but
+not for polygon vertices, which are continuous coordinates and reflect as
+$x \mapsto W - x$. Half a pixel at each edge is invisible on a large object, but
+the mean bead here is 17 pixels across, so a one-pixel boundary shift moves
+roughly 13\% of its area on every flipped training sample. The fault was found by
+rasterising the transformed polygons and comparing them against the directly
+transformed raster mask, which agree to an intersection over union of 0.9995 under
+the correct convention and 0.87 under the incorrect one. That check is now
+permanent in the test suite, since the failure produced no error message and no
+visibly wrong image, only slightly wrong labels.
 
 \textbf{Evaluating a thousand objects per image was forty times slower than
 necessary.} Instances were initially held as full-frame masks, one
-$1024 \times 736$ array per object. The classical baseline emits over a thousand
-objects for a single micrograph, so its parameter search spent almost all of its
-time reading zeros outside the objects, and a single Aggregated Jaccard Index
-computation took 5.95 seconds. Holding each instance as a bounding box plus a mask
-covering only that box, and computing intersections only for pairs whose boxes
-overlap, reduced that to 0.02 seconds and the full parameter search from over an
-hour to a few minutes.
+$1024 \times 736$ array per object, and the classical baseline emits over a
+thousand objects for a single micrograph, so its parameter search spent almost all
+its time reading zeros: a single Aggregated Jaccard Index computation took 5.95
+seconds. Holding each instance as a bounding box plus a mask covering only that
+box, and computing intersections only for pairs whose boxes overlap, reduced that
+to 0.02 seconds and the full parameter search from over an hour to a few minutes.
 
 \textbf{The smoke run destroyed a completed set of results.} The fast correctness
 check of Section~\ref{sec:deployment} originally wrote its predictions to the same
@@ -290,9 +289,8 @@ directory as a real run, so re-running it after a completed four-fold experiment
 silently overwrote several hours of predictions with output from eight training
 iterations. A smoke run produces a well-formed predictions file, so nothing fails
 and nothing warns, and the only symptom is that every subsequently reported number
-is wrong. The fix is structural rather than procedural, as a smoke run now
-redirects its working and results directories before any pipeline module is
-imported.
+is wrong. The fix is structural rather than procedural: a smoke run now redirects
+its working and results directories before any pipeline module is imported.
 
 \section{Code Organization}
 

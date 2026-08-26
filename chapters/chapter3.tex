@@ -512,10 +512,11 @@ with none, and $U$ for the predictions never selected by any bead,
           \;+\; \sum_{k \in U} |p_k|}.
     \label{eq:aji}
 \end{equation}
+
 %
-Every predicted object that matches nothing, and every bead that is matched by
-nothing, therefore enters the denominator and lowers the score. It is this that
-makes the index sensitive to over-segmentation, which a per-object average is not.
+Every predicted object that matches nothing, and every bead matched by nothing,
+therefore enters the denominator and lowers the score, which is what makes the
+index sensitive to over-segmentation where a per-object average is not.
 
 Panoptic quality \cite{kirillov2019panoptic} is reported to separate
 recognition from delineation. A predicted and an annotated mask are matched when

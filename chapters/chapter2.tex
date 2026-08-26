@@ -160,30 +160,30 @@ better on this data but not which component is responsible.
 \subsection{Detection of Small Objects}
 \label{sec:small_objects}
 
-The objects counted in this work are small in the precise sense used by the COCO
+The objects counted here are small in the precise sense used by the COCO
 benchmark, where an object is \emph{small} when its area falls below
-$32 \times 32 = 1024$ pixels. Under this convention 82.8\% of the particles
-annotated here are small, rising to 97\% in the $500\times$ micrographs, while
-only 1.2\% are large (Section~\ref{sec:calibration}). This determines which
-results in the literature form a fair point of comparison, since detector accuracy
-degrades sharply and systematically with object size, a decline documented across
-architectures and datasets in the survey of Liu et al.\ \cite{liu2021survey} and
-attributed there to the small number of pixels each object contributes, the loss
-of that signal through successive downsampling, and the coarse alignment between
-small objects and the anchors or feature-map cells meant to capture them.
+$32 \times 32 = 1024$ pixels. Under that convention 82.8\% of the particles
+annotated here are small, rising to 97\% in the $500\times$ micrographs, and only
+1.2\% are large (Section~\ref{sec:calibration}). This determines which published
+results are a fair point of comparison, since detector accuracy degrades sharply
+and systematically with object size, a decline documented across architectures in
+the survey of Liu et al.\ \cite{liu2021survey} and attributed there to the few
+pixels each object contributes, the loss of that signal through downsampling, and
+the coarse alignment between small objects and the anchors meant to capture them.
 
-Table~\ref{tab:coco_size} holds the model and the dataset fixed and splits the
-score by object size alone, for five architectures evaluated on COCO, every entry
-taken from the paper that introduced the method. The same pattern is observed for
-all of them, as the small-object score lies between a seventh and a half of the
-large-object score. The ratio also separates the architectures in a way the pooled
-AP does not: the single-stage detectors of that generation lose the most, with
-YOLOv2 recovering only a seventh of its large-object accuracy, whereas the
-two-stage detectors built on a feature pyramid lose the least. This is the
-empirical basis for preferring a pyramid-based two-stage model here.
+Table~\ref{tab:coco_size} holds model and dataset fixed and splits the score by
+object size alone, for five architectures on COCO, every entry taken from the
+paper that introduced the method. The same pattern holds for all of them: the
+small-object score lies between a seventh and a half of the large-object score.
+The ratio separates the architectures in a way the pooled AP does not, since the
+single-stage detectors of that generation lose the most, YOLOv2 recovering only a
+seventh of its large-object accuracy, whereas the two-stage detectors built on a
+feature pyramid lose the least. This is the empirical basis for preferring a
+pyramid-based two-stage model here.
 
 \begin{table}[htbp]
     \centering
+
     \caption{Average precision on COCO decomposed by object size. Every row is the
     published result of the method's own paper. The final column is the ratio
     $\mathrm{AP}_S / \mathrm{AP}_L$, the fraction of a model's large-object
@@ -284,22 +284,19 @@ average precision that must also assign every instance correctly.
     \end{tabular}
 \end{table}
 
-The last row is the reason the table is placed here rather than in the results
-chapter. The $\mathrm{AP}_{50}$ of 29.8 obtained in this work on masks lies within
-a tenth of a point of what a standard Faster R-CNN achieves with boxes on
-AI-TOD-v2, a benchmark built specifically for tiny-object detection whose mean
-object size is within two pixels of the median here. This is not a claim of
-equivalence, since the datasets, metrics and task all differ, but it does locate
-the result: a figure that appears to be a failure against pooled COCO numbers is
-an ordinary one against the literature that shares this object size.
-
-Two lessons carry over into the methodology. A feature pyramid is not optional at
-this object size, since it is the mechanism by which small objects retain a
-representation at a resolution where they still occupy several cells of the
-feature map. And an average precision in the range reported in
-Chapter~\ref{ch:results} has to be read against Tables~\ref{tab:coco_size} and
-\ref{tab:small_object_lit} rather than against pooled COCO figures, which are
-dominated by objects an order of magnitude larger.
+The last row is why the table sits here rather than in the results chapter. The
+$\mathrm{AP}_{50}$ of 29.8 obtained in this work on masks lies within a tenth of a
+point of what a standard Faster R-CNN achieves with boxes on AI-TOD-v2, a
+benchmark built for tiny-object detection whose mean object size is within two
+pixels of the median here. This is not a claim of equivalence, since the datasets,
+metrics and task all differ, but it locates the result: a figure that looks like a
+failure against pooled COCO numbers is ordinary against the literature that shares
+this object size. Two lessons follow. A feature pyramid is not optional at this
+object size, since it is how small objects retain a representation at a resolution
+where they still occupy several feature-map cells. And an average precision in the
+range reported in Chapter~\ref{ch:results} must be read against
+Tables~\ref{tab:coco_size} and \ref{tab:small_object_lit} rather than against
+pooled COCO figures, which are dominated by objects an order of magnitude larger.
 
 \subsection{Prior Work at Epoka University}
 \label{sec:epoka_prior}
@@ -421,14 +418,7 @@ set then measures memorisation rather than generalisation. The same concern
 applies to any hierarchical dataset in which several images derive from one
 physical specimen, a point returned to in Chapter~\ref{ch:methodology}.
 
-\subsection{Foundation Models for Segmentation}
 
-The Segment Anything Model \cite{kirillov2023segment} is trained on a very large
-mask corpus and produces class-agnostic masks from point or box prompts, with strong
-zero-shot transfer. For a domain with only 11 annotated images this is attractive,
-but SAM has no notion of what a bead is, and when prompted densely on a fibre mat it
-segments fibres, inter-fibre voids and beads indiscriminately. Its realistic role here is that of an annotation aid rather than a
-standalone detector.
 
 \section{Evaluation of Instance Segmentation}
 
