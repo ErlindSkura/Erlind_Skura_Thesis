@@ -23,40 +23,38 @@ micrographs under an identical partitioning scheme, and are assessed both by
 conventional segmentation metrics and by the counting and sizing errors that
 determine whether the output is usable in the laboratory.
 
-The comparison is deliberately structured so that each method isolates one factor.
-The classical pipeline establishes what is achievable without training data and
-represents current practice. The semantic network establishes what is gained by
-learning while still producing only a foreground mask. The region-based instance
-network adds explicit instance separation, and the difference between the second and
-the third therefore measures the value of instance-level modelling specifically
-rather than the value of deep learning in general. The remaining methods vary one
-component at a time within this structure, as set out in the sections that follow.
+The comparison is structured so each method isolates one factor. The
+classical pipeline establishes what is achievable without training data. The
+semantic network establishes what is gained by learning while still producing only
+a foreground mask. The region-based instance network adds explicit instance
+separation, so the difference between the second and the third measures the value
+of instance-level modelling rather than of deep learning in general. The remaining
+methods vary one component at a time within this structure.
 
 \section{Dataset}
 
 \subsection{Acquisition and Structure}
 
-The dataset consists of SEM micrographs of electrospun nanofibre mats, acquired on a
-Zeiss instrument at an accelerating voltage of 15.00\,kV and at working distances
-between 8.5 and 11.0\,mm. Every micrograph is $1024 \times 768$ pixels, 8-bit
-greyscale, and is stored as JPEG.
+The dataset consists of SEM micrographs of electrospun nanofibre mats, acquired on
+a Zeiss instrument at an accelerating voltage of 15.00\,kV and at working
+distances between 8.5 and 11.0\,mm. Every micrograph is $1024 \times 768$ pixels,
+8-bit greyscale, stored as JPEG.
 
 The 11 micrographs are not independent samples. They derive from four specimens,
-denoted Z2, Z4, Z5 and Z6, each of which is imaged at three magnifications,
-$500\times$, $1000\times$ and $3000\times$. The numeric suffix in a filename encodes
-the magnification rather than a repeat acquisition, so that Z2-1, Z2-2 and Z2-3 are
-three views of one specimen. One combination is absent, as specimen Z4 has no
-$500\times$ micrograph, and specimen Z6 uses the identifier Z6-4 for its
-$3000\times$ view. The resulting layout is summarised in Table~\ref{tab:dataset}.
-
-The four specimens are four different production methods and not four repeats of
-one. It is this that makes the partitioning choice of Section~\ref{sec:protocol}
-consequential rather than procedural, since holding out a specimen holds out a
-production method, so that a model generalising across the folds has generalised
-across the process and not merely across the frame.
+denoted Z2, Z4, Z5 and Z6, each imaged at $500\times$, $1000\times$ and
+$3000\times$. The numeric suffix in a filename encodes the magnification rather
+than a repeat acquisition, so Z2-1, Z2-2 and Z2-3 are three views of one specimen.
+One combination is absent, as specimen Z4 has no $500\times$ micrograph, and
+specimen Z6 uses the identifier Z6-4 for its $3000\times$ view. The four specimens
+are four different production methods and not four repeats of one, which is what
+makes the partitioning choice of Section~\ref{sec:protocol} consequential rather
+than procedural: holding out a specimen holds out a production method, so a model
+generalising across the folds has generalised across the process and not merely
+across the frame.
 
 \begin{table}[htbp]
     \centering
+
     \caption{The 11 annotated micrographs. Specimen and magnification are recovered
     from the filename and confirmed against the instrument banner burned into each
     image. All micrographs are $1024 \times 768$ px at 15.00\,kV.}
@@ -94,10 +92,9 @@ model is required.
     \centering
     \includegraphics[width=\textwidth]{figures/fig_dataset_overview.pdf}
     \caption{Specimen Z2 imaged at $500\times$, $1000\times$ and $3000\times$, with
-    the manual bead annotations overlaid in red. The same physical beads appear at
-    roughly 14, 29 and 76 pixels across respectively, and the number of beads within
-    the field falls from 71 to 10 as the field of view narrows. A model trained on
-    these data must handle a sixfold range in object scale.}
+    the manual bead annotations overlaid in red. The same beads appear at roughly
+    14, 29 and 76 pixels across, and the count within the field falls from 71 to 10
+    as the field of view narrows.}
     \label{fig:dataset_overview}
 \end{figure}
 
@@ -116,57 +113,51 @@ everything else and no distinction is drawn between bead subtypes.
 \subsubsection{What Counts as an Object}
 \label{sec:object_definition}
 
-A segmentation result is interpretable only against a definition of the thing being
-segmented, and the three rules to which the annotator worked are therefore stated
-here rather than left implicit in the polygons. They were specified by the
-supervisor, who directs the group that produced the specimens.
+A segmentation result is interpretable only against a definition of the thing
+being segmented, so the three rules to which the annotator worked are stated here
+rather than left implicit in the polygons. They were specified by the supervisor,
+who directs the group that produced the specimens.
 
 \begin{enumerate}
     \item \textbf{Circularity.} The embedded zeolite particles, referred to
     throughout this thesis as beads since the two terms denote the same objects,
     are approximately circular in projection. An object is annotated when it
-    presents as a compact and roughly circular body, and not when it presents as
-    an elongated fibre segment.
+    presents as a compact, roughly circular body, and not when it presents as an
+    elongated fibre segment.
 
     \item \textbf{Swellings count.} Where a fibre thickens locally into such a
     body, that swelling is annotated as a particle even though the fibre passes
-    through it and continues out the other side. In these micrographs this is the
-    common case rather than the exception, which is why no distinction is drawn
-    between a free particle and a thickened fibre segment, as by the specification
-    there is none to draw.
+    through it. In these micrographs this is the common case rather than the
+    exception, which is why no distinction is drawn between a free particle and a
+    thickened fibre segment.
 
     \item \textbf{A cluster is one object.} Where several small particles lie
-    together, the group is outlined once, as a cluster of a few beads, rather than
-    being resolved into its members.
+    together, the group is outlined once rather than resolved into its members.
 \end{enumerate}
 
-The third rule carries a consequence with which Chapter~\ref{ch:results} has to
-live. A method that splits a cluster into its visible members is scored as having
-made a split error, even where its output may be closer to the number of individual
-crystals present. What is counted in this thesis is therefore particle sites, and
-the merge and split rates of Section~\ref{sec:comparison} measure agreement with
-that convention rather than with crystal-level truth. The distinction is carried
-through to the physical quantification of Section~\ref{sec:counting} and is
-revisited among the limitations in Section~\ref{sec:limitations}.
+The third rule carries a consequence Chapter~\ref{ch:results} has to live with. A
+method that splits a cluster into its visible members is scored as having made a
+split error, even where its output may be closer to the number of individual
+crystals present. What is counted here is therefore particle sites, and the merge
+and split rates of Section~\ref{sec:comparison} measure agreement with that
+convention rather than with crystal-level truth; the distinction is revisited
+among the limitations in Section~\ref{sec:limitations}.
 
 Two properties of the annotation constrain the implementation and are shown in
-Figures~\ref{fig:bead_examples} and \ref{fig:overlap}. The first is that the same
-physical object is presented to the model at very different resolutions, as the
-median bead of specimen Z6 measures about 8\,$\mu$m at every magnification while
-spanning 16 pixels at $500\times$ and 77 at $3000\times$. The second is that beads
-touch. Across the dataset, 8.8\% of the annotated bead pixels lie inside more than
-one polygon, so that the annotation is not a partition of the image and cannot be
-stored as one without discarding exactly the regions where merge and split errors
-are decided.
+Figures~\ref{fig:bead_examples} and \ref{fig:overlap}. The same physical object is
+presented at very different resolutions, as the median bead of specimen Z6
+measures about 8\,$\mu$m at every magnification while spanning 16 pixels at
+$500\times$ and 77 at $3000\times$. And beads touch: 8.8\% of annotated bead
+pixels lie inside more than one polygon, so the annotation is not a partition of
+the image and cannot be stored as one without discarding exactly the regions where
+merge and split errors are decided.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{figures/fig_bead_examples.pdf}
     \caption{The median bead of specimen Z6 at each magnification, each crop
-    scaled to the same display size. The physical diameter is nearly constant, as
-    it must be for three views of one specimen, while the pixel diameter varies
-    almost fivefold. At $500\times$ the bead boundary is decided by a handful of
-    pixels; at $3000\times$ it is comfortably resolved.}
+    scaled to the same display size. The physical diameter is nearly constant
+    while the pixel diameter varies almost fivefold.}
     \label{fig:bead_examples}
 \end{figure}
 
@@ -174,9 +165,8 @@ are decided.
     \centering
     \includegraphics[width=\textwidth]{figures/fig_overlap.pdf}
     \caption{A region of Z6-1 in which annotated beads share pixels. Red outlines
-    are the manual annotation; shaded pixels are claimed by more than one bead.
-    Because touching beads are common rather than exceptional, instances are kept
-    as separate masks throughout rather than flattened into a single label map.}
+    are the manual annotation and shaded pixels are claimed by more than one
+    bead.}
     \label{fig:overlap}
 \end{figure}
 
@@ -219,7 +209,7 @@ shoelace formula, with indices taken modulo $N$,
 %
 rather than by counting the pixels of a rasterised mask. The distinction is not
 pedantic in this case, since at $500\times$ the median bead is only about 14 pixels
-across, so that a one-pixel error along its boundary changes the area by roughly
+across, so a one-pixel error along its boundary changes the area by roughly
 15\%. The equivalent diameter in micrometres then follows from the pixel size $s$ of
 Table~\ref{tab:calibration},
 %
@@ -240,115 +230,103 @@ are compared in Figure~\ref{fig:bead_statistics}.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{figures/fig_bead_statistics.pdf}
-    \caption{Left: annotated beads per micrograph, coloured by magnification. The
-    count falls steeply with magnification because the field of view narrows, so the
+    \caption{Left: annotated beads per micrograph, coloured by magnification; the
     $3000\times$ micrographs contribute only 52 of the 606 annotated beads. Right:
-    distribution of equivalent bead diameter in micrometres, grouped by
-    magnification. The three distributions overlap, which is the expected result if
-    the scale calibration is correct, since all three magnifications image the same
-    four specimens.}
+    equivalent bead diameter in micrometres, grouped by magnification. The three
+    distributions overlap, as they must if the calibration is correct.}
     \label{fig:bead_statistics}
 \end{figure}
 
 The residual downward trend with magnification, from 7.92 to 6.75\,$\mu$m, is
-consistent with a sampling effect rather than with a calibration error. At
-$3000\times$ the field is only 94.8\,$\mu$m wide, so that a large bead is more
-likely to be clipped by the image border and excluded, and only 52 beads are
-observed in total. This is discussed again when the results are interpreted.
+consistent with a sampling effect rather than a calibration error. At $3000\times$
+the field is only 94.8\,$\mu$m wide, so a large bead is more likely to be clipped
+by the image border and excluded, and only 52 beads are observed in total.
 
 \subsection{The Instrument Banner}
 \label{sec:banner}
 
-Every micrograph carries a burned-in information banner occupying the bottom
-32 pixels, which contains the scale bar, the working distance, the accelerating
-voltage and the magnification. The banner is not part of the specimen. It is
-high-contrast, it is identical in structure across images, and it correlates with
-magnification, so that a network trained on uncropped images could in principle read
-the magnification off the banner instead of learning scale-invariant features.
-
-The banner is therefore cropped before any processing, leaving an effective image
-size of $1024 \times 736$. No annotation is lost in doing so, since no annotated
-polygon extends into the banner region. The calibration values in
-Table~\ref{tab:calibration} are extracted from the banner once, before cropping, and
-are carried forward as metadata.
+Every micrograph carries a burned-in information banner occupying the bottom 32
+pixels, containing the scale bar, working distance, accelerating voltage and
+magnification. The banner is not part of the specimen: it is high-contrast,
+identical in structure across images, and correlates with magnification, so a
+network trained on uncropped images could read the magnification off the banner
+instead of learning scale-invariant features. It is therefore cropped before any
+processing, leaving an effective image size of $1024 \times 736$. No annotation is
+lost, since no annotated polygon extends into the banner region, and the
+calibration values of Table~\ref{tab:calibration} are extracted once before
+cropping and carried forward as metadata.
 
 \subsection{The Supplied Augmentations}
 \label{sec:supplied_aug}
 
-The dataset as received contains 143 image--annotation pairs rather than 11. Each of
-the 11 originals is accompanied by 12 pre-computed augmented copies, namely a
-horizontal flip, a vertical flip, eight translations of $\pm 150$ pixels along each
-axis and in combination, and two horizontal stretches of 20\% and 40\%. The polygon
-coordinates were transformed along with the images, and inspection confirms that
-they remain correctly registered in every variant.
+The dataset as received contains 143 image--annotation pairs rather than 11. Each
+of the 11 originals is accompanied by 12 pre-computed augmented copies: a
+horizontal flip, a vertical flip, eight translations of $\pm 150$ pixels along
+each axis and in combination, and two horizontal stretches of 20\% and 40\%. The
+polygon coordinates were transformed along with the images and remain correctly
+registered in every variant.
 
-These copies are nevertheless excluded from the analysis, for three reasons.
-
-The first is statistical. Thirteen copies of one micrograph contain the information
-of one micrograph. Reporting 143 images, or 7\,878 bead instances, would misstate
-the sample size by a factor of 13, and any metric computed over the augmented set
-would be dominated by repeated content.
+These copies are nevertheless excluded, for three reasons. The first is
+statistical: thirteen copies of one micrograph contain the information of one
+micrograph, so reporting 143 images, or 7\,878 bead instances, would misstate the
+sample size by a factor of 13.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{figures/fig_augmentation_problem.pdf}
+
     \caption{Three of the 143 supplied files: one original and two of its
     pre-computed augmented copies, with the instrument banner outlined and
-    enlarged beneath each. The flip mirrors the burned-in text, and the
-    translation displaces the banner and leaves black fill along the top edge.
-    The augmentations were applied before the banner was considered.}
+    enlarged beneath each. The flip mirrors the burned-in text and the translation
+    leaves black fill along the top edge.}
     \label{fig:augmentation_problem}
 \end{figure}
 
 The second reason is methodological and more serious. Since the copies were
 generated before partitioning, a random split over the 143 files would place
-transformed versions of the same source micrograph in both the training and the test
-partition, and the test score would then partly measure memorisation. Augmentation
-is still used, as it is essential at this sample size, but it is applied on the fly
-during training, after partitioning, so that no test image has a transformed
-relative in the training set. The augmentations actually used are described in
-Chapter~\ref{ch:implementation}.
+transformed versions of the same source micrograph in both the training and the
+test partition, and the test score would then partly measure memorisation.
+Augmentation is still used, as it is essential at this sample size, but applied on
+the fly during training, after partitioning, so no test image has a transformed
+relative in the training set.
 
-The third reason is visible in Figure~\ref{fig:augmentation_problem}, where the
-transformations have been applied to the whole file, including the instrument
-banner. The flipped copies carry mirrored burned-in text and the translated copies
-carry black fill along the vacated edge. Neither is a plausible micrograph, so that
-the copies are not merely redundant but carry an artefact on which a network can
-key.
+The third is visible in Figure~\ref{fig:augmentation_problem}: the transformations
+were applied to the whole file, including the instrument banner. The flipped
+copies carry mirrored burned-in text and the translated copies carry black fill
+along the vacated edge, so the copies are not merely redundant but carry an
+artefact a network can key on.
 
 \section{Evaluation Protocol}
 \label{sec:protocol}
 
 The four specimens, and not the eleven micrographs, are the independent units of
 this dataset. Micrographs Z2-1, Z2-2 and Z2-3 are three views of the same physical
-material, as they share its polymer, its spinning parameters and its particular
-population of beads. A partition that places Z2-1 in training and Z2-3 in testing is
-therefore not measuring generalisation to a new specimen but generalisation to a new
-magnification of a specimen already seen. Figure~\ref{fig:split_protocol} shows the
-resulting structure and the axis along which it has to be divided.
+material, sharing its polymer, its spinning parameters and its particular
+population of beads, so a partition placing Z2-1 in training and Z2-3 in testing
+measures generalisation to a new magnification of a specimen already seen rather
+than to a new specimen.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.75\textwidth]{figures/fig_split_protocol.pdf}
     \caption{Layout of the dataset. Each column is a specimen and each row a
-    magnification; the shaded cells are the 11 available micrographs. Partitioning
-    must be performed along columns, because the specimen is the only independent
-    unit. Specimen Z4 has no $500\times$ micrograph.}
+    magnification, and the shaded cells are the 11 available micrographs. Specimen
+    Z4 has no $500\times$ micrograph.}
     \label{fig:split_protocol}
 \end{figure}
 
-The protocol adopted is therefore \textbf{leave-one-specimen-out cross-validation}.
-Each of the four folds trains on all micrographs of three specimens and tests on all
-micrographs of the fourth. Every micrograph is used for testing exactly once and no
-specimen is ever split. With four specimens this gives four folds, and the results
-are reported as the mean over folds together with the spread, which at this sample
-size is itself an important number to report.
+The protocol adopted is therefore \textbf{leave-one-specimen-out
+cross-validation}. Each of the four folds trains on all micrographs of three
+specimens and tests on all micrographs of the fourth, so every micrograph is used
+for testing exactly once and no specimen is ever split. Results are reported as
+the mean over folds together with the spread, which at this sample size is itself
+an important number.
 
-In order to quantify what this protocol costs, and therefore what a naive protocol
-would have overstated, a second and deliberately flawed configuration is also run,
-in which the 11 micrographs are split at random without regard to specimen. The
-difference between the two is reported in Chapter~\ref{ch:results}. This comparison
-is one of the stated contributions of the thesis, as it converts a methodological
+To quantify what this protocol costs, and therefore what a naive protocol would
+have overstated, a second and deliberately flawed configuration is also run, in
+which the 11 micrographs are split at random without regard to specimen. The
+difference is reported in Chapter~\ref{ch:results}, and this comparison is one of
+the stated contributions of the thesis, since it converts a methodological
 argument into a measured quantity.
 
 \section{Methods}
@@ -357,28 +335,23 @@ argument into a measured quantity.
 
 The classical pipeline represents current laboratory practice. The cropped
 micrograph is contrast-normalised, thresholded with Otsu's method
-\cite{otsu1979threshold} and cleaned with morphological opening and closing in order
-to remove isolated fibre fragments, and the resulting binary mask is split into
-instances by a watershed transform \cite{vincent1991watersheds} applied to its
-distance transform with local maxima as markers. Components smaller than a minimum
-area, expressed in physical units through the calibration of
-Section~\ref{sec:calibration}, are discarded.
-
-This baseline requires no training data, so it is evaluated on all 11 micrographs
-directly. Its parameters are tuned once on the training folds and are then held
-fixed.
+\cite{otsu1979threshold} and cleaned with morphological opening and closing, and
+the resulting binary mask is split into instances by a watershed transform
+\cite{vincent1991watersheds} applied to its distance transform with local maxima
+as markers. Components smaller than a minimum area, expressed in physical units
+through the calibration of Section~\ref{sec:calibration}, are discarded. The
+baseline requires no training data, so it is evaluated on all 11 micrographs
+directly, with its parameters tuned once on the training folds and held fixed.
 
 \subsection{Semantic Baseline: U-Net}
 
 The semantic baseline is a U-Net \cite{ronneberger2015unet} with a ResNet encoder
-\cite{he2016deep} initialised from ImageNet weights \cite{deng2009imagenet}. It is
-trained to predict a binary bead-versus-background mask, and the instances are
-recovered afterwards by connected-component labelling.
-
-This baseline is included specifically in order to isolate the cost of merging. It
-is expected to segment bead pixels well while merging clusters of touching beads
-into single components, and the gap between its pixel-level and its count-level
-performance is the quantity of interest.
+\cite{he2016deep} initialised from ImageNet weights \cite{deng2009imagenet},
+trained to predict a binary bead-versus-background mask, with instances recovered
+afterwards by connected-component labelling. It is included specifically to
+isolate the cost of merging: it is expected to segment bead pixels well while
+merging clusters of touching beads into single components, and the gap between its
+pixel-level and its count-level performance is the quantity of interest.
 
 \subsection{Instance Segmentation: Mask R-CNN}
 
@@ -386,123 +359,113 @@ The primary model is Mask R-CNN \cite{he2017mask} with a ResNet-50 backbone
 \cite{he2016deep} and a feature pyramid network \cite{lin2017feature}, initialised
 from COCO-pretrained weights \cite{lin2014microsoft}. The region proposal network
 proposes candidate boxes, and for each surviving proposal the network predicts a
-class, a refined box and a binary mask within the region. Since each bead is handled
-in its own region, touching beads are separated by construction.
-
-The feature pyramid is important for this dataset in particular, as it assigns
-proposals to pyramid levels according to their size, which is the mechanism by which
-a single model can handle beads spanning 14 to 76 pixels across.
-
-The anchor scales are set from the empirical bead size distribution rather than left
-at their COCO defaults, since bead defects are far smaller relative to the image than
-typical COCO objects, the median bead occupying 0.04\% of the image area.
+class, a refined box and a binary mask within the region, so touching beads are
+separated by construction. The feature pyramid assigns proposals to levels
+according to their size, which is the mechanism by which a single model can handle
+beads spanning 14 to 76 pixels across. Anchor scales are set from the empirical
+bead size distribution rather than left at their COCO defaults, since the median
+bead occupies 0.04\% of the image area.
 
 \subsection{Detection Without Segmentation: Faster R-CNN}
 
-The endpoint that this work exists to serve is a count, and a count requires only
+The endpoint this work exists to serve is a count, and a count requires only
 detection. Faster R-CNN \cite{ren2015faster} is therefore included as a controlled
-ablation of the mask branch of Mask R-CNN. The two share the ResNet-50 and feature
-pyramid backbone, the anchor sizes rescaled to the measured particle size, the
-detection budget, the optimiser, the schedule, the fold definitions and the rule
-that fixes the score threshold on the training partition of each fold. The mask
-branch is the only difference between them, so that a gap between them is
-attributable to it. The same architecture was applied to the counting of cells in
-low-contrast micrographs by Uka et al.\ \cite{uka2020faster}.
+ablation of the mask branch of Mask R-CNN: the two share the ResNet-50 and feature
+pyramid backbone, the anchor sizes, the detection budget, the optimiser, the
+schedule, the fold definitions and the rule fixing the score threshold on each
+fold's training partition. The mask branch is the only difference, so a gap
+between them is attributable to it. The same architecture was applied to counting
+cells in low-contrast micrographs by Uka et al.\ \cite{uka2020faster}.
 
-Its predictions are stored as boxes with no segmentation field, and it is
-consequently absent from every mask-level result. The Aggregated Jaccard Index,
-Panoptic Quality, the merge and split rates and the size distribution are mask
-quantities, and filling each box in order to manufacture one would score the method
-on something that it never predicted. What the ablation is able to compare is the
-count, which is defined identically for both.
+Its predictions are stored as boxes with no segmentation field, so it is absent
+from every mask-level result: the Aggregated Jaccard Index, Panoptic Quality, the
+merge and split rates and the size distribution are mask quantities, and filling
+each box to manufacture one would score the method on something it never
+predicted. What the ablation can compare is the count, defined identically for
+both.
 
 \subsection{One-Stage Alternatives: YOLOv8 and YOLOv5u}
 
 YOLOv8 \cite{redmon2016yolo, jocher2023ultralytics} is the one-stage family of
-Section~\ref{sec:onestage}, and it is included in order to answer a different
-question from the ablation above, namely whether a different family of architecture
-performs better on this data. It is not a controlled comparison and is not read as
-one, since it shares nothing with the region-based models, having a different
-backbone, an anchor-free head, a different label assignment rule, a different loss
-and its own augmentation and optimiser schedule, so that a gap between it and Mask
-R-CNN identifies no component as responsible. The segmentation variant is used, so
-that it predicts masks and is scored on every metric on which the region-based
-instance model is scored.
+Section~\ref{sec:onestage}, included to answer a different question from the
+ablation above, namely whether a different family of architecture performs better
+on this data. It is not a controlled comparison and is not read as one, since it
+shares nothing with the region-based models, having a different backbone, an
+anchor-free head, a different label assignment rule, a different loss and its own
+augmentation and optimiser schedule, so a gap between it and Mask R-CNN identifies
+no component as responsible. The segmentation variant is used, so it predicts
+masks and is scored on every metric the region-based instance model is.
 
 YOLOv5u is included alongside it, sharing the Ultralytics training loop, the same
-three departures from its defaults and the same gradient budget, while differing in
-the backbone and in carrying no mask branch, since the package ships no segmentation
-weights for YOLOv5 and it is therefore scored on boxes and counting only. Two models
-rather than one make the family comparison less dependent on a single checkpoint.
+three departures from its defaults and the same gradient budget, while differing
+in the backbone and in carrying no mask branch, since the package ships no
+segmentation weights for YOLOv5. Two models rather than one make the family
+comparison less dependent on a single checkpoint.
 
-The name requires one qualification. The checkpoint is \texttt{yolov5su}, that is
-the YOLOv5 backbone fitted by Ultralytics with the anchor-free and objectness-free
-split head of YOLOv8, and not the anchor-based YOLOv5 of the original release. What
-separates it from \texttt{yolov8s-seg} is therefore mostly the backbone and the mask
-branch, and the pair should not be read as anchor-based against anchor-free. The
+The checkpoint is \texttt{yolov5su}, the YOLOv5 backbone fitted by Ultralytics
+with the anchor-free, objectness-free split head of YOLOv8, and not the
+anchor-based YOLOv5 of the original release. What separates it from
+\texttt{yolov8s-seg} is therefore mostly the backbone and the mask branch. The
 results are labelled YOLOv5u throughout.
 
-Three settings depart from the package defaults, each of them for a measured
-property of this dataset rather than by search. The input size is held at 1024
-rather than at the default 640, since downscaling a $1024 \times 736$ micrograph by
-0.625 would take the median particle at $500\times$ from 14.3 to 8.9 pixels. Mosaic
-augmentation is disabled, because composing four images and rescaling roughly halves
-the apparent object size while 82.8\% of the particles are already below the
-small-object threshold of COCO. The detection cap is raised to 400 for the same
-reason for which it is raised for the region-based models.
+Three settings depart from the package defaults, each for a measured property of
+this dataset rather than by search. The input size is held at 1024 rather than the
+default 640, since downscaling a $1024 \times 736$ micrograph by 0.625 would take
+the median particle at $500\times$ from 14.3 to 8.9 pixels. Mosaic augmentation is
+disabled, because composing four images and rescaling roughly halves the apparent
+object size while 82.8\% of the particles are already below the small-object
+threshold of COCO. The detection cap is raised to 400 for the same reason as for
+the region-based models.
 
-One consequence of the first of these settings has to be stated together with the
-results. The data pipeline of the package expects a fixed directory of images rather
-than the crops that the region-based models draw on demand, so that both YOLO models
-train on whole micrographs at 1024 pixels while the region-based models train on
-$512 \times 512$ crops. Their training cost is therefore not comparable with that of
-the region-based models, and Chapter~\ref{ch:results} reports them on that footing.
+One consequence has to be stated with the results. The data pipeline of the
+package expects a fixed directory of images rather than the crops the region-based
+models draw on demand, so both YOLO models train on whole micrographs at 1024
+pixels while the region-based models train on $512 \times 512$ crops. Their
+training cost is therefore not comparable with that of the region-based models.
 
 \subsection{Preprocessing as an Experimental Factor}
 \label{sec:preprocessing_method}
 
 Prior work from this institution reports that the preprocessing applied before a
-network sees a micrograph changes materially what that network is able to learn, for
-images suffering from non-uniform illumination and low contrast
-\cite{uka2020preprocessing}. The present dataset shares the low contrast, with about
-eighteen grey levels separating a particle from the surrounding mat, but it differs
-in one respect that governs which transforms are worth testing. In unstained
-brightfield the background is a smooth field, whereas here it is a dense fibre
-network with structure at the same spatial scale as the particles. The transforms
-are therefore selected for this material rather than carried across.
+network sees a micrograph changes materially what it can learn, for images
+suffering from non-uniform illumination and low contrast
+\cite{uka2020preprocessing}. The present dataset shares the low contrast, with
+about eighteen grey levels separating a particle from the surrounding mat, but
+differs in one respect that governs which transforms are worth testing: in
+unstained brightfield the background is a smooth field, whereas here it is a dense
+fibre network with structure at the same spatial scale as the particles. The
+transforms are therefore selected for this material rather than carried across.
 
-Four variants are compared, with the architecture, the schedule, the fold
-definitions and the threshold-selection rule held fixed, so that any difference is
-attributable to the input transform alone:
+Four variants are compared, with the architecture, schedule, fold definitions and
+threshold-selection rule held fixed, so any difference is attributable to the
+input transform alone:
 
 \begin{itemize}
     \item \textbf{None.} The baseline, and not merely a formality. Both detectors
     are initialised from weights trained on natural images, which carry
-    expectations about intensity statistics, so that a transform can as easily
-    cost accuracy as buy it, and a variant that loses to this row is a finding.
+    expectations about intensity statistics, so a transform can as easily cost
+    accuracy as buy it, and a variant that loses to this row is a finding.
 
     \item \textbf{CLAHE.} Contrast-limited adaptive histogram equalisation,
     applied against the narrow separation. It is adaptive rather than global
     because the brightness of the mat varies across a frame by more than the
-    particle-to-mat difference, so that a single global mapping cannot serve both
-    sides of an image.
+    particle-to-mat difference.
 
     \item \textbf{Background subtraction.} The particles are darker than the mat,
-    so the illumination estimate is a grey closing, an operation that erases dark
-    features while preserving the slowly varying field. Its footprint has to
-    exceed the largest object present, as otherwise that object is itself treated
-    as illumination and flattened away, and since the largest annotated particle
-    spans 214 pixels the footprint is set to 257.
+    so the illumination estimate is a grey closing, which erases dark features
+    while preserving the slowly varying field. Its footprint has to exceed the
+    largest object present, and since the largest annotated particle spans 214
+    pixels the footprint is set to 257.
 
     \item \textbf{Median filter.} A $3\times3$ median against sensor noise, kept
     deliberately small, since the median particle is 20 pixels across and a window
     approaching that size would remove the object along with the noise.
 \end{itemize}
 
-Each variant is applied to the whole micrograph before cropping, at the single point
-where the training and the inference paths share code. This is a correctness
-requirement rather than a convenience, since a model trained on equalised images and
-evaluated on raw ones would still produce numbers, wrong in a way that no metric
+Each variant is applied to the whole micrograph before cropping, at the single
+point where the training and inference paths share code. This is a correctness
+requirement rather than a convenience, since a model trained on equalised images
+and evaluated on raw ones would still produce numbers, wrong in a way no metric
 would reveal.
 
 \section{Evaluation Metrics}
@@ -524,14 +487,15 @@ intersection-over-union threshold of 0.5 ($\mathrm{AP}_{50}$), at 0.75
 ($\mathrm{AP}_{75}$), and averaged over thresholds from 0.5 to 0.95 following the
 COCO protocol \cite{lin2014microsoft}. Average precision at a fixed overlap
 threshold originates with the Pascal VOC challenge \cite{everingham2010pascal},
-while the COCO variant averages it over a range of thresholds so that boundary
-accuracy is rewarded rather than only detection.
+while the COCO variant averages over a range of thresholds so boundary accuracy is
+rewarded rather than only detection.
 
 The aggregated Jaccard index \cite{kumar2017dataset} is reported in addition,
 since it penalises merges and splits explicitly rather than treating each object
-independently. Each annotated bead $g_i$ is assigned the prediction that it overlaps
+independently. Each annotated bead $g_i$ is assigned the prediction it overlaps
 most,
 %
+
 \begin{equation}
     j^{*}(i) = \arg\max_{j} \; \mathrm{IoU}(g_i, p_j),
     \label{eq:aji_match}
@@ -553,7 +517,7 @@ Every predicted object that matches nothing, and every bead that is matched by
 nothing, therefore enters the denominator and lowers the score. It is this that
 makes the index sensitive to over-segmentation, which a per-object average is not.
 
-Panoptic quality \cite{kirillov2019panoptic} is reported in order to separate
+Panoptic quality \cite{kirillov2019panoptic} is reported to separate
 recognition from delineation. A predicted and an annotated mask are matched when
 $\mathrm{IoU}(g, p) > 0.5$, and since no mask can exceed that overlap with more than
 one partner, the matching is unique and requires no assignment solver. Writing
@@ -570,17 +534,19 @@ unmatched predictions and beads,
                       + \tfrac{1}{2}|\mathit{FN}|}}_{\textstyle \mathrm{RQ}}.
     \label{eq:pq}
 \end{equation}
+
 %
 The two factors are reported separately as well as combined, since they answer
-different questions. Segmentation quality $\mathrm{SQ}$ measures how well the beads
-that are found are outlined, whereas recognition quality $\mathrm{RQ}$ measures how
-many of them were found at all. A method can be strong on one and weak on the other,
-and Chapter~\ref{ch:results} shows that the distinction matters here.
+different questions: segmentation quality $\mathrm{SQ}$ measures how well the
+beads that are found are outlined, whereas recognition quality $\mathrm{RQ}$
+measures how many were found at all. A method can be strong on one and weak on the
+other, and Chapter~\ref{ch:results} shows the distinction matters here.
 
-Finally, one measure is reported that deliberately discards instance identity.
-Flattening each side to a single binary mask, $\hat{G} = \bigcup_i g_i$ and
-$\hat{P} = \bigcup_j p_j$, gives the pixel-level agreement
+Finally, one measure deliberately discards instance identity. Flattening each side
+to a single binary mask, $\hat{G} = \bigcup_i g_i$ and $\hat{P} = \bigcup_j p_j$,
+gives the pixel-level agreement
 %
+
 \begin{equation}
     \mathrm{DICE} = \frac{2\,|\hat{G} \cap \hat{P}|}{|\hat{G}| + |\hat{P}|},
     \qquad
@@ -588,26 +554,27 @@ $\hat{P} = \bigcup_j p_j$, gives the pixel-level agreement
                                     {|\hat{G} \cup \hat{P}|}.
     \label{eq:pixel_dice}
 \end{equation}
+
 %
 This is the weakest measure in the chapter and is not used to rank anything, since
-it cannot distinguish a method that separates two touching beads from one that fuses
-them, which is the distinction on which this work turns. It is reported for one
-reason. The semantic segmentation literature, including the prior work of
-Section~\ref{sec:epoka_prior}, reports DICE and IoU computed in this way, and those
-values cannot be read against an average precision, so that computing both from the
-same predictions is what makes them comparable. The counts are pooled over
-micrographs before the ratio is formed, so that a frame holding four beads does not
-weigh as much as one holding 152.
+it cannot distinguish a method that separates two touching beads from one that
+fuses them. It is reported for one reason: the semantic segmentation literature,
+including the prior work of Section~\ref{sec:epoka_prior}, reports DICE and IoU
+computed this way, and those values cannot be read against an average precision,
+so computing both from the same predictions is what makes them comparable. The
+counts are pooled over micrographs before the ratio is formed, so a frame holding
+four beads does not weigh as much as one holding 152.
 
 \subsection{Laboratory Metrics}
 
-Segmentation metrics do not by themselves establish that a method is usable. The
-following are therefore reported as primary outcomes:
+Segmentation metrics do not by themselves establish that a method is usable, so
+the following are reported as primary outcomes.
 
 \textbf{Counting error.} The relative error in the number of beads found in a
 micrograph, reported both signed and absolute, since a method whose errors cancel
 across specimens behaves differently from one that is biased:
 %
+
 \begin{equation}
     e = 100 \times \frac{|P| - |G|}{|G|} \quad (\%).
     \label{eq:counting_error}
@@ -640,16 +607,18 @@ contains at least half of each of two or more predictions:
         |\{p \in P : c_{P}(g,p) \geq \tau\}| \geq 2 \,\bigr\}\Bigr|.
     \label{eq:split_rate}
 \end{align}
+
 %
 Coverage is used rather than intersection over union because the two failures are
-asymmetric, since a prediction that swallows two beads has a low $\mathrm{IoU}$ with
-each of them while containing both almost entirely, and an overlap-based criterion
-would miss exactly the case being measured.
+asymmetric: a prediction swallowing two beads has a low $\mathrm{IoU}$ with each
+while containing both almost entirely, so an overlap-based criterion would miss
+exactly the case being measured.
 
-\textbf{Areal density.} Beads per square millimetre, which is the form in which the
-measurement is used for process comparison. For a micrograph of $W \times H$ pixels
-at a pixel size of $s$ micrometres,
+\textbf{Areal density.} Beads per square millimetre, the form in which the
+measurement is used for process comparison. For a micrograph of $W \times H$
+pixels at a pixel size of $s$ micrometres,
 %
+
 \begin{equation}
     \rho = \frac{|P| \times 10^{6}}{W H s^{2}}
     \quad (\mathrm{beads\ mm^{-2}}).
@@ -662,28 +631,24 @@ ranges and by a two-sample Kolmogorov--Smirnov test.
 
 \section{Tools and Technologies}
 
-The implementation uses Python with PyTorch. The annotations are parsed from the
-LabelMe JSON format and converted to COCO-style instance masks. The classical
-baseline uses scikit-image and OpenCV, while the figures and statistics are produced
+The implementation uses Python with PyTorch. Annotations are parsed from the
+LabelMe JSON format and converted to COCO-style instance masks, the classical
+baseline uses scikit-image and OpenCV, and figures and statistics are produced
 with Matplotlib and NumPy. Full version information is given in
-Chapter~\ref{ch:implementation}.
-
-No local GPU was available, so the training stages were run on Google Colab with an
-NVIDIA T4. The consequences for the experimental design are set out in
-Section~\ref{sec:environment}.
+Chapter~\ref{ch:implementation}. No local GPU was available, so the training
+stages were run on Google Colab with an NVIDIA T4, with consequences for the
+experimental design set out in Section~\ref{sec:environment}.
 
 \section{Summary}
 
 The dataset comprises 11 SEM micrographs of four electrospun specimens, imaged at
 three magnifications and annotated with 606 bead polygons. Each micrograph is
-calibrated against its burned-in scale bar, and the calibration is validated by the
-agreement of the physical bead size distribution across magnifications. Since the
-specimen is the only independent unit in the data, the evaluation uses
-leave-one-specimen-out cross-validation, and the pre-computed augmented copies
-supplied with the dataset are excluded in favour of augmentation applied after
-partitioning. Six methods, namely classical thresholding, a semantic U-Net, Mask
-R-CNN, the same detector without its mask branch, and the YOLOv8 and YOLOv5u
-one-stage models, are compared under this protocol and are assessed both by
-segmentation metrics and by the counting and sizing errors that determine
-usefulness in the laboratory. The next chapter describes how this design is
-realised in software.
+calibrated against its burned-in scale bar, and the calibration is validated by
+the agreement of the physical bead size distribution across magnifications. Since
+the specimen is the only independent unit, evaluation uses leave-one-specimen-out
+cross-validation, and the pre-computed augmented copies supplied with the dataset
+are excluded in favour of augmentation applied after partitioning. Six methods,
+namely classical thresholding, a semantic U-Net, Mask R-CNN, the same detector
+without its mask branch, and the YOLOv8 and YOLOv5u one-stage models, are compared
+under this protocol. The next chapter describes how the design is realised in
+software.

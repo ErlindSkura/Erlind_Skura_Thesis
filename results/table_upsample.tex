@@ -3,15 +3,11 @@
 \begin{table}[htbp]
     \centering
     \caption{Effect of magnifying the dataset threefold by bicubic
-    interpolation, under the leave-one-specimen-out protocol. The image and its
-    annotation are resampled together, the network is trained and run at the
-    magnified scale, and its predictions are mapped back to native resolution
-    before scoring, so both rows are measured against the same ground truth in
-    the same coordinate frame. Architecture, schedule, folds and
-    threshold-selection rule are identical, so a difference is attributable to
-    the resampling alone. Resampling adds no information; what it changes is the
-    number of pixels the network is given per particle, and
-    Table~\ref{tab:coco_size} shows how few that is at native resolution.}
+    interpolation, under the leave-one-specimen-out protocol. Image and
+    annotation are resampled together and the predictions are mapped back to
+    native resolution before scoring, so both rows are measured against the same
+    ground truth. Architecture, schedule, folds and threshold-selection rule are
+    identical.}
     \label{tab:upsample}
     \begin{tabular}{lrrrr}
         \toprule

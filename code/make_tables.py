@@ -119,8 +119,8 @@ def table_comparison(m: dict) -> str:
     \\centering
     \\caption{{The mask-predicting methods under an identical protocol, averaged over
     the four leave-one-specimen-out folds. Counting error is the mean absolute
-    percentage difference between the predicted and the annotated particle count.
-    Detection-only methods are compared in Table~\\ref{{tab:counting}}.}}
+    percentage difference per micrograph. Detection-only methods appear in
+    Table~\\ref{{tab:counting}}.}}
     \\label{{tab:method_comparison}}
     \\begin{{tabular}}{{lrrrr}}
         \\toprule
@@ -144,10 +144,8 @@ def table_leakage(m: dict) -> str | None:
             f"{_f(ra['abs_counting_error']['mean'] - rb['abs_counting_error']['mean'], 1)} \\\\")
     return f"""\\begin{{table}}[htbp]
     \\centering
-    \\caption{{The same model evaluated under a specimen-wise protocol and under a
-    random split over the 11 micrographs, with identical fold sizes. The
-    difference is what a naive protocol would have gained on this dataset;
-    a difference near zero is itself a result, not a missing one.}}
+    \\caption{{The same model under a specimen-wise protocol and under a random
+    split over the 11 micrographs, with identical fold sizes.}}
     \\label{{tab:leakage}}
     \\begin{{tabular}}{{lrrr}}
         \\toprule
@@ -188,11 +186,9 @@ def table_counting(m: dict) -> str:
     return f"""\\begin{{table}}[htbp]
     \\centering
     \\caption{{Counting accuracy under the leave-one-specimen-out protocol. Counts
-    are pooled over all 11 held-out micrographs; the error is the mean absolute
-    percentage difference per micrograph, so it does not cancel between images that
-    over- and under-count. Methods marked (box) predict boxes and no masks, so
-    their average precision is computed on boxes and they are absent from the
-    mask-based comparison of Table~\\ref{{tab:method_comparison}}.}}
+    are pooled over the 11 held-out micrographs, while the error is the mean
+    absolute percentage difference per micrograph. Methods marked (box) predict
+    no masks, so their average precision is computed on boxes.}}
     \\label{{tab:counting}}
     \\begin{{tabular}}{{lrrrr}}
         \\toprule
@@ -225,10 +221,8 @@ def table_ap_bands(m: dict) -> str:
     \\centering
     \\caption{{Average precision decomposed by object size, under the
     leave-one-specimen-out protocol. The bands are COCO's: small is below
-    $32 \\times 32$ pixels, large above $96 \\times 96$. Since 82.8\\% of the
-    annotated particles are small and 1.2\\% are large, $\\mathrm{{AP}}_S$ is the
-    column that describes this dataset; a dash marks a band the held-out ground
-    truth does not populate, which cannot be scored.}}
+    $32 \\times 32$ pixels, large above $96 \\times 96$. A dash marks a band the
+    held-out ground truth does not populate.}}
     \\label{{tab:ap_bands}}
     \\begin{{tabular}}{{lrrrrrr}}
         \\toprule
@@ -300,11 +294,10 @@ def table_preprocessing(m: dict) -> str:
     \\centering
     \\caption{{Effect of input preprocessing on Mask R-CNN, under the
     leave-one-specimen-out protocol. Architecture, schedule, folds and
-    threshold-selection rule are identical across rows, so a difference is
-    attributable to the input transform alone. The second column is the
-    particle-to-mat contrast measured directly on the annotations before any
-    training: the mean grey-level separation divided by the standard deviation of
-    the background, which is the contrast a filter actually has to work with.}}
+    threshold-selection rule are identical across rows. The second column is the
+    particle-to-mat contrast measured on the annotations before training, that is
+    the mean grey-level separation divided by the background standard
+    deviation.}}
     \\label{{tab:preprocessing}}
     \\begin{{tabular}}{{lrrrrr}}
         \\toprule
@@ -339,15 +332,11 @@ def table_upsample(m: dict) -> str:
     return f"""\\begin{{table}}[htbp]
     \\centering
     \\caption{{Effect of magnifying the dataset threefold by bicubic
-    interpolation, under the leave-one-specimen-out protocol. The image and its
-    annotation are resampled together, the network is trained and run at the
-    magnified scale, and its predictions are mapped back to native resolution
-    before scoring, so both rows are measured against the same ground truth in
-    the same coordinate frame. Architecture, schedule, folds and
-    threshold-selection rule are identical, so a difference is attributable to
-    the resampling alone. Resampling adds no information; what it changes is the
-    number of pixels the network is given per particle, and
-    Table~\\ref{{tab:coco_size}} shows how few that is at native resolution.}}
+    interpolation, under the leave-one-specimen-out protocol. Image and
+    annotation are resampled together and the predictions are mapped back to
+    native resolution before scoring, so both rows are measured against the same
+    ground truth. Architecture, schedule, folds and threshold-selection rule are
+    identical.}}
     \\label{{tab:upsample}}
     \\begin{{tabular}}{{lrrrr}}
         \\toprule
@@ -390,17 +379,8 @@ def table_generalisation(m: dict) -> str:
     \\centering
     \\caption{{Training accuracy against test accuracy under the
     leave-one-specimen-out protocol. Each fold's model is scored on the
-    micrographs it was trained on and on the specimen it was held out from, by
-    the same code and against the same annotations. The gap is train minus test
-    in each metric's own units, so the model favours what it has already seen
-    when the $\\mathrm{{AP}}_{{50}}$ gap is positive and when the counting gap is
-    negative. The training figure is not a result in
-    its own right -- it is measured on data the optimiser was given -- but the
-    distance between the two columns is: it separates a model that has memorised
-    its training specimens from one that is limited by the difficulty of the
-    task. No pooled figure is given because a micrograph belongs to the training
-    partition of three of the four folds, so pooling would weight specimens by
-    how often they recur.}}
+    micrographs it was trained on and on the specimen it was held out from. The
+    gap is train minus test in each metric's own units.}}
     \\label{{tab:generalisation}}
     \\begin{{tabular}}{{lrrrrrr}}
         \\toprule
@@ -443,10 +423,9 @@ def table_runtime(m: dict) -> str:
     return f"""\\begin{{table}}[htbp]
     \\centering
     \\caption{{Training cost per fold, averaged over the four leave-one-specimen-out
-    folds.{hw} Training draws random crops on demand rather than iterating a fixed
-    set, so an epoch is defined here as one crop-equivalent pass over the fold's
-    eight training micrographs. Step times are medians, measured with the device
-    synchronised, and exclude the first step, which carries one-off initialisation.}}
+    folds.{hw} An epoch is one crop-equivalent pass over the fold's eight training
+    micrographs. Step times are medians, measured with the device synchronised,
+    and exclude the first step.}}
     \\label{{tab:runtime}}
     \\begin{{tabular}}{{lrrrrrr}}
         \\toprule
@@ -507,9 +486,8 @@ def table_physical(m: dict) -> str:
     return f"""\\begin{{table}}[htbp]
     \\centering
     \\caption{{Predicted bead size distribution against the manual ground truth,
-    pooled over all 11 held-out micrographs. Diameters are equivalent circular
-    diameters in micrometres; the two-sample Kolmogorov--Smirnov statistic
-    compares each predicted distribution with the manual one.}}
+    pooled over the 11 held-out micrographs. Diameters are equivalent circular
+    diameters in micrometres.}}
     \\label{{tab:physical}}
     \\begin{{tabular}}{{lrrrrr}}
         \\toprule
@@ -537,11 +515,9 @@ def table_folds(m: dict) -> str:
     return f"""\\begin{{table}}[htbp]
     \\centering
     \\caption{{Leave-one-specimen-out fold composition and the bead counts
-    Mask R-CNN produced for each held-out specimen. Counting error is signed --
-    positive means the method over-counted -- and is the mean over the fold's
-    micrographs, not the difference between the two count columns: a fold whose
-    micrographs err in opposite directions can carry a mean of either sign while
-    its totals agree.}}
+    Mask R-CNN produced for each held-out specimen. Counting error is signed,
+    positive meaning an over-count, and is the mean over the fold's micrographs
+    rather than the difference between the two count columns.}}
     \\label{{tab:folds}}
     \\begin{{tabular}}{{llrrrr}}
         \\toprule

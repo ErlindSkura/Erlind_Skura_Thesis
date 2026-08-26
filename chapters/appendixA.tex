@@ -1,10 +1,10 @@
 \chapter{SOURCE CODE}
 \label{app:code}
 
-This appendix lists the parts of the implementation in which a design decision is
-embedded in the code rather than in prose. The complete repository, including the
-training, evaluation and reporting scripts together with the Colab notebook used
-to run them, is available at
+This appendix lists the three places where a design decision is embedded in the
+code rather than in prose. The complete repository, including the training,
+evaluation, partitioning and reporting scripts together with the Colab notebook
+used to run them, is available at
 \url{https://github.com/ErlindSkura/Erlind_Skura_Thesis}.
 
 The listings are trimmed to their substantive parts, since imports and argument
@@ -16,16 +16,6 @@ The object area is computed analytically from the polygon vertices rather than
 from a rasterised mask, for the reason given in Section~\ref{sec:parsing}.
 
 \begin{lstlisting}[language=Python, caption={Calibration constants and shoelace area (\texttt{code/config.py}, \texttt{code/prepare\_data.py})}]
-# The 11 original micrographs, keyed by specimen and magnification. The
-# suffix encodes magnification, not a repeat: -1 is 500x, -2 is 1kx,
-# -3/-4 is 3kx.
-IMAGES = {
-    "Z2-1": ("Z2", 500), "Z2-2": ("Z2", 1000), "Z2-3": ("Z2", 3000),
-    "Z4-2": ("Z4", 1000), "Z4-3": ("Z4", 3000),
-    "Z5-1": ("Z5", 500), "Z5-2": ("Z5", 1000), "Z5-3": ("Z5", 3000),
-    "Z6-1": ("Z6", 500), "Z6-2": ("Z6", 1000), "Z6-4": ("Z6", 3000),
-}
-
 # Calibrated from the burned-in scale bars: the field width is 284.4 um
 # at 1000x and scales inversely with magnification, over 1024 px.
 NM_PER_PX = {500: 555.6, 1000: 277.8, 3000: 92.6}
@@ -48,48 +38,21 @@ def polygon_area(points):
 \section*{A.2 \quad Augmentation Geometry}
 
 Augmentation transforms the polygon vertices and the image together and
-rasterises only afterwards, so that overlapping beads remain separable. The
-reflection convention below is the one described in
-Section~\ref{sec:challenges}, where vertices are continuous coordinates and a
-reflection is therefore $x \mapsto W - x$.
+rasterises only afterwards, so overlapping beads remain separable. Vertices
+are continuous coordinates, so a reflection is $x \mapsto W - x$ and not
+$x \mapsto W - 1 - x$. The check below is the one that found that error
+(Section~\ref{sec:challenges}): it rasterises the transformed polygons and
+compares them against the directly transformed raster mask, and the two agree to
+an intersection over union of 0.9995 under the correct convention and of only
+0.87 under the incorrect one.
 
-\begin{lstlisting}[language=Python, caption={Vertex-space transforms (\texttt{code/data\_io.py})}]
+\begin{lstlisting}[language=Python, caption={Vertex-space reflection and the check that verifies it (\texttt{code/data\_io.py})}]
 def flip_h(img, polys):
     w = img.size[0]
     return (img.transpose(Image.FLIP_LEFT_RIGHT),
             [np.column_stack([w - p[:, 0], p[:, 1]]) for p in polys])
 
 
-def rot90(img, polys):
-    """One 90-degree counter-clockwise rotation; (x, y) -> (y, W - x)."""
-    w = img.size[0]
-    return (img.transpose(Image.ROTATE_90),
-            [np.column_stack([p[:, 1], w - p[:, 0]]) for p in polys])
-
-
-def augment(img, polys, rng, *, crop_size, scale_range):
-    img, polys = scale(img, polys, rng.uniform(*scale_range))
-    if rng.random() < 0.5:
-        img, polys = flip_h(img, polys)
-    if rng.random() < 0.5:
-        img, polys = flip_v(img, polys)
-    for _ in range(int(rng.integers(4))):
-        img, polys = rot90(img, polys)
-
-    w, h = img.size
-    ox = int(rng.integers(0, max(1, w - crop_size + 1)))
-    oy = int(rng.integers(0, max(1, h - crop_size + 1)))
-    img, polys = crop(img, polys, ox, oy, crop_size)
-    return photometric(img, rng), polys
-\end{lstlisting}
-
-The following is the check that found the one-pixel error described in
-Section~\ref{sec:challenges}. It rasterises the transformed polygons and compares
-them against the directly transformed raster mask, and the two agree to an
-intersection over union of 0.9995 under the correct convention and of only 0.87
-under the incorrect one.
-
-\begin{lstlisting}[language=Python, caption={Verifying that vertex transforms match image transforms}]
 for name, transform in [("flip_h", flip_h), ("flip_v", flip_v),
                         ("rot90", rot90)]:
     moved_img, moved_polys = transform(image, record.polys)
@@ -104,7 +67,7 @@ for name, transform in [("flip_h", flip_h), ("flip_v", flip_v),
 The listing below gives the Aggregated Jaccard Index together with the merge and
 split rates that make the counting failure modes explicit. Intersections are
 computed only for pairs whose bounding boxes overlap, since a micrograph can hold
-152 annotated beads and several hundred predictions, so that evaluating every
+152 annotated beads and several hundred predictions, so evaluating every
 pair over the full frame would be prohibitive while almost every pair is
 disjoint.
 
@@ -145,35 +108,4 @@ def merge_split(gts, preds, thr=0.5):
                   if np.count_nonzero(cov_pr[i] >= thr) >= 2)
     return {"merge_rate": 100.0 * len(merged) / len(gts),
             "split_rate": 100.0 * n_split / len(gts)}
-\end{lstlisting}
-
-\section*{A.4 \quad Partitioning}
-
-Fold membership derives from the specimen prefix, so that all micrographs of one
-specimen move together. The random control uses the same four test-set sizes, so
-that the two protocols differ only in what the split respects.
-
-\begin{lstlisting}[language=Python, caption={Both partitioning protocols (\texttt{code/folds.py})}]
-def loso_folds():
-    folds = []
-    for sp in SPECIMENS:
-        test = [n for n, (s, _) in IMAGES.items() if s == sp]
-        folds.append({"name": sp, "held_out_specimen": sp,
-                      "test": sorted(test),
-                      "train": sorted(n for n in IMAGES if n not in test)})
-    return folds
-
-
-def random_folds(seed=SEED):
-    names = sorted(IMAGES)
-    random.Random(seed).shuffle(names)
-    sizes = [len(f["test"]) for f in loso_folds()]   # 3, 2, 3, 3
-    folds, cut = [], 0
-    for i, k in enumerate(sizes, start=1):
-        test = sorted(names[cut:cut + k])
-        cut += k
-        folds.append({"name": f"R{i}", "held_out_specimen": None,
-                      "test": test,
-                      "train": sorted(n for n in IMAGES if n not in test)})
-    return folds
 \end{lstlisting}

@@ -3,10 +3,9 @@
 \begin{table}[htbp]
     \centering
     \caption{Training cost per fold, averaged over the four leave-one-specimen-out
-    folds. Trained on Tesla T4. Training draws random crops on demand rather than iterating a fixed
-    set, so an epoch is defined here as one crop-equivalent pass over the fold's
-    eight training micrographs. Step times are medians, measured with the device
-    synchronised, and exclude the first step, which carries one-off initialisation.}
+    folds. Trained on Tesla T4. An epoch is one crop-equivalent pass over the fold's eight training
+    micrographs. Step times are medians, measured with the device synchronised,
+    and exclude the first step.}
     \label{tab:runtime}
     \begin{tabular}{lrrrrrr}
         \toprule
