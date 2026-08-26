@@ -49,29 +49,25 @@
 
 % Abstract (English)
 \abstract{
-Bead defects in electrospun nanofibre mats degrade porosity and mechanical
-strength, and are quantified by hand, one ImageJ outline at a time.
-
-This thesis automates that measurement. The dataset is 11 SEM micrographs of four
-specimens at 500$\times$, 1000$\times$ and 3000$\times$, carrying 606 manually
-delineated beads; since the specimens are the only independent units in it,
-evaluation is leave-one-specimen-out. Mask R-CNN is compared under an identical
-protocol against five alternatives: a detection-only ablation of itself, YOLOv8
-and YOLOv5u, a U-Net semantic baseline and a classical Otsu-plus-watershed
-pipeline.
-
-Mask R-CNN leads the mask-predicting methods at
-$\mathrm{AP}_{50} = 0.298 \pm 0.059$, a counting error of 41.1\% per micrograph
-and a median bead diameter within 3.2\% of the manual value -- two thousandths
-short of the 0.30 criterion, taken from a benchmark of matched object size. The
-semantic baseline matches its mask accuracy but merges 48.7\% of beads and
-under-counts by 44\%: what instance segmentation contributes is separation, not
-boundary precision. Detection improves with magnification, 0.227 at $500\times$
-against 0.396 at $3000\times$ although that group holds only 52 beads: the
-binding constraint is pixels per object, not label scarcity, and magnifying the
-dataset threefold raises it to 0.373 without adding an observation. YOLOv5u, the
-best detector tested, counts three specimens to within 18.3\% and the fourth to
-212.5\%.
+Bead defects in electrospun nanofibre mats reduce porosity and mechanical
+strength and are quantified by hand, one ImageJ outline at a time. This work
+automates that measurement. The dataset consists of 11 SEM micrographs of four
+specimens at 500$\times$, 1000$\times$ and 3000$\times$, carrying 606
+manually delineated beads, and since the specimens are the only independent units
+in it, the evaluation is leave-one-specimen-out. Mask R-CNN is compared under an
+identical protocol against five alternatives, namely a detection-only ablation of
+itself, YOLOv8, YOLOv5u, a U-Net semantic baseline and a classical
+Otsu-plus-watershed pipeline. Mask R-CNN is found to lead the
+mask-predicting methods, with $\mathrm{AP}_{50} = 0.298 \pm 0.059$, a counting
+error of 41.1\% per micrograph and a median bead diameter within 3.2\% of the
+manual value, two thousandths short of the 0.30 criterion taken from a
+benchmark of matched object size. The semantic baseline matches its mask accuracy
+while merging 48.7\% of the beads and under-counting by 44\%, indicating that
+instance segmentation contributes separation rather than boundary precision. Detection improves with magnification, from 0.227 at $500\times$ to
+0.396 at $3000\times$ although that group holds only 52 beads, so the binding
+constraint is pixels per object rather than label scarcity, and magnifying the
+dataset threefold raises it to 0.373 without adding an observation. YOLOv5u, the best detector tested, counts three specimens to within
+18.3\% and the fourth to 212.5\%.
 }
 
 % Keywords (English)
@@ -81,25 +77,23 @@ best detector tested, counts three specimens to within 18.3\% and the fourth to
 \abstrakt{
 Defektet e tipit rruazë në membranat nanofibroze ulin porozitetin dhe
 qëndrueshmërinë mekanike dhe maten manualisht, duke vizatuar secilën në ImageJ.
-
-Kjo tezë e automatizon atë matje. Grupi ka 11 imazhe SEM të katër mostrave në
-500$\times$, 1000$\times$ dhe 3000$\times$, me 606 rruaza të anotuara
-manualisht; meqë mostrat janë njësitë e vetme të pavarura, vlerësimi lë jashtë
-një mostër të plotë. Mask R-CNN krahasohet nën të njëjtin protokoll me pesë
-alternativa: vetë ai pa degën e maskave, YOLOv8, YOLOv5u, një model bazë U-Net
-dhe një metodë klasike Otsu-\emph{watershed}.
-
-Mask R-CNN kryeson mes metodave me maska, me
-$\mathrm{AP}_{50} = 0{,}298 \pm 0{,}059$, gabim numërimi 41,1\% për imazh dhe
-diametër mesatar brenda 3,2\% të matjes manuale -- dy të mijta nën kriterin 0,30,
-marrë nga një bazë të dhënash me objekte po aq të vogla. Modeli bazë semantik
-arrin të njëjtën saktësi maskash, por bashkon 48,7\% të rruazave: kontributi i
-segmentimit të instancave është ndarja e objekteve, jo konturi. Detektimi
-përmirësohet me zmadhimin, 0,227 në $500\times$ kundrejt 0,396 në $3000\times$
-edhe pse ai grup ka vetëm 52 rruaza: kufizimi është numri i pikselëve për objekt,
-jo etiketat e pakta; zmadhimi i grupit me faktorin tre e ngre në 0,373. YOLOv5u,
-detektori më i mirë i testuar, i numëron tri mostra brenda 18,3\% dhe të katërtën
-me 212,5\%.
+Ky punim e automatizon atë matje. Grupi i të dhënave përbëhet nga 11 imazhe SEM
+të katër mostrave, të marra në 500$\times$, 1000$\times$ dhe 3000$\times$, me 606
+rruaza të anotuara manualisht, dhe meqë mostrat janë njësitë e vetme të pavarura
+në të, vlerësimi lë jashtë një mostër të plotë. Mask R-CNN krahasohet nën të
+njëjtin protokoll me pesë alternativa, përkatësisht vetë ai pa degën e maskave,
+YOLOv8, YOLOv5u, një model bazë U-Net dhe një metodë klasike
+Otsu-\emph{watershed}. Rezultatet tregojnë se Mask R-CNN kryeson mes metodave me
+maska, me $\mathrm{AP}_{50} = 0{,}298 \pm 0{,}059$, gabim numërimi 41,1\% për
+imazh dhe diametër mesatar brenda 3,2\% të matjes manuale, duke mbetur dy të
+mijta nën kriterin 0,30 të marrë nga një bazë të dhënash me objekte po aq të
+vogla. Modeli bazë semantik arrin të njëjtën saktësi maskash, por bashkon 48,7\%
+të rruazave, çka tregon se kontributi i segmentimit të instancave është ndarja e
+objekteve dhe jo konturi. Detektimi përmirësohet me zmadhimin, nga 0,227 në
+$500\times$ në 0,396 në $3000\times$ edhe pse ai grup ka vetëm 52 rruaza, pra
+kufizimi është numri i pikselëve për objekt dhe jo etiketat e pakta, ndërsa
+zmadhimi i grupit me faktorin tre e ngre atë në 0,373. YOLOv5u, detektori më i
+mirë i testuar, i numëron tri mostra brenda 18,3\% dhe të katërtën me 212,5\%.
 }
 
 % Keywords (Albanian)

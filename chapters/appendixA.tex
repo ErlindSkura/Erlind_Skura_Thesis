@@ -1,19 +1,19 @@
 \chapter{SOURCE CODE}
 \label{app:code}
 
-This appendix lists the parts of the implementation where a design decision is
+This appendix lists the parts of the implementation in which a design decision is
 embedded in the code rather than in prose. The complete repository, including the
-training, evaluation and reporting scripts and the Colab notebook used to run
-them, is available at
+training, evaluation and reporting scripts together with the Colab notebook used
+to run them, is available at
 \url{https://github.com/ErlindSkura/Erlind_Skura_Thesis}.
 
-Listings are trimmed to the substantive parts; imports and argument parsing add
-pages without adding information.
+The listings are trimmed to their substantive parts, since imports and argument
+parsing add pages without adding information.
 
 \section*{A.1 \quad Polygon Area and Physical Calibration}
 
-Object area is computed analytically from the polygon vertices rather than from a
-rasterised mask, for the reason given in Section~\ref{sec:parsing}.
+The object area is computed analytically from the polygon vertices rather than
+from a rasterised mask, for the reason given in Section~\ref{sec:parsing}.
 
 \begin{lstlisting}[language=Python, caption={Calibration constants and shoelace area (\texttt{code/config.py}, \texttt{code/prepare\_data.py})}]
 # The 11 original micrographs, keyed by specimen and magnification. The
@@ -48,10 +48,10 @@ def polygon_area(points):
 \section*{A.2 \quad Augmentation Geometry}
 
 Augmentation transforms the polygon vertices and the image together and
-rasterises only afterwards, so that overlapping beads stay separable. The
+rasterises only afterwards, so that overlapping beads remain separable. The
 reflection convention below is the one described in
-Section~\ref{sec:challenges}: vertices are
-continuous coordinates, so a reflection is $x \mapsto W - x$.
+Section~\ref{sec:challenges}, where vertices are continuous coordinates and a
+reflection is therefore $x \mapsto W - x$.
 
 \begin{lstlisting}[language=Python, caption={Vertex-space transforms (\texttt{code/data\_io.py})}]
 def flip_h(img, polys):
@@ -83,11 +83,11 @@ def augment(img, polys, rng, *, crop_size, scale_range):
     return photometric(img, rng), polys
 \end{lstlisting}
 
-The check that found the one-pixel error described in
-Section~\ref{sec:challenges}. It rasterises
-the transformed polygons and compares them against the directly transformed
-raster mask; the two agree to an intersection over union of 0.9995 under the
-correct convention and only 0.87 under the incorrect one.
+The following is the check that found the one-pixel error described in
+Section~\ref{sec:challenges}. It rasterises the transformed polygons and compares
+them against the directly transformed raster mask, and the two agree to an
+intersection over union of 0.9995 under the correct convention and of only 0.87
+under the incorrect one.
 
 \begin{lstlisting}[language=Python, caption={Verifying that vertex transforms match image transforms}]
 for name, transform in [("flip_h", flip_h), ("flip_v", flip_v),
@@ -101,11 +101,12 @@ for name, transform in [("flip_h", flip_h), ("flip_v", flip_v),
 
 \section*{A.3 \quad Instance-Level Agreement}
 
-The Aggregated Jaccard Index, and the merge and split rates that make the
-counting failure modes explicit. Intersections are computed only for pairs whose
-bounding boxes overlap: a micrograph can hold 152 annotated beads and several
-hundred predictions, and evaluating every pair over the full frame would be
-prohibitive while almost every pair is disjoint.
+The listing below gives the Aggregated Jaccard Index together with the merge and
+split rates that make the counting failure modes explicit. Intersections are
+computed only for pairs whose bounding boxes overlap, since a micrograph can hold
+152 annotated beads and several hundred predictions, so that evaluating every
+pair over the full frame would be prohibitive while almost every pair is
+disjoint.
 
 \begin{lstlisting}[language=Python, caption={AJI and merge/split rates (\texttt{code/metrics.py})}]
 def aji(gts, preds):

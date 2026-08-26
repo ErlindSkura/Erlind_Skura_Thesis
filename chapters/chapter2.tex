@@ -3,197 +3,206 @@
 
 \section{Introduction}
 
-This chapter reviews the three bodies of work that the thesis draws on: the
-materials-science literature on electrospinning and bead formation, which defines
-what is being measured and why; the image-analysis literature on fibrous
-microscopy, which describes how the measurement is currently made; and the
-computer-vision literature on segmentation, which supplies the methods used here.
-The chapter closes by stating the gap between them.
+This chapter reviews the three bodies of work on which the thesis draws. These are
+i) the materials-science literature on electrospinning and bead formation, which
+defines what is measured and why, ii) the image-analysis literature on fibrous
+microscopy, which describes the way in which the measurement is currently made, and
+iii) the computer-vision literature on segmentation, from which the methods used
+here are taken. The gap between them is stated at the end of the chapter.
 
 \section{Theoretical Background}
 
 \subsection{Electrospinning and the Formation of Bead Defects}
 
-In electrospinning, a polymer solution is fed through a spinneret held at a high
-potential relative to a collector. Above a threshold voltage the electrostatic
-repulsion of surface charge overcomes the surface tension of the pendant droplet,
-which deforms into a Taylor cone and emits a charged jet. The jet undergoes bending
-instability, stretches by orders of magnitude, and the solvent evaporates, leaving a
-solid fibre deposited as a randomly oriented non-woven mat
-\cite{doshi1995electrospinning, huang2003review}.
-Reneker and Yarin \cite{reneker2008electrospinning} give a detailed account of the jet dynamics that
-govern this process.
+In electrospinning, a polymer solution is fed through a spinneret that is held at a
+high potential relative to a collector. Above a threshold voltage the electrostatic
+repulsion of the surface charge overcomes the surface tension of the pendant
+droplet, which then deforms into a Taylor cone and emits a charged jet. The jet
+undergoes a bending instability and stretches by orders of magnitude while the
+solvent evaporates, leaving a solid fibre that is deposited as a randomly oriented
+non-woven mat \cite{doshi1995electrospinning, huang2003review}.
+A detailed account of the jet dynamics governing this process is given by Reneker
+and Yarin \cite{reneker2008electrospinning}.
 
-The morphology of the deposit depends on a balance of forces: surface tension
-favours the break-up of a cylindrical thread into droplets, while viscoelastic
-stress and charge repulsion oppose it. At low viscosity, low charge density or
-high surface tension the instability is not fully suppressed and the jet
-partially collapses, producing ellipsoidal swellings along the fibres. Fong, Chun
-and Reneker \cite{fong1999beaded} established the standard account, showing that
-higher viscosity and higher net charge density produce fewer and more elongated
-beads while higher surface tension does the opposite; Bhardwaj and Kundu
-\cite{bhardwaj2010electrospinning} review how concentration, conductivity,
-voltage, flow rate and tip-to-collector distance interact in practice.
+The morphology of the deposit is determined by a balance of forces, where surface
+tension favours the break-up of a cylindrical thread into droplets while
+viscoelastic stress and charge repulsion oppose it. At low viscosity, low charge
+density or high surface tension the instability is not fully suppressed and the jet
+collapses partially, producing ellipsoidal swellings along the fibres. The standard
+account of this behaviour was established by Fong, Chun and Reneker
+\cite{fong1999beaded}, who showed that higher viscosity and higher net charge
+density result in fewer and more elongated beads, whereas higher surface tension
+has the opposite effect. Bhardwaj and Kundu \cite{bhardwaj2010electrospinning}
+review the way in which concentration, conductivity, voltage, flow rate and
+tip-to-collector distance interact in practice.
 
-Because bead content responds so directly to these parameters, bead count and
-size are the diagnostic output of a parameter sweep: a recipe is refined until
-the mat is bead-free or the bead population acceptably small. Beads also matter
-physically -- they reduce the specific surface area that makes these mats useful
-for filtration and catalysis, perturb the pore-size distribution that governs
-permeability, and act as stress concentrators that lower tensile strength.
+Since the bead content responds so directly to these parameters, bead count and
+bead size are used as the diagnostic output of a parameter sweep, and a recipe is
+refined until the mat is bead-free or until the bead population is acceptably
+small. Beads are also important physically, as they reduce the specific surface
+area that makes these mats useful in filtration and catalysis, perturb the
+pore-size distribution that governs permeability and act as stress concentrators
+that lower the tensile strength.
 
 \subsection{Scanning Electron Microscopy of Nanofibre Mats}
 
 SEM is the standard characterisation tool for these materials. It resolves features
-well below the diffraction limit of light microscopy and produces images whose
-contrast derives largely from surface topography, which suits the assessment of
-fibre morphology. Micrographs are typically acquired at several magnifications: a
-low magnification to sample enough fibres for a representative measurement, and a
-higher one to resolve individual features. Instrument software burns an information
-banner into the image, recording the scale bar, accelerating voltage, working
-distance and magnification. The banner is convenient for a human reader and is the
-means by which pixel measurements can be converted to physical units, but it is not
-part of the specimen and must be excluded before any automated analysis.
+well below the diffraction limit of light microscopy and produces images in which
+the contrast derives largely from surface topography, making it suitable for the
+assessment of fibre morphology. Micrographs are typically acquired at several
+magnifications, a low one in order to sample enough fibres for a representative
+measurement and a higher one in order to resolve individual features. The
+instrument software burns an information banner into the image, in which the scale
+bar, the accelerating voltage, the working distance and the magnification are
+recorded. The banner is convenient for a human reader and provides the means by
+which pixel measurements are converted to physical units. It is not, however, part
+of the specimen, and therefore it has to be excluded before any automated analysis.
 
 \subsection{Semantic and Instance Segmentation}
 
-Semantic segmentation assigns a class label to every pixel; instance segmentation
-additionally separates the pixels belonging to distinct objects of the same class.
-The distinction is decisive here. A semantic model that labels every bead pixel
-correctly still yields a single connected component for a cluster of touching
-beads, so the derived count is too low and the derived size distribution contains a
-spurious large object. Since the laboratory endpoint is a count and a size
-distribution rather than an area fraction, instance-level output is required.
+Semantic segmentation assigns a class label to every pixel, whereas instance
+segmentation additionally separates the pixels belonging to distinct objects of the
+same class. This distinction is decisive in the present task. A semantic model that
+labels every bead pixel correctly still produces a single connected component for a
+cluster of touching beads, so that the derived count is too low while the derived
+size distribution contains a spurious large object. Since the laboratory endpoint
+is a count and a size distribution rather than an area fraction, an instance-level
+output is required.
 
 \section{Related Work}
 
 \subsection{Classical Image Analysis for Fibrous Microscopy}
 
 The established approach in the materials literature is a sequence of hand-designed
-operations: contrast normalisation, thresholding, morphological cleaning and a
-splitting step. Otsu's method \cite{otsu1979threshold} chooses a global threshold by
-maximising between-class variance and remains the default in tools such as Fiji
-\cite{schindelin2012fiji}. Touching objects are then separated by the watershed
-transform \cite{vincent1991watersheds}, usually applied to the distance transform of
-the binary mask.
+operations, namely contrast normalisation, thresholding, morphological cleaning and
+a splitting step. Otsu's method \cite{otsu1979threshold} selects a global threshold
+by maximising the between-class variance and remains the default in tools such as
+Fiji \cite{schindelin2012fiji}. Touching objects are then separated by the watershed
+transform \cite{vincent1991watersheds}, which is usually applied to the distance
+transform of the binary mask.
 
-For electrospun materials specifically, DiameterJ \cite{hotaling2015diameterj}
+For electrospun materials in particular, DiameterJ \cite{hotaling2015diameterj}
 provides a validated open-source pipeline for fibre diameter and porosity from SEM
-micrographs, and is widely used. Its scope, however, is the fibre network: it
+micrographs and is widely used. Its scope, however, is the fibre network, as it
 characterises diameters and intersections rather than isolating discrete defects.
 
-These pipelines have real advantages -- they are transparent, they require no
-training data and their failure modes are interpretable -- but they depend on the
-foreground being separable by intensity. In micrographs of a dense fibre mat this
-assumption does not hold: bright fibres cross the field at every angle and occupy
-the same grey levels as bead surfaces, so a global threshold cannot isolate the
-beads. Watershed splitting also has a well-known tendency to over-segment on noisy
-distance transforms, which is the failure that most directly corrupts a count.
+These pipelines have real advantages, since they are transparent, they require no
+training data and their failure modes are interpretable. They depend, however, on
+the foreground being separable by intensity, and in micrographs of a dense fibre mat
+this assumption does not hold, as bright fibres cross the field at every angle and
+occupy the same grey levels as the bead surfaces, so that a global threshold is not
+able to isolate the beads. Watershed splitting has in addition a well-known tendency
+to over-segment on noisy distance transforms, and this is the failure that corrupts
+a count most directly.
 
 \subsection{Encoder--Decoder Networks for Semantic Segmentation}
 
 U-Net \cite{ronneberger2015unet} introduced the encoder--decoder architecture with
-skip connections that has dominated biomedical segmentation since. The contracting
-path captures context while the expanding path recovers spatial resolution, and the
-skip connections restore the high-frequency detail lost to pooling. It was designed
-explicitly for the regime of interest here, having been demonstrated on training
-sets of a few dozen annotated images with heavy augmentation. Falk et al.
-\cite{falk2019unet} later packaged it for cell counting and morphometry, confirming
-that the architecture transfers to quantification tasks.
+skip connections that has dominated biomedical segmentation since then. The
+contracting path captures context while the expanding path recovers spatial
+resolution, and the skip connections restore the high-frequency detail that is lost
+to pooling. The architecture was designed explicitly for the regime of interest
+here, having been demonstrated on training sets of a few dozen annotated images
+together with heavy augmentation. Falk et al.\ \cite{falk2019unet} later packaged
+it for cell counting and morphometry, thus confirming that it transfers to
+quantification tasks.
 
-U-Net remains a semantic model, and the standard remedy for instance separation --
-predicting object boundaries as an auxiliary class and using them to split the
-foreground -- is effective but indirect, and its accuracy depends on how reliably
-thin boundaries can be predicted.
+U-Net nevertheless remains a semantic model. The standard remedy for instance
+separation, which consists in predicting object boundaries as an auxiliary class and
+using them to split the foreground, is effective but indirect, as its accuracy
+depends on how reliably thin boundaries can be predicted.
 
 \subsection{Instance Segmentation}
 
-Faster R-CNN \cite{ren2015faster} established the two-stage detection paradigm: a
-region proposal network scores candidate boxes, and a second stage classifies and
-refines them. Mask R-CNN \cite{he2017mask} extends it with a parallel branch that
-predicts a binary mask inside each proposal, and replaces the coarse RoI pooling
-with RoIAlign to preserve spatial correspondence. Because each object is handled in
-its own region, touching objects are separated by construction rather than by
-post-processing -- the property that makes it the natural choice for counting tasks.
-Feature pyramid networks \cite{lin2017feature} supply the multi-scale representation
-that lets a single model handle objects of very different apparent size, which is
-directly relevant to a dataset spanning a sixfold magnification range.
+Faster R-CNN \cite{ren2015faster} established the two-stage detection paradigm, in
+which a region proposal network scores candidate boxes and a second stage classifies
+and refines them. Mask R-CNN \cite{he2017mask} extends this design with a parallel
+branch that predicts a binary mask inside each proposal, and replaces the coarse RoI
+pooling with RoIAlign in order to preserve spatial correspondence. Since each object
+is handled inside its own region, touching objects are separated by construction
+rather than by post-processing, and it is this property that makes the architecture
+a natural choice for counting tasks. Feature pyramid networks \cite{lin2017feature}
+supply the multi-scale representation that allows a single model to handle objects
+of very different apparent size, which is directly relevant to a dataset spanning a
+sixfold magnification range.
 
-In microscopy, several methods exploit the shape regularity of the targets.
-StarDist \cite{schmidt2018stardist} represents each object as a star-convex polygon,
-which is well matched to roundish, convex objects and degrades gracefully when they
-touch. Cellpose \cite{stringer2021cellpose} learns spatial gradient flows towards
-object centres and follows them to recover instances, and generalises across cell
-types without retraining. Bead defects are approximately ellipsoidal and convex, so
-these shape priors are a plausible fit and are noted here as alternatives.
+Several methods developed for microscopy exploit the shape regularity of the
+targets. StarDist \cite{schmidt2018stardist} represents each object as a star-convex
+polygon, which is well matched to roundish and convex objects and degrades
+gracefully when they touch. Cellpose \cite{stringer2021cellpose} learns spatial
+gradient flows towards object centres and follows them in order to recover the
+instances, and it generalises across cell types without retraining. Bead defects are
+approximately ellipsoidal and convex, so that these shape priors are a plausible fit
+and are noted here as alternatives.
 
 \subsection{One-Stage Detection}
 \label{sec:onestage}
 
-The two-stage design above spends its first stage proposing regions and its second
-refining them. One-stage detectors remove the proposal step and predict class and
-box directly on a dense grid of locations, which is what makes them fast. YOLO
-\cite{redmon2016yolo} introduced the formulation, and its principal early weakness
-was accuracy on the objects that fall between grid cells -- small, clustered ones.
-Lin et al.\ \cite{lin2020focal} identified the cause as the class imbalance of
-dense prediction, where the overwhelming majority of candidate locations are
-background, and addressed it with a loss that down-weights easy negatives. The
-modern YOLO releases \cite{jocher2023ultralytics} keep the one-stage structure but
-drop the anchor boxes, predicting object extent directly and adding an optional
-branch that emits a mask per detection, which brings the family into the same
-comparison as the region-based instance models.
+The two-stage design described above spends its first stage in proposing regions and
+its second in refining them. One-stage detectors remove the proposal step and predict
+the class and the box directly on a dense grid of locations, and it is this that
+makes them fast. The formulation was introduced by YOLO \cite{redmon2016yolo}, whose
+principal early weakness was its accuracy on the objects falling between grid cells,
+that is small and clustered ones. Lin et al.\ \cite{lin2020focal} identified the
+cause as the class imbalance of dense prediction, where the overwhelming majority of
+the candidate locations are background, and addressed it with a loss that
+down-weights easy negatives. The modern YOLO releases \cite{jocher2023ultralytics}
+keep the one-stage structure but drop the anchor boxes, predicting object extent
+directly and adding an optional branch that emits a mask per detection, which brings
+the family into the same comparison as the region-based instance models.
 
-The reason to test one here is not speed, which this application does not need,
-but the different inductive bias. A region-based model reasons about one object at
-a time inside its own proposal; a one-stage model reasons about the whole frame at
-once and must resolve neighbouring objects through non-maximum suppression rather
-than by construction. For a dataset in which the objects touch, that is a
-substantive difference rather than an implementation detail, and
-Chapter~\ref{ch:results} measures which way it cuts.
+The reason for testing such a model here is not speed, which this application does
+not require, but the different inductive bias. A region-based model reasons about one
+object at a time inside its own proposal, whereas a one-stage model reasons
+about the whole frame at once and has to resolve neighbouring objects through
+non-maximum suppression rather than by construction. For a dataset in which the
+objects touch this is a substantive difference and not an implementation detail, and
+Chapter~\ref{ch:results} measures in which direction it operates.
 
-Two cautions from the literature carry directly into how the result should be
-read. The family's weakness on small objects is documented rather than
-incidental, and Section~\ref{sec:small_objects} quantifies it against the other
-architectures in this comparison. And a comparison against a region-based model
-varies the backbone, the label assignment, the loss and the augmentation schedule
-together, so it answers whether a different family does better on this data, not
-which component is responsible.
+Two cautions from the literature carry directly into the way in which the result
+should be read. First, the weakness of this family on small objects is documented
+rather than incidental, and Section~\ref{sec:small_objects} quantifies it against
+the other architectures included in this comparison. Second, a comparison against a
+region-based model varies the backbone, the label assignment, the loss and the
+augmentation schedule at the same time, so that it answers whether a different
+family performs better on this data but not which component is responsible.
 
 \subsection{Detection of Small Objects}
 \label{sec:small_objects}
 
 The objects counted in this work are small in the precise sense used by the COCO
-benchmark: an object is \emph{small} when its area falls below
-$32 \times 32 = 1024$ pixels. Under that convention 82.8\% of the particles
-annotated here are small, rising to 97\% in the $500\times$ micrographs, and only
-1.2\% are large (Section~\ref{sec:calibration}). This is not an incidental
-property of the dataset. It determines which results in the literature are a fair
-point of comparison, because detector accuracy degrades sharply and systematically
-with object size -- a decline documented across architectures and datasets in the
-survey of Liu et al.\ \cite{liu2021survey}, which attributes it to the small number
-of pixels each object contributes, the loss of that signal through successive
-downsampling, and the coarse alignment between small objects and the anchors or
-feature-map cells meant to capture them.
+benchmark, where an object is defined as \emph{small} when its area falls below
+$32 \times 32 = 1024$ pixels. Under this convention 82.8\% of the particles
+annotated here are small, rising to 97\% in the $500\times$ micrographs, while only
+1.2\% are large (Section~\ref{sec:calibration}). This is not an incidental property
+of the dataset, since it determines which results in the literature form a fair
+point of comparison. Detector accuracy degrades sharply and systematically with
+object size, a decline that is documented across architectures and datasets in the
+survey of Liu et al.\ \cite{liu2021survey} and is attributed there to the small
+number of pixels contributed by each object, to the loss of that signal through
+successive downsampling, and to the coarse alignment between small objects and the
+anchors or feature-map cells that are meant to capture them.
 
-The cleanest evidence for that degradation comes from holding the model and the
+The clearest evidence for this degradation is obtained by holding the model and the
 dataset fixed and splitting the score by object size alone. Table~\ref{tab:coco_size}
-does this for five architectures evaluated on COCO, where every entry is drawn from
-the paper that introduced the method. No architecture escapes the pattern: the
-small-object score is between a seventh and a half of the large-object score for the
-same model on the same images. The ratio also separates the architectures in a way
-the pooled AP does not. The single-stage detectors of that generation lose the most
--- YOLOv2 recovers only a seventh of its large-object accuracy on small objects --
-while the two-stage detectors built on a feature pyramid lose the least, which is
-the empirical basis for preferring a pyramid-based two-stage model here.
+summarises this for five architectures evaluated on COCO, where every entry is taken
+from the paper that introduced the method. The same pattern is observed for all of
+them, as the small-object score lies between a seventh and a half of the large-object
+score for the same model on the same images. The ratio also separates the
+architectures in a way that the pooled AP does not. The single-stage detectors of
+that generation lose the most, with YOLOv2 recovering only a seventh of its
+large-object accuracy on small objects, whereas the two-stage detectors built on a
+feature pyramid lose the least. This constitutes the empirical basis for preferring
+a pyramid-based two-stage model in the present work.
 
 \begin{table}[htbp]
     \centering
     \caption{Average precision on COCO decomposed by object size. Every row is the
-    published result of the method's own paper, so the comparison holds the dataset
-    and the evaluation protocol fixed and varies only the architecture. The final
-    column is the ratio $\mathrm{AP}_S / \mathrm{AP}_L$: the fraction of a model's
-    large-object accuracy that survives on small objects. Mask R-CNN is scored on
-    masks, the others on boxes.}
+    published result of the method's own paper, so that the comparison holds the
+    dataset and the evaluation protocol fixed and varies only the architecture. The
+    final column reports the ratio $\mathrm{AP}_S / \mathrm{AP}_L$, that is the
+    fraction of a model's large-object accuracy that survives on small objects.
+    Mask R-CNN is scored on masks and the others on boxes.}
     \label{tab:coco_size}
     \begin{tabular}{llrrrrr}
         \toprule
@@ -208,50 +217,53 @@ the empirical basis for preferring a pyramid-based two-stage model here.
     \end{tabular}
 \end{table}
 
-A second body of work studies domains where nearly every object is small, and it is
-these absolute numbers that set a realistic expectation for the present task.
-Table~\ref{tab:small_object_lit} collects studies whose stated aim, in the abstract,
-is the detection or segmentation of small objects, together with the figure this
-thesis reports, so that the two can be read on one scale.
+A second body of work studies domains in which nearly every object is small, and it
+is these absolute numbers that set a realistic expectation for the present task.
+Table~\ref{tab:small_object_lit} collects the studies whose stated aim, as given in
+the abstract, is the detection or segmentation of small objects, together with the
+figure reported in this thesis, so that the two can be read on the same scale.
 
-The first row is the plainest statement of the difficulty. Cheng et al.\
-\cite{cheng2023soda} quote, in their abstract, a single detector on a single
-benchmark scored by object size: on COCO test-dev, DyHead reaches 28.3 AP on small
-objects against 50.3 on medium and 57.5 on large. Small objects are not a variant
-of the same problem; they are roughly half as solvable with the same model on the
-same images. The mechanism is geometric, and the same paper quantifies it: a
-six-pixel displacement of a predicted box costs a small object almost all of its
-overlap, dropping IoU from 100\% to 32.5\%, while the same displacement leaves a
-medium or large object at 56.6\% or 71.8\%. A localisation error that is negligible
-for a large object is fatal for a small one.
+The first row provides the plainest statement of the difficulty. Cheng et al.\
+\cite{cheng2023soda} quote in their abstract a single detector on a single benchmark
+scored by object size, where DyHead reaches 28.3 AP on small objects on COCO
+test-dev against 50.3 on medium and 57.5 on large ones. Small objects are therefore
+not a variant of the same problem, as they are roughly half as solvable with the
+same model on the same images. The mechanism is geometric and is quantified in the
+same paper, where a six-pixel displacement of a predicted box costs a small object
+almost all of its overlap and reduces the IoU from 100\% to 32.5\%, while the same
+displacement leaves a medium or a large object at 56.6\% or 71.8\% respectively. A
+localisation error that is negligible for a large object is thus fatal for a small
+one.
 
-The dedicated benchmarks bear that out in absolute terms. On SODA-D, whose objects
+The dedicated benchmarks confirm this in absolute terms. On SODA-D, whose objects
 average 20.3 pixels, a standard Faster R-CNN reaches 28.9 AP \cite{cheng2023soda}.
-The aerial benchmark AI-TOD-v2 \cite{xu2022tiny} is more severe still: its objects
-average 12.7 pixels, comparable to the 14.3-pixel median of the $500\times$
-micrographs here, and a standard Faster R-CNN reaches only 12.8 AP on it, scoring
-0.0 on the very-tiny band of 2--8 pixels. Even the method proposed in that paper
-reaches 24.7 AP. TinyPerson \cite{yu2020tinyperson} defines its task in the same
-terms, targeting persons under 20 pixels in large-scale images and identifying the
-scale mismatch between pre-training and target data as the cause of the loss --
-which is the same argument the magnified-input experiment of
-Section~\ref{sec:upsample_results} tests directly.
+The aerial benchmark AI-TOD-v2 \cite{xu2022tiny} is more severe still, as its
+objects average 12.7 pixels, which is comparable to the 14.3-pixel median of the
+$500\times$ micrographs used here, and a standard Faster R-CNN reaches only 12.8 AP
+on it while scoring 0.0 on the very-tiny band of 2--8 pixels. Even the method
+proposed in that paper reaches 24.7 AP. TinyPerson \cite{yu2020tinyperson} defines
+its task in the same terms, targeting persons below 20 pixels in large-scale images
+and identifying the scale mismatch between the pre-training and the target data as
+the cause of the loss. This is the same argument that the magnified-input experiment
+of Section~\ref{sec:upsample_results} tests directly.
 
-Microscopy studies report far higher scores, but on a materially easier problem:
-both \cite{monchot2021titanium} and \cite{bals2023nanoparticles} image particles
-against a clean, uniform substrate rather than through an occluding fibre network,
-and both report region-overlap measures such as DICE or IoU rather than an average
-precision that must also assign every instance correctly.
+Microscopy studies report far higher scores, although on a materially easier
+problem, since both \cite{monchot2021titanium} and \cite{bals2023nanoparticles}
+image particles against a clean and uniform substrate rather than through an
+occluding fibre network, and both of them report region-overlap measures such as
+DICE or IoU rather than an average precision that also has to assign every instance
+correctly.
 
 \begin{table}[htbp]
     \centering
-    \caption{Published results from studies that state small-object detection or
-    segmentation as their aim, with the result of this thesis on the same scale.
-    Average precision is reported on the 0--100 scale used by those papers rather
-    than the 0--1 scale used elsewhere in this work. The metrics are not mutually
-    comparable -- AP penalises every false positive and every missed instance,
-    whereas DICE and IoU measure region overlap once objects are found -- so the
-    column reports each study's own headline figure under its own name.}
+    \caption{Published results of studies that state small-object detection or
+    segmentation as their aim, together with the result of this thesis on the same
+    scale. Average precision is reported on the 0--100 scale used by those papers
+    rather than on the 0--1 scale used elsewhere in this work. The metrics are not
+    mutually comparable, since AP penalises every false positive and every missed
+    instance whereas DICE and IoU measure region overlap once the objects have been
+    found, and therefore the column reports the headline figure of each study under
+    its own name.}
     \label{tab:small_object_lit}
     \begin{tabular}{p{3.0cm}p{2.9cm}p{2.4cm}p{3.2cm}}
         \toprule
@@ -295,67 +307,69 @@ precision that must also assign every instance correctly.
     \end{tabular}
 \end{table}
 
-The last row is why the table is placed here rather than in the results chapter.
-This work's $\mathrm{AP}_{50}$ of 29.8, computed on masks, sits within a tenth of a
-point of what a standard Faster R-CNN achieves on AI-TOD-v2 with boxes, on a
-benchmark built specifically for tiny-object detection and whose mean object size
-is within two pixels of the median here. That coincidence is not a claim of
-equivalence -- the datasets, the metrics and the task differ -- but it does locate
-the result. A figure that looks like a failure against pooled COCO numbers is
-ordinary against the literature that shares this object size.
+The last row is the reason for placing the table here rather than in the results
+chapter. The $\mathrm{AP}_{50}$ of 29.8 obtained in this work on masks lies within a
+tenth of a point of what a standard Faster R-CNN achieves with boxes on AI-TOD-v2, a
+benchmark built specifically for tiny-object detection and whose mean object size is
+within two pixels of the median obtained here. This coincidence is not presented as
+a claim of equivalence, since the datasets, the metrics and the task all differ, but
+it does locate the result. A figure that appears to be a failure when compared with
+pooled COCO numbers is an ordinary one when compared with the literature that shares
+this object size.
 
-Two lessons carry into the methodology. The first is that a feature pyramid is not
-optional at this object size, since it is the mechanism by which small objects
+Two lessons carry over into the methodology. The first is that a feature pyramid is
+not optional at this object size, since it is the mechanism by which small objects
 retain a representation at a resolution where they still occupy several cells of the
 feature map. The second is that an average precision in the range reported in
-Chapter~\ref{ch:results} should be read against Tables~\ref{tab:coco_size} and
+Chapter~\ref{ch:results} has to be read against Tables~\ref{tab:coco_size} and
 \ref{tab:small_object_lit} rather than against the pooled COCO figures that are
-usually quoted, which are dominated by objects an order of magnitude larger than
-these.
+usually quoted, as the latter are dominated by objects an order of magnitude larger
+than these.
 
 \subsection{Prior Work at Epoka University}
 \label{sec:epoka_prior}
 
-The problem addressed here has a direct antecedent in the host institution's own
-research, which has for several years concerned the counting and segmentation of
-small, low-contrast objects in microscopy. The imaging modality differs -- unstained
-brightfield rather than SEM -- but the difficulties are the same ones that recur
-throughout this thesis: objects that touch, backgrounds that are not uniform, and
-too few annotated images to train from scratch.
+The problem addressed here has a direct antecedent in the research of the host
+institution, which for several years has concerned the counting and segmentation of
+small, low-contrast objects in microscopy. The imaging modality is different, being
+unstained brightfield rather than SEM, but the difficulties are the same ones that
+recur throughout this thesis, namely objects that touch, backgrounds that are not
+uniform, and too few annotated images to allow training from scratch.
 
-Uka et al.\ \cite{uka2020faster} applied Faster R-CNN to counting cells in
+Uka et al.\ \cite{uka2020faster} applied Faster R-CNN to the counting of cells in
 low-contrast micrographs, motivated by the observation that manual counting is
-repetitive and does not scale, and that unstained acquisition -- chosen to avoid the
-side effects of staining -- makes the objects harder to separate from the
-background. That combination of a counting endpoint with a detector that isolates
-each object in its own region is the same argument made in
-Section~\ref{sec:small_objects} for the present work, and it is the reason a
-region-based detector rather than a purely semantic model is the primary method
-here.
+repetitive and does not scale, and that unstained acquisition, which is chosen in
+order to avoid the side effects of staining, makes the objects harder to separate
+from the background. The combination of a counting endpoint with a detector that
+isolates each object inside its own region is the same argument that is made in
+Section~\ref{sec:small_objects} for the present work, and it is the reason why a
+region-based detector rather than a purely semantic model is used here as the
+primary method.
 
 The same group has established that the preprocessing applied before a network sees
-an image materially changes what it can learn: Uka et al.\
-\cite{uka2020preprocessing} report the effect of preprocessing choices on
+an image changes materially what that network is able to learn. Uka et al.\
+\cite{uka2020preprocessing} report the effect of preprocessing choices on the
 classification of microscopy images suffering from non-uniform illumination and low
-contrast. The contrast measurements reported in Figure~\ref{fig:contrast} show that
-the present dataset has the same character, with roughly eighteen grey levels
-separating a particle from the surrounding mat, and this is why preprocessing is
+contrast. The contrast measurements presented in Figure~\ref{fig:contrast} indicate
+that the present dataset has the same character, with roughly eighteen grey levels
+separating a particle from the surrounding mat, and for this reason preprocessing is
 treated in
-Chapter~\ref{ch:methodology} as an experimental variable rather than a fixed
-preliminary.
+Chapter~\ref{ch:methodology} as an experimental variable rather than as a fixed
+preliminary step.
 
 A subsequent line of work covers the segmentation side. Uka et al.\
-\cite{uka2021basis} set out the image-analysis basis for evaluating cell--biomaterial
-interaction, and Polisi Duro et al.\ \cite{polisi2024detection} apply U-Net
-architectures to detection, segmentation, counting and average-area estimation --
-the same four endpoints reported in Chapter~\ref{ch:results}. More recent work
-\cite{polisi2023pruning, polisi2025efficient} examines how far such models can be
-compressed by pruning and quantisation, and how the choice of optimiser and loss
-function affects segmentation quality, which bears on the training configuration
-justified in Section~\ref{sec:training_config}. Alongside the segmentation line,
-Polisi Duro et al.\ \cite{polisiduro2025optimizing} pair three pretrained feature
-extractors with six classifiers for cell-type classification, finding the deepest
-extractor and the most flexible classifier best in combination.
+\cite{uka2021basis} set out the image-analysis basis for evaluating
+cell--biomaterial interaction, while Polisi Duro et al.\ \cite{polisi2024detection}
+apply U-Net architectures to detection, segmentation, counting and average-area
+estimation, which are the same four endpoints reported in Chapter~\ref{ch:results}.
+More recent work \cite{polisi2023pruning, polisi2025efficient} examines how far such
+models can be compressed by pruning and quantisation, and how the choice of
+optimiser and loss function affects segmentation quality, which bears on the
+training configuration justified in Section~\ref{sec:training_config}. Alongside
+this segmentation line, Polisi Duro et al.\ \cite{polisiduro2025optimizing} pair
+three pretrained feature extractors with six classifiers for cell-type
+classification, finding the deepest extractor and the most flexible classifier to be
+the best combination.
 
 % TODO(supervisor): a conference abstract by this group on segmenting nanobeads
 % on nanofibres -- the same object in the same modality as this thesis, and so
@@ -365,19 +379,19 @@ extractor and the most flexible classifier best in combination.
 % supervisor whether the work exists and where, then cite it here. Until then
 % nothing is claimed about it.
 
-Table~\ref{tab:epoka_results} collects the headline result of each of these where
-it could be obtained.
+Table~\ref{tab:epoka_results} summarises the headline result of each of these
+studies where it could be obtained.
 
 \begin{table}[htbp]
     \centering
-    \caption{Reported results of the host institution's prior work on microscopy
-    image analysis. Two rows are taken from the papers themselves, which are open
-    access. Two report what the indexed abstract states and no more, because the
-    full text is behind institutional access. One is marked \emph{not retrieved}:
-    neither its text nor an indexed abstract could be obtained. The counting
-    accuracy in the first row is a secondary attribution, taken from a paper that
-    cites it. No figure here is approximated, and the incomplete rows are kept so
-    that the gap is visible rather than hidden.}
+    \caption{Reported results of the prior work of the host institution on
+    microscopy image analysis. Two rows are taken from the papers themselves, which
+    are open access. Two report what the indexed abstract states and no more, since
+    the full text is behind institutional access. One is marked \emph{not
+    retrieved}, as neither its text nor an indexed abstract could be obtained. The
+    counting accuracy in the first row is a secondary attribution taken from a paper
+    that cites it. No figure reported here is approximated, and the incomplete rows
+    are retained so that the gap remains visible rather than hidden.}
     \label{tab:epoka_results}
     \begin{tabular}{p{3.1cm}p{3.2cm}p{2.4cm}p{2.9cm}}
         \toprule
@@ -425,99 +439,102 @@ it could be obtained.
 % for \cite{uka2020faster} is currently taken from a paper that cites it, not
 % from the paper itself; confirm it against the original.
 
-One number in that table needs care, because it is the one a reader will reach for
-first. The segmentation work of this group reports an intersection over union
+One number in that table requires care, since it is the one that a reader will reach
+for first. The segmentation work of this group reports an intersection over union
 between 0.90 and 0.93, against the $\mathrm{AP}_{50}$ of 0.298 reported in
-Chapter~\ref{ch:results}. The two are not on the same scale and cannot be
+Chapter~\ref{ch:results}. The two values are not on the same scale and cannot be
 subtracted. An IoU of that kind is a \emph{pixel-level} measure over a foreground
-that occupies a large fraction of the frame: it asks how well the predicted region
-overlaps the true region, and it is indifferent to whether two touching objects
-were separated. Average precision is an \emph{instance-level} measure: every object
-must be found, delineated and matched one-to-one, and every spurious detection is
-counted against the score. A model can hold an IoU near 0.9 while merging half the
-objects it finds, which is exactly the failure the U-Net baseline of
-Section~\ref{sec:comparison} exhibits.
+that occupies a large fraction of the frame, as it asks how well the predicted
+region overlaps the true region while remaining indifferent to whether two touching
+objects have been separated. Average precision is an \emph{instance-level} measure,
+where every object has to be found, delineated and matched one-to-one, and where
+every spurious detection is counted against the score. A model can therefore
+maintain an IoU near 0.9 while merging half of the objects that it finds, and this
+is exactly the failure exhibited by the U-Net baseline of
+Section~\ref{sec:comparison}.
 
 % Both figures are computed by code/evaluate.py and stored in results/metrics.json
 % under loso.<method>.pixel_agreement, pooled over the 11 held-out micrographs.
-Measured on the present dataset in the group's own metric, the same U-Net
-architecture reaches a pixel-level DICE of 0.667 and an IoU of 0.501, and Mask
-R-CNN 0.625 and 0.454. The gap against 0.90 is therefore not a gap between this
-work and that one; it is a gap between cells that are large, dense and imaged
-against a controlled background, and beads that are small, sparse and embedded in
-an occluding fibre network. The comparison is reported here so that the two bodies
-of work can be read together, and Section~\ref{sec:small_objects} gives the
-literature-wide version of the same caution.
+When measured on the present dataset in the metric used by that group, the same
+U-Net architecture reaches a pixel-level DICE of 0.667 and an IoU of 0.501, whereas
+Mask R-CNN reaches 0.625 and 0.454 respectively. The gap with respect to 0.90 is
+therefore not a gap between this work and that one, but a gap between cells that are
+large, dense and imaged against a controlled background and beads that are small,
+sparse and embedded in an occluding fibre network. The comparison is reported here
+so that the two bodies of work can be read together, while
+Section~\ref{sec:small_objects} provides the literature-wide version of the same
+caution.
 
 \subsection{Segmentation from Few Annotated Images}
 
-Training on a handful of annotated micrographs is standard in microscopy, and the
-countermeasures are well established: transfer learning from large natural-image
-corpora such as ImageNet \cite{deng2009imagenet} or COCO \cite{lin2014microsoft},
-and aggressive geometric and photometric augmentation \cite{shorten2019survey}.
-Microscopy is more forgiving than most domains in this respect, because flips and
-rotations are genuinely label-preserving: unlike photographs of natural scenes, a
-micrograph has no canonical orientation.
+Training on a handful of annotated micrographs is standard practice in microscopy,
+and the countermeasures are well established, namely transfer learning from large
+natural-image corpora such as ImageNet \cite{deng2009imagenet} or COCO
+\cite{lin2014microsoft}, together with aggressive geometric and photometric
+augmentation \cite{shorten2019survey}. Microscopy is more forgiving than most
+domains in this respect, since flips and rotations are genuinely label-preserving,
+as a micrograph, unlike a photograph of a natural scene, has no canonical
+orientation.
 
 Augmentation also introduces a hazard that is easy to overlook. If augmented copies
 are generated before the data are partitioned, transformed versions of the same
-source image can appear in both the training and the test set. The test set then
-measures memorisation rather than generalisation. The same concern applies more
+source image can appear both in the training and in the test set, so that the test
+set measures memorisation rather than generalisation. The same concern applies more
 broadly to any hierarchical dataset in which several images derive from one physical
-specimen, a point returned to in Chapter~\ref{ch:methodology}.
+specimen, a point that is returned to in Chapter~\ref{ch:methodology}.
 
 \subsection{Foundation Models for Segmentation}
 
 The Segment Anything Model \cite{kirillov2023segment} is trained on a very large
 mask corpus and produces class-agnostic masks from point or box prompts, with strong
 zero-shot transfer. For a domain with only 11 annotated images this is attractive,
-but SAM has no notion of what a bead is: prompted densely on a fibre mat it will
-segment fibres, inter-fibre voids and beads indiscriminately. Its realistic role
-here is as an annotation aid or as a mask proposal generator, not as a standalone
-detector.
+but SAM has no notion of what a bead is, and when prompted densely on a fibre mat it
+segments fibres, inter-fibre voids and beads indiscriminately. Its realistic role in
+the present context is therefore that of an annotation aid or a mask proposal
+generator rather than a standalone detector.
 
 \section{Evaluation of Instance Segmentation}
 
-Detection quality is conventionally summarised by average precision computed over
+Detection quality is conventionally summarised by an average precision computed over
 intersection-over-union thresholds, following the COCO protocol
 \cite{lin2014microsoft}. For microscopy, metrics that penalise merges and splits
-explicitly are more informative: the aggregated Jaccard index
+explicitly are more informative. The aggregated Jaccard index
 \cite{kumar2017dataset} accumulates intersection and union over matched objects and
-charges unmatched ones to the denominator, and panoptic quality
+charges the unmatched ones to the denominator, while panoptic quality
 \cite{kirillov2019panoptic} factors performance into a recognition and a
 segmentation term. Since the laboratory endpoint is a count and a size distribution,
 these segmentation metrics are reported here alongside the counting error and a
-direct comparison of the predicted and manual size distributions.
+direct comparison of the predicted and the manual size distributions.
 
 \section{Research Gap}
 
-Three gaps emerge from the above.
+Three gaps emerge from the work reviewed above.
 
 First, the image-analysis tooling available to the electrospinning community is
-aimed at the fibre network -- diameter, orientation, porosity -- rather than at
-discrete defects. DiameterJ and comparable tools do not count beads, and the
-quantification of bead defects is consequently still performed by hand.
+aimed at the fibre network, that is at diameter, orientation and porosity, rather
+than at discrete defects. DiameterJ and comparable tools do not count beads, and
+consequently the quantification of bead defects is still performed by hand.
 
 Second, where deep segmentation has been applied to fibrous microscopy it has
-usually been semantic, reporting pixel-level overlap. For a task whose output is
-a count that is the wrong figure of merit: it does not distinguish a model that
-separates two touching beads from one that merges them, though only the former
-counts correctly. Studies reporting counting error against a manual ground truth,
-and comparing instance-level against semantic-level modelling on the same images,
-are scarce.
+usually been semantic and has reported pixel-level overlap. For a task whose output
+is a count this is the wrong figure of merit, since it does not distinguish a model
+that separates two touching beads from one that merges them, although only the
+former counts correctly. Studies that report counting error against a manual ground
+truth, and that compare instance-level with semantic-level modelling on the same
+images, are scarce.
 
 Third, and most consequential for the credibility of any result in this area,
-evaluation protocols are frequently not matched to the structure of the data.
-Small microscopy datasets are hierarchical -- many images per specimen, many
-augmented copies per image -- and a partition that ignores this allows the same
-specimen, or the same source image, to appear on both sides of the split, leaving
-reported scores optimistic by an unknown margin.
+evaluation protocols are frequently not matched to the structure of the data. Small
+microscopy datasets are hierarchical, with many images per specimen and many
+augmented copies per image, and a partition that ignores this structure allows the
+same specimen, or the same source image, to appear on both sides of the split,
+leaving the reported scores optimistic by an unknown margin.
 
 This thesis addresses these gaps by treating bead quantification as an instance
 segmentation problem, by evaluating it with the counting and sizing errors that
-determine laboratory usefulness alongside conventional segmentation metrics, and by
-adopting a specimen-wise protocol whose effect relative to the naive alternative is
-measured rather than assumed.
+determine its usefulness in the laboratory alongside conventional segmentation
+metrics, and by adopting a specimen-wise protocol whose effect relative to the naive
+alternative is measured rather than assumed.
 
 % Question 11 was answered on 2026-08-24: the supervisor asked for all of the
 % group's Epoka publications to be reviewed and their results included, which is
@@ -527,11 +544,11 @@ measured rather than assumed.
 
 \section{Summary}
 
-Bead defects are the standard diagnostic of a misconfigured electrospinning process,
-and they are currently quantified by hand because existing automated tools target
-the fibre network instead. Classical thresholding fails on these micrographs because
+Bead defects are the standard diagnostic of a misconfigured electrospinning process
+and are currently quantified by hand, since the existing automated tools target the
+fibre network instead. Classical thresholding fails on these micrographs because
 beads and fibres are not separable by intensity. Encoder--decoder networks segment
-the bead class well but merge touching instances, which corrupts precisely the
+the bead class well but merge touching instances, thus corrupting precisely the
 quantity of interest. Region-based instance segmentation separates instances by
-construction and is the approach adopted here. The following chapter sets out the
-dataset, the calibration and the evaluation protocol in detail.
+construction and is therefore the approach adopted here. The following chapter sets
+out the dataset, the calibration and the evaluation protocol in detail.

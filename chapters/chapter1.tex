@@ -3,188 +3,204 @@
 
 \section{Introduction}
 
-Electrospinning draws a polymer solution into fibres with diameters between tens of
-nanometres and a few micrometres by applying a high electric field between a
-spinneret and a grounded collector. The resulting non-woven mats combine a very
-high surface-to-volume ratio with an interconnected pore structure, which is why
-they are used in air and water filtration, in wound dressings, in drug delivery
-and as scaffolds for tissue engineering.
+Electrospinning is a fabrication technique in which a high electric field applied
+between a spinneret and a grounded collector draws a polymer solution into fibres
+with diameters ranging from tens of nanometres to a few micrometres. The non-woven
+mats obtained in this way combine a very high surface-to-volume ratio with an
+interconnected pore structure, and these properties explain their use in air
+and water filtration, in wound dressings, in drug delivery and as scaffolds for
+tissue engineering.
 
-The process is not, however, uniformly well behaved. When the electrostatic
-stretching force is insufficient to overcome the surface tension of the jet, the
-solution collapses locally into droplets that solidify as ellipsoidal swellings
-along the fibre. These \emph{bead defects}, first characterised systematically by
-Fong, Chun and Reneker \cite{fong1999beaded}, are the standard indicator that the
-spinning parameters are outside their usable window. Beads reduce the effective
-surface area of the mat, disturb its pore-size distribution and act as stress
-concentrators that weaken it mechanically. Counting and measuring them is therefore
-a routine step whenever an electrospinning recipe is being tuned.
+The process, however, is not uniformly well behaved. When the electrostatic
+stretching force is not sufficient to overcome the surface tension of the jet, the
+solution collapses locally into droplets which then solidify as ellipsoidal
+swellings along the fibre. These \emph{bead defects}, first characterised
+systematically by Fong, Chun and Reneker \cite{fong1999beaded}, are commonly taken
+as an indicator that the spinning parameters lie outside their usable window. Their
+presence reduces the effective surface area of the mat, disturbs its pore-size
+distribution and introduces stress concentrators that weaken it mechanically. For
+this reason, counting and measuring the beads is a routine step whenever an
+electrospinning recipe is being tuned.
 
-That step is currently manual. An operator loads each scanning electron microscopy
-(SEM) micrograph into ImageJ \cite{schindelin2012fiji}, identifies the beads by eye
-and outlines them one at a time. A single micrograph in the dataset used here
-contains up to 152 beads, and each of them has to be traced individually. The
-procedure is slow, it does not scale to the number of micrographs that a parameter
-study produces, and because the boundary between a large bead and a locally thick
-fibre segment is a matter of judgement, it is difficult to reproduce between
-operators or even between sessions.
+That step is currently performed manually. The operator loads each scanning
+electron microscopy (SEM) micrograph into ImageJ \cite{schindelin2012fiji},
+identifies the beads by visual inspection and outlines them one at a time. A single
+micrograph of the dataset used here contains up to 152 beads, each of which has to
+be traced individually. The procedure is therefore slow and it does not scale to
+the number of micrographs that a parameter study produces. In addition, the
+boundary between a large bead and a locally thick fibre segment is a matter of
+judgement, so that the resulting annotation is difficult to reproduce between
+operators or even between sessions of the same operator.
 
 \section{Background and Motivation}
 
-Automating this measurement is an image segmentation problem, but not the easiest
-kind. Three properties of SEM micrographs of nanofibre mats make it harder than the
-generic case.
+The automation of this measurement is an image segmentation problem, although not
+among the simpler ones. Three properties of SEM micrographs of nanofibre mats make
+the task more difficult than the generic case: i) a dense and high-contrast
+background, ii) objects of interest that touch and overlap, and iii) scarce data
+acquired at several magnifications. These are considered in turn below.
 
-First, the beads sit on top of a dense, high-contrast background of overlapping
-fibres. The fibres themselves are bright, elongated and cross each other at every
-angle, so simple intensity thresholding cannot separate beads from background:
-both occupy similar grey levels, and the texture energy of the fibre mesh is
-comparable to that of a bead surface.
+The beads are located on top of a dense background of overlapping fibres. The
+fibres are themselves bright, elongated and cross each other at every angle, and
+consequently a simple intensity threshold is not able to separate beads from
+background, as both occupy similar grey levels while the texture energy of the
+fibre mesh is comparable to that of a bead surface.
 
-Second, the objects of interest touch and overlap. Beads frequently occur in
-clusters along the same fibre, and a method that produces only a foreground mask
-will merge such a cluster into a single connected component. Since the quantity the
-laboratory needs is a \emph{count} and a \emph{size distribution}, merging two beads
-into one is not a small error: it changes the reported count and it invents a
-non-existent large particle in the size histogram. This is what makes the problem an
-instance segmentation problem rather than a semantic one.
+The objects of interest touch and overlap. Beads frequently occur in clusters along
+the same fibre, and a method that produces only a foreground mask merges such a
+cluster into a single connected component. Since the quantities required by the
+laboratory are a \emph{count} and a \emph{size distribution}, the merging of two
+beads into one cannot be treated as a small error, because it lowers the reported
+count and at the same time introduces into the size histogram a large particle that
+does not exist. It is this requirement that makes the task an instance segmentation
+problem rather than a semantic one.
 
-Third, the data are scarce and are acquired at several magnifications. The dataset
+The data are scarce and are acquired at several magnifications. The dataset
 available for this thesis contains 11 annotated micrographs drawn from four
-specimens, each imaged at $500\times$, $1000\times$ and $3000\times$. A bead that is
-about 14 pixels across at $500\times$ is about 76 pixels across at $3000\times$ --
-the same physical object with a sixfold difference in apparent size. A model trained
-on this data has to be scale-robust, and the evaluation protocol has to account for
-the fact that the four specimens, not the eleven images, are the independent units
-of the experiment.
+specimens, each of them imaged at $500\times$, $1000\times$ and $3000\times$. A
+bead measuring approximately 14 pixels across at $500\times$ measures
+approximately 76 pixels across at $3000\times$, so that the same physical object
+appears with a sixfold difference in apparent size. A model trained on such data is
+required to be scale-robust, while the evaluation protocol has to take into account
+that the four specimens, and not the eleven images, are the independent units of
+the experiment.
 
-Modern instance segmentation architectures address the first two difficulties
-directly. Mask R-CNN \cite{he2017mask} detects each object separately and predicts
-a mask within its own region proposal, so touching beads remain separate instances
-by construction. The third difficulty -- little data, evaluated honestly -- is what
-determines whether the reported numbers mean anything, and it receives explicit
-attention in this thesis.
+The first two difficulties are addressed directly by modern instance segmentation
+architectures. Mask R-CNN \cite{he2017mask} detects each object separately and
+predicts a mask inside its own region proposal, so that touching beads remain
+separate instances by construction. The third difficulty, namely the limited amount
+of data and the manner in which it is evaluated, determines whether the reported
+numbers can be trusted, and for this reason it is given explicit attention
+throughout this thesis.
 
 \section{Problem Statement}
 
 This thesis addresses the automated detection, delineation and quantification of
-bead defects in SEM micrographs of electrospun nanofibre mats. Four questions are
-posed:
+bead defects in SEM micrographs of electrospun nanofibre mats. The work is
+organised around four research questions:
 
 \begin{enumerate}
-    \item Can a deep instance segmentation model delineate individual bead defects
-    in SEM micrographs of nanofibre mats accurately enough to replace manual
-    annotation, when only 11 annotated micrographs from four specimens are available?
+    \item Is a deep instance segmentation model able to delineate individual bead
+    defects in SEM micrographs of nanofibre mats with an accuracy sufficient to
+    replace manual annotation, when only 11 annotated micrographs from four
+    specimens are available?
 
-    \item Does instance segmentation offer a measurable advantage over semantic
-    segmentation for this task, specifically in separating touching beads and
-    therefore in the accuracy of the reported bead count?
+    \item Does instance-level modelling offer a measurable advantage over semantic
+    segmentation in this task, in particular in the separation of touching beads
+    and consequently in the accuracy of the reported bead count?
 
-    \item How does a deep model compare against the classical image-processing
-    pipeline (thresholding followed by watershed splitting) that represents current
-    laboratory practice?
+    \item How does a deep model compare with the classical image-processing
+    pipeline, consisting of thresholding followed by watershed splitting, which
+    represents current laboratory practice?
 
-    \item Do the derived physical quantities -- bead count, areal density and size
-    distribution in micrometres -- agree with those obtained from the manual
-    annotation closely enough to be used in process optimisation?
+    \item Do the derived physical quantities, namely bead count, areal density and
+    size distribution expressed in micrometres, agree with those obtained from the
+    manual annotation closely enough to be used in process optimisation?
 \end{enumerate}
 
-The scope is restricted to bead defects in micrographs of a single material system,
-imaged on one instrument. Fibre diameter measurement, three-dimensional structure
-and the relationship between spinning parameters and bead formation lie outside the
-scope, although Section~\ref{sec:futurework} returns to them.
+The scope of the work is restricted to bead defects in micrographs of a single
+material system, imaged on one instrument. Fibre diameter measurement,
+three-dimensional structure and the relation between spinning parameters and bead
+formation are outside this scope, although they are discussed as possible
+extensions in Section~\ref{sec:futurework}.
 
 \section{Research Objectives}
 \label{sec:objectives}
 
-The objectives are stated below with the criteria that will be used to judge whether
-each has been met.
+The objectives are listed below, each together with the criterion by which it
+is judged to have been met.
 
 \begin{itemize}
     \item \textbf{Dataset characterisation and calibration.} Establish what the
-    available data actually contain and place every measurement on a physical scale.
-    This includes recovering the pixel size of each micrograph from its burned-in
-    scale bar and verifying the calibration by checking that the bead size
-    distribution is consistent across the three magnifications. Success criterion:
-    median bead diameter agreeing to within 20\% across $500\times$, $1000\times$ and
-    $3000\times$.
+    available data contain and place every measurement on a physical scale. This
+    includes the recovery of the pixel size of each micrograph from its burned-in
+    scale bar and the verification of this calibration by checking whether the bead
+    size distribution is consistent across the three magnifications. Success
+    criterion: median bead diameter agreeing to within 20\% across $500\times$,
+    $1000\times$ and $3000\times$.
 
     \item \textbf{A leakage-free evaluation protocol.} Define a partitioning scheme
     appropriate to a dataset whose 11 images derive from only 4 specimens, and
-    demonstrate quantitatively why the naive alternative -- a random split over
-    images, or over the augmented copies -- overstates performance. Success criterion:
-    a reported gap between the naive and the specimen-wise protocol on the same model.
+    demonstrate quantitatively why the naive alternative, that is a random split
+    over images or over the augmented copies, overstates performance. Success
+    criterion: a reported gap between the naive and the specimen-wise protocol
+    obtained with the same model.
 
     \item \textbf{Instance segmentation of beads.} Train Mask R-CNN to delineate
     individual beads under leave-one-specimen-out cross-validation. Success
-    criterion: $\mathrm{AP}_{50} \geq 0.30$ averaged over the four folds, which is
-    what a standard region-based detector achieves on a published benchmark of
-    comparable object size.
+    criterion: $\mathrm{AP}_{50} \geq 0.30$ averaged over the four folds, which
+    corresponds to what a standard region-based detector achieves on a published
+    benchmark of comparable object size.
 
-        That criterion replaces the $\mathrm{AP}_{50} \geq 0.70$ recorded when this
-    work was proposed, and the grounds are given here rather than left implicit,
-    because a criterion revised once results are known is worth nothing unless
-    the grounds for revising it are independent of those results. The original
-    figure was set before the small-object literature of
-    Section~\ref{sec:small_objects} was surveyed, and that survey shows 0.70 to
-    be above what any published detector reaches at this object size. On
-    AI-TOD-v2, whose objects average 12.7 pixels against the 14.3-pixel median
-    here, a standard Faster R-CNN reaches $\mathrm{AP}_{50} = 0.299$ and the
-    method introduced in that paper 0.574 \cite{xu2022tiny}. The revised
-    criterion is the first of those, rounded, and it is stated in full awareness
-    that Chapter~\ref{ch:results} reports 0.298, two thousandths below it: a
-    threshold chosen in order to be cleared would not have been set there.
+        This criterion replaces the value of $\mathrm{AP}_{50} \geq 0.70$ that was
+    recorded when the work was proposed. The grounds for the revision are reported
+    here explicitly, since a criterion that is revised after the results are known
+    has no value unless the grounds for revising it are independent of those
+    results. The original figure was set before the small-object literature
+    reviewed in Section~\ref{sec:small_objects} was surveyed, and that survey
+    indicates that 0.70 lies above what any published detector reaches at this
+    object size. On AI-TOD-v2, a benchmark whose objects average 12.7 pixels
+    against the 14.3-pixel median obtained here, a standard Faster R-CNN reaches
+    $\mathrm{AP}_{50} = 0.299$, whereas the method introduced in the same paper
+    reaches 0.574 \cite{xu2022tiny}. The revised criterion is the first of these
+    values, rounded. It is stated while being fully aware that
+    Chapter~\ref{ch:results} reports 0.298, which is two thousandths below it, as a
+    threshold selected in order to be cleared would not have been set at this
+    level.
 
-    One qualification belongs with that number, and it would soften the result.
-    The AI-TOD-v2 figure is a \emph{box} average precision while the 0.298 here
-    is a \emph{mask} average precision, the stricter of the two, since a mask
-    must agree in shape as well as position. Measured on boxes, as the reference
-    is, the detection-only methods of Chapter~\ref{ch:results} do clear the
-    criterion, at 0.305 and 0.315. It is nevertheless kept at the mask level,
-    where it is not met, because the objective stated here is instance
-    segmentation rather than detection.
+    One qualification has to be attached to this number, and it would soften the
+    result. The AI-TOD-v2 figure is a \emph{box} average precision, whereas the
+    value of 0.298 reported here is a \emph{mask} average precision, which is the
+    stricter of the two since a mask is required to agree in shape as well as in
+    position. When measured on boxes, as is done in the reference, the
+    detection-only methods of Chapter~\ref{ch:results} do clear the criterion,
+    reaching 0.305 and 0.315. The criterion is nevertheless kept at the mask level,
+    where it is not met, because the objective stated here is instance segmentation
+    and not detection.
     % TODO(supervisor): question 10. The supervisor has still not set a threshold.
     % The criterion above is derived from the literature and is this work's own
     % proposal, not an agreed one. Ask him to confirm it or replace it.
 
-    \item \textbf{Comparison against five alternatives.} Quantify what
-    instance-level modelling buys, and what within it is responsible, by comparing
-    Mask R-CNN against the same detector with its mask branch removed -- Faster
-    R-CNN \cite{ren2015faster}, which isolates that branch -- two one-stage
-    detectors of the YOLO family \cite{jocher2023ultralytics}, a YOLOv8
-    segmentation model and a YOLOv5u detector, which vary the architecture family
-    as a whole and each other's backbone, a U-Net \cite{ronneberger2015unet}
-    semantic baseline with connected-component labelling, and an Otsu
-    \cite{otsu1979threshold} plus watershed \cite{vincent1991watersheds} pipeline
-    representing current manual practice. Success criterion: a clear ranking on counting error, with the merge
-    behaviour of each method reported explicitly.
+    \item \textbf{Comparison against five alternatives.} Quantify what is gained by
+    instance-level modelling and which component of it is responsible for that
+    gain. Mask R-CNN is compared against i) the same detector with its mask branch
+    removed, that is Faster R-CNN \cite{ren2015faster}, which isolates the
+    contribution of that branch, ii) two one-stage detectors of the YOLO family
+    \cite{jocher2023ultralytics}, a YOLOv8 segmentation model and a YOLOv5u
+    detector, which vary the architecture family as a whole and differ from each
+    other in the backbone, iii) a U-Net \cite{ronneberger2015unet} semantic
+    baseline followed by connected-component labelling, and iv) an Otsu
+    \cite{otsu1979threshold} and watershed \cite{vincent1991watersheds} pipeline
+    that represents current manual practice. Success criterion: a clear ranking on
+    counting error, with the merge behaviour of each method reported explicitly.
 
     \item \textbf{Physical quantification.} Report bead count, areal density
     (beads\,mm$^{-2}$) and the size distribution in micrometres, and compare each
-    against the manual ground truth. Success criterion: counting error and a
-    distributional comparison of predicted versus manual bead diameters.
+    of them against the manual ground truth. Success criterion: counting error
+    together with a distributional comparison of predicted versus manual bead
+    diameters.
 \end{itemize}
 
 \section{Contributions}
 
 \begin{enumerate}
     \item A characterised and physically calibrated dataset of 606 manually
-    delineated bead defects across 11 SEM micrographs of four electrospun specimens,
-    with per-magnification pixel sizes recovered from the instrument's own scale bars
-    and validated for internal consistency.
+    delineated bead defects across 11 SEM micrographs of four electrospun
+    specimens, in which the per-magnification pixel sizes are recovered from the
+    instrument's own scale bars and are validated for internal consistency.
 
-    \item An evaluation protocol for this class of small, hierarchically structured
-    microscopy datasets, in which the specimen rather than the image is the unit of
-    partitioning, together with a measurement of what a naive split actually costs
-    on a dataset of this shape.
+    \item An evaluation protocol for this class of small and hierarchically
+    structured microscopy datasets, in which the specimen and not the image is used
+    as the unit of partitioning, together with a measurement of the cost that a
+    naive split actually carries on a dataset of this shape.
 
-    \item A controlled comparison of six methods -- two-stage instance
+    \item A controlled comparison of six methods, namely two-stage instance
     segmentation, the same detector without its mask branch, two one-stage
     alternatives from the same family, semantic segmentation with connected
-    components, and classical thresholding -- on the same micrographs under the
-    same protocol, evaluated
-    both by segmentation metrics and by the counting and sizing errors that
-    determine whether the method is usable in the laboratory.
+    components and classical thresholding, carried out on the same micrographs and
+    under the same protocol. The comparison is evaluated both by segmentation
+    metrics and by the counting and sizing errors that determine whether a method
+    is usable in the laboratory.
 
     \item An open implementation covering annotation conversion, scale calibration,
     training, evaluation and the reporting of physical quantities.
@@ -193,12 +209,12 @@ each has been met.
 \section{Thesis Organization}
 
 \textbf{Chapter 2} reviews electrospinning and bead formation, classical image
-analysis for fibrous microscopy, and deep segmentation architectures, and identifies
-the gap this thesis addresses.
+analysis for fibrous microscopy and deep segmentation architectures, and identifies
+the gap that this thesis addresses.
 
-\textbf{Chapter 3} presents the methodology: the dataset and its structure, scale
-calibration, the specimen-wise evaluation protocol, the three methods under
-comparison, and the metrics.
+\textbf{Chapter 3} presents the methodology, that is the dataset and its structure,
+the scale calibration, the specimen-wise evaluation protocol, the six methods under
+comparison and the metrics.
 
 \textbf{Chapter 4} describes the implementation, including annotation conversion,
 the handling of the burned-in information banner, the augmentation strategy and the
