@@ -103,10 +103,10 @@ def build() -> dict:
         })
 
     coco = {
-        "info": {"description": "Bead defects in SEM micrographs of electrospun "
+        "info": {"description": "Beads in SEM micrographs of electrospun "
                                 "nanofibre mats; 11 originals, banner removed."},
         "licenses": [],
-        "categories": [{"id": 1, "name": "bead", "supercategory": "defect"}],
+        "categories": [{"id": 1, "name": "bead", "supercategory": "bead"}],
         "images": images,
         "annotations": annotations,
     }

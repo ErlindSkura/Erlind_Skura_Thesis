@@ -1,11 +1,11 @@
-# Deep Learning for Instance Segmentation and Quantification of Bead Defects in SEM Images of Electrospun Nanofibre Mats
+# Deep Learning for Instance Segmentation and Quantification of Beads in SEM Images of Electrospun Nanofibre Mats
 
 MSc thesis, Epoka University, Department of Computer Engineering.
 Supervisor: Assoc. Prof. Dr. Arban Uka. Defence: September 2026.
 
 ## What this is
 
-Bead defects in electrospun nanofibre mats are currently quantified by hand: an
+Beads in electrospun nanofibre mats are currently quantified by hand: an
 operator outlines each bead in ImageJ. This work automates that measurement and
 reports the quantities the laboratory actually uses — bead count, areal density and
 the size distribution in micrometres — rather than detection scores alone.

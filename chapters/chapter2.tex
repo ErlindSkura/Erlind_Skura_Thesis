@@ -12,7 +12,7 @@ here are taken. The gap between them is stated at the end of the chapter.
 
 \section{Theoretical Background}
 
-\subsection{Electrospinning and the Formation of Bead Defects}
+\subsection{Electrospinning and the Formation of Beads}
 
 In electrospinning, a polymer solution is fed through a spinneret held at a high
 potential relative to a collector. Above a threshold voltage the electrostatic
@@ -81,7 +81,7 @@ separated by the watershed transform \cite{vincent1991watersheds}, usually appli
 to the distance transform of the binary mask. For electrospun materials in
 particular, DiameterJ \cite{hotaling2015diameterj} provides a validated
 open-source pipeline for fibre diameter and porosity and is widely used, although
-its scope is the fibre network rather than discrete defects.
+its scope is the fibre network rather than discrete beads.
 
 These pipelines are transparent, require no training data and have interpretable
 failure modes, but they depend on the foreground being separable by intensity. In
@@ -125,7 +125,7 @@ Several methods developed for microscopy exploit the shape regularity of the
 targets. StarDist \cite{schmidt2018stardist} represents each object as a
 star-convex polygon, well matched to roundish convex objects, and Cellpose
 \cite{stringer2021cellpose} learns spatial gradient flows towards object centres
-and generalises across cell types without retraining. Bead defects are
+and generalises across cell types without retraining. Beads are
 approximately ellipsoidal and convex, so these shape priors are a plausible fit
 and are noted here as alternatives.
 
@@ -439,8 +439,8 @@ Three gaps emerge from the work reviewed above.
 
 First, the image-analysis tooling available to the electrospinning community is
 aimed at the fibre network, that is at diameter, orientation and porosity, rather
-than at discrete defects. DiameterJ and comparable tools do not count beads, so
-the quantification of bead defects is still performed by hand.
+than at discrete beads. DiameterJ and comparable tools do not count them, so
+the quantification of beads is still performed by hand.
 
 Second, where deep segmentation has been applied to fibrous microscopy it has
 usually been semantic, reporting pixel-level overlap. For a task whose output is a
@@ -465,7 +465,7 @@ alternative is measured rather than assumed.
 
 \section{Summary}
 
-Bead defects are the standard diagnostic of a misconfigured electrospinning process
+Beads are the standard diagnostic of a misconfigured electrospinning process
 and are currently quantified by hand, since the existing automated tools target the
 fibre network instead. Classical thresholding fails on these micrographs because
 beads and fibres are not separable by intensity. Encoder--decoder networks segment

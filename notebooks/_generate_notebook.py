@@ -26,7 +26,7 @@ md(r"""
 # Bead segmentation in SEM micrographs — training and evaluation
 
 Runs the full pipeline for the MSc thesis *Deep Learning for Instance Segmentation and
-Quantification of Bead Defects in SEM Images of Electrospun Nanofibre Mats*.
+Quantification of Beads in SEM Images of Electrospun Nanofibre Mats*.
 
 **Before you start:** `Runtime → Change runtime type → T4 GPU`.
 
