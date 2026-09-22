@@ -20,7 +20,7 @@ partitioning. Both are reflected in the leave-one-specimen-out protocol.
 
 Under that protocol, Mask R-CNN outperforms the mask-predicting alternatives on
 every metric, reaching $\mathrm{AP}_{50} = 0.298 \pm 0.059$, an Aggregated Jaccard
-Index of $0.325 \pm 0.053$ and a mean absolute counting error of 41.1\%. It
+Index of $0.325 \pm 0.053$ and a mean absolute counting error of 41.2\%. It
 reaches neither success criterion of Section~\ref{sec:objectives}, falling far
 short of the $\mathrm{AP}_{50} \geq 0.70$ recorded at the proposal stage and two
 thousandths short of the 0.30 a standard detector reaches on a benchmark matched
@@ -37,11 +37,11 @@ U-Net merges 48.7\% of beads and never splits one, so it under-counts by 44\% wi
 a bias that never changes sign, while its mask accuracy differs from Mask R-CNN's
 by only 0.020 in AJI: what the instance formulation contributes is the separation
 of objects that touch. Faster R-CNN, which is Mask R-CNN with the mask branch
-removed, counts as well as the full model, 37.8\% against 41.1\%, for 15\% less
+removed, counts as well as the full model, 39.5\% against 41.2\%, for 15\% less
 training time, so the mask branch is not what makes the count work but what makes
 the size distribution measurable at all. YOLOv8 finds more of the real beads than
 any other method, a recall of 0.696 against 0.447, while reporting 1223 objects
-against 606 annotated for a counting error of 93.2\%. YOLOv5u reaches the highest
+against 606 annotated for a counting error of 99.3\%. YOLOv5u reaches the highest
 box $\mathrm{AP}_{50}$ in the study, $0.315 \pm 0.049$, and the highest
 $\mathrm{AP}_S$, 0.132, counting three specimens to within 8.2\%, 15.0\% and
 18.3\% while reporting 591 objects for the 238 beads of the fourth, an error of
@@ -62,7 +62,7 @@ standard deviation of 0.059, although it produced a fold-to-fold spread 1.7 time
 as wide. A fourth result is negative in a narrower sense: none of the three
 preprocessing transforms improved detection, Mask R-CNN scoring 0.298 on raw
 micrographs against 0.289, 0.263 and 0.262, while background subtraction cut
-counting error from 41.1\% to 31.3\%.
+counting error from 41.2\% to 31.5\%.
 
 \section{Research Contributions}
 
@@ -185,7 +185,7 @@ the binding constraint, this is the intervention with the highest leverage.
 
 The pipeline built here does not yet replace the operator with the mouse. At an
 $\mathrm{AP}_{50}$ of 0.298 and a per-micrograph counting error ranging from
-$-75\%$ to $+119\%$, no laboratory should report its output on a single field as a
+$+75\%$ to $-119\%$, no laboratory should report its output on a single field as a
 measurement without checking it.
 
 What the work does establish is where the difficulty lies, which is worth more at

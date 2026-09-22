@@ -179,12 +179,12 @@ therefore reported individually as well as averaged, since a mean over four fold
 of this size is not a stable summary on its own.
 
 One feature of that table appears to be an error and is not. Fold Z6 shows 238
-annotated beads against 319 predicted, an excess of 34\% on the totals, next to a
-counting error of $+64.7\%$. The count columns are fold totals, whereas the error
-column is the mean over the fold's three micrographs of the per-micrograph signed
-error, and on Z6 those are $-8.6\%$, $+119.4\%$ and $+83.3\%$. The two large
-over-counts fall on the sparsely populated micrographs and the near-miss on the
-densest, so the unweighted mean is nearly twice the ratio of the totals. The
+annotated beads against 319 predicted, an over-count of 34.0\% on the totals, next
+to a counting error of $-64.7\%$. The count columns are fold totals, whereas the
+error column is the mean over the fold's three micrographs of the per-micrograph
+signed error, and on Z6 those are $+8.6\%$, $-119.4\%$ and $-83.3\%$. The two
+large over-counts fall on the sparsely populated micrographs and the near-miss on
+the densest, so the unweighted mean is nearly twice the ratio of the totals. The
 per-micrograph figure is the one reported throughout, since the laboratory
 measures one micrograph at a time.
 
@@ -236,8 +236,8 @@ failure mode connected-component labelling predicts, since two beads whose
 predicted regions touch by a single pixel become one object and the information
 distinguishing them was discarded when instance identity was dropped.
 
-The consequence is direct and one-sided. The U-Net under-counts by 44.2\% on
-average, and its signed error of $-44.2\%$ is identical to the absolute error
+The consequence is direct and one-sided. The U-Net under-counts by 42.3\% on
+average, and its signed error of $+42.3\%$ is identical to the absolute error
 because every one of the four folds under-counts. A method that merges cannot
 over-count, so its error carries a bias rather than scatter and no averaging will
 remove it. It is also the most conservative method measured, returning 325 objects
@@ -257,7 +257,7 @@ well under half that of Mask R-CNN, and it is by a wide margin the worst method 
 the quantity this work exists to measure.
 
 It reports 1223 objects against 606 annotated, a mean absolute counting error of
-93.2\% and a mean signed error of $+84.9\%$; on specimen Z6 alone it returns 723
+99.3\% and a mean signed error of $-90.2\%$; on specimen Z6 alone it returns 723
 detections for 238 beads. That over-counting is not indiscriminate, which is what
 makes it interesting, since at an overlap of 0.5 it matches 422 of the 606
 annotated beads, a recall of 0.696 against 0.447 for Mask R-CNN, and it has the
@@ -295,7 +295,7 @@ The counting result splits cleanly in two. On three folds YOLOv5u counts better
 than anything else in this work, at 18.3\% on Z2, 15.0\% on Z4 and 8.2\% on Z5,
 against the best of 21.9\%, 20.1\% and 31.9\% from the other five methods. On the
 fourth it fails outright, at 212.5\% on Z6, reporting 591 objects for 238
-annotated beads. The mean of 63.5\% describes neither behaviour, and its
+annotated beads. The mean of 67.9\% describes neither behaviour, and its
 between-fold standard deviation of 99.4 points is larger than the mean itself.
 
 The operating point is the obvious suspect, as that fold selected a confidence
@@ -323,7 +323,7 @@ the detection cap never binds for YOLOv5u, whose largest output is 292 objects o
 Z6-1 where YOLOv8 returns the full 400. On three specimens this is the most
 accurate counter in the study, on the fourth the second worst of the six, and four
 folds are too few to say which is typical; what it does establish is that a far
-smaller counting error is attainable here than the previous best of 37.8\%.
+smaller counting error is attainable here than the previous best of 39.5\%.
 
 \subsection{Faster R-CNN and the Value of the Mask Branch}
 \label{sec:mask_branch}
@@ -332,17 +332,17 @@ Faster R-CNN is the ablation of the mask branch of Mask R-CNN, with the same
 backbone, feature pyramid, anchors and schedule, and the mask head removed. It
 reaches $\mathrm{AP}_{50} = 0.305 \pm 0.073$ at box overlap and a box $F_1$ of
 0.529, and reports 602 objects against 606 annotated for a mean absolute counting
-error of 37.8\%.
+error of 39.5\%.
 
 Its average precision is not comparable with the mask figures elsewhere in this
 chapter, since a box has a systematically higher overlap with its ground-truth box
 than a mask has with its ground-truth mask for objects of this shape. The
 comparison the ablation does support is on counting, defined identically for both:
-37.8\% for the detector against 41.1\% for the same architecture with the mask
+39.5\% for the detector against 41.2\% for the same architecture with the mask
 branch attached, at a training cost 15\% lower.
 
 The honest reading is that on counting alone the mask branch buys nothing. The
-cheaper model counts better by 3.3 percentage points, far inside the fold-to-fold
+cheaper model counts better by 1.7 percentage points, far inside the fold-to-fold
 spread of either, 16.4 points for the detector and 20.9 for the full model, so the
 two are indistinguishable on this endpoint rather than the detector superior on
 it. What the mask branch buys is everything else, since without it there is no
@@ -355,7 +355,7 @@ small.
 
 The Otsu-plus-watershed pipeline fails on this data. It reaches
 $\mathrm{AP}_{50} = 0.001$, an AJI of 0.067 and a Panoptic Quality of 0.013, and
-over-counts by 574\% on average, reporting 2205 objects against 606 annotated. At
+over-counts by 495\% on average, reporting 2205 objects against 606 annotated. At
 an overlap of 0.5 it matches 28 beads out of 606, a recall of 0.046 at a precision
 of 0.013.
 
@@ -397,23 +397,23 @@ Among the mask-predicting methods, Mask R-CNN leads on every metric measured and
 the classical pipeline is last on all of them, so the fourth objective of
 Section~\ref{sec:objectives} is met. The qualification concerns the two box-only
 methods, absent from the mask-level columns. On counting, the only endpoint
-defined identically for all six, Faster R-CNN is 3.3 points ahead of Mask R-CNN
+defined identically for all six, Faster R-CNN is 1.7 points ahead of Mask R-CNN
 (Section~\ref{sec:mask_branch}) while YOLOv5u is ahead of both on three folds and
 far behind on the fourth (Section~\ref{sec:yolov5_results}). The ordering in
 between depends on which metric is asked for, and that dependence is a result
 rather than an inconvenience: YOLOv8 beats the U-Net on average precision, 0.254
-against 0.152, and loses to it on counting, 93.2\% against 44.2\%.
+against 0.152, and loses to it on counting, 99.3\% against 42.3\%.
 
 The counting column separates the five failure modes more clearly than the
 accuracy columns do. The classical pipeline fragments texture into objects,
-over-counting by a factor of seven. The U-Net fuses neighbours, under-counting by
-44\% with an error entirely one-signed. YOLOv8 detects freely and fragments what
-it detects, over-counting by 93\% with the highest recall and the highest split
+over-counting by a factor of six. The U-Net fuses neighbours, under-counting by
+42\% with an error entirely one-signed. YOLOv8 detects freely and fragments what
+it detects, over-counting by 99\% with the highest recall and the highest split
 rate, 28.5\%. YOLOv5u is the most accurate counter on three folds and the second
 worst of the six on the fourth, its failure a loss of score calibration on one
 specimen rather than a bias in one direction. Mask R-CNN errs in both directions:
-its mean absolute counting error of 41.1\% is the lowest of the four
-mask-predicting methods, while its mean signed error is $-6.1\%$, so most of its
+its mean absolute counting error of 41.2\% is the lowest of the four
+mask-predicting methods, while its mean signed error is $+3.0\%$, so most of its
 absolute error cancels between micrographs that over- and under-count. That last
 distinction matters for the application and is discussed in
 Section~\ref{sec:counting}, since a method whose errors partly cancel is useful
@@ -531,7 +531,7 @@ explanation.
 
 One row points the other way, and it is the row the laboratory cares about most.
 Background subtraction gives the lowest counting error of the four variants,
-31.3\% against 41.1\%, while losing 0.035 of $\mathrm{AP}_{50}$, and it has the
+31.5\% against 41.2\%, while losing 0.035 of $\mathrm{AP}_{50}$, and it has the
 lowest split rate of any Mask R-CNN variant, 11.6\% against 13.8\%. What separates
 the two on counting is not the average instance behaviour but the tails: the two
 worst frames of the baseline over-count by 119\% and 83\%, and background
@@ -576,8 +576,8 @@ finest pyramid level and the smallest anchor are both marginal to one at which
 neither is. The gain is therefore evidence for the diagnosis of
 Section~\ref{sec:magnification}, obtained by changing only the scale of the input.
 
-The counting endpoint does not follow. Mean absolute counting error is 42.7\%
-against 41.1\%, and the aggregate turns from a deficit into a surplus, 806 objects
+The counting endpoint does not follow. Mean absolute counting error is 44.0\%
+against 41.2\%, and the aggregate turns from a deficit into a surplus, 806 objects
 against 606 annotated where the baseline reported 562. Finding more beads has
 meant fragmenting more of them, the split rate rising from 13.8\% to 18.0\% and
 the merge rate from 24.9\% to 28.9\%, which is the same trade the instance methods
@@ -631,7 +631,7 @@ sizes identical to the specimen-wise protocol, gives
 $\mathrm{AP}_{50} = 0.303$ against 0.298 for leave-one-specimen-out, a difference
 of 0.005 in favour of the random split, against a between-fold standard deviation
 of 0.059. The other two metrics run the other way, as AJI is 0.313 against 0.325
-and mean absolute counting error 44.7\% against 41.1\%. Only one of the three
+and mean absolute counting error 43.9\% against 41.2\%. Only one of the three
 differences points in the direction a leak would produce, and it is a twelfth of
 the between-fold spread. On this dataset the naive protocol does not measurably
 overstate performance.
@@ -693,9 +693,9 @@ the highest test score, so its gain is not bought by fitting the training data
 harder, which is what a resampling artefact would have looked like.
 
 The counting column is reported for completeness. Mask R-CNN counts better on its
-training partition than on its test specimen, 32.6\% against 41.1\%, Faster R-CNN
-barely distinguishes the two, 35.7\% against 37.8\%, and the magnified model
-counts \emph{worse} on training than on test, 46.0\% against 42.7\%. That
+training partition than on its test specimen, 32.5\% against 41.2\%, Faster R-CNN
+barely distinguishes the two, 35.7\% against 39.5\%, and the magnified model
+counts \emph{worse} on training than on test, 45.6\% against 44.0\%. That
 inversion is not a paradox, since the counting figure is an unweighted mean of
 per-micrograph percentage errors dominated by the sparsely populated frames. The
 training column is not a result in its own right, and it is optimistic twice over,
@@ -749,19 +749,21 @@ only 52 beads the $3000\times$ figures should be read as indicative.
 \label{sec:counting}
 
 Summed over all 11 held-out micrographs, Mask R-CNN reports 562 beads against 606
-annotated, an aggregate deficit of 7.3\%. That figure is far more favourable than
-the method deserves, since it is the sum of errors that largely cancel. Per
-specimen the mean signed error runs from $-40.3\%$ on Z4 to $+64.7\%$ on Z6, and
-per micrograph from $-74.5\%$ on Z5-1 to $+119.4\%$ on Z6-2, while the mean
-absolute error per fold is 41.1\% against a mean signed error of $-6.1\%$. A
-single micrograph is therefore not a reliable measurement, and 7.3\% against
-41.1\% is a factor of six, none of which comes from the model being right.
+annotated, an aggregate under-count of $+7.3\%$. That figure is far more
+favourable than the method deserves, since it is the sum of errors that largely
+cancel. Per specimen the mean signed error runs from $+40.3\%$ on Z4, the largest
+under-count, to $-64.7\%$ on Z6, the largest over-count, and per micrograph from
+$+74.5\%$ on Z5-1 to $-119.4\%$ on Z6-2, while the mean absolute error is 41.2\%
+against a mean signed error of $+3.0\%$. A single micrograph is therefore not a
+reliable measurement, and 7.3\% against 41.2\% is a factor of six, none of which
+comes from the model being right.
 
 That cancellation is a property of the method rather than of aggregation. Faster
-R-CNN aggregates to $-0.7\%$ against a per-fold mean of 37.8\%, a wider gap still.
-YOLOv5u gains nothing, its aggregate of $+63.5\%$ matching its per-fold mean
-because its error is one-signed and concentrated on a single specimen, while the
-aggregate of $+101.8\%$ for YOLOv8 is worse than its per-fold mean of 93.2\%. A
+R-CNN aggregates to $+0.7\%$ against a mean absolute error of 39.5\%, a wider gap
+still. YOLOv5u gains nothing, its aggregate of $-63.5\%$ nearly matching its mean
+absolute error because its error is one-signed and concentrated on a single
+specimen, while the aggregate of $-101.8\%$ for YOLOv8 is worse than its mean
+absolute error of 99.3\%. A
 laboratory pooling many micrographs would gain roughly a factor of six from Mask
 R-CNN, more from Faster R-CNN, and nothing from either YOLO model. That
 distinction appears in no accuracy column in this chapter.
@@ -820,7 +822,7 @@ distribution closely through its bulk and falls short in the tail above roughly
 Two rows of Table~\ref{tab:physical} are a warning rather than a finding. Of the
 four methods, YOLOv8 has the \emph{lowest} KS statistic at $D = 0.075$ and the
 classical pipeline the second lowest at $D = 0.105$, and these are the two that
-over-count by 93\% and 574\%. Both achieve their agreement by reporting far more
+over-count by 99\% and 495\%. Both achieve their agreement by reporting far more
 objects than exist, whose sizes happen to span a similar range to the real beads,
 while Mask R-CNN, the best method by every other measure here, has a worse $D$ than
 both.
@@ -857,7 +859,7 @@ it is evidence. The model under-fits rather than memorises, reaching 0.437 on th
 micrographs it trained on, so the shortfall is one of capacity and training budget.
 
 \textbf{The absolute performance is not yet sufficient for unattended use.} An
-$\mathrm{AP}_{50}$ of 0.298 and a per-fold counting error of 41.1\% do not support
+$\mathrm{AP}_{50}$ of 0.298 and a per-micrograph counting error of 41.2\% do not support
 replacing a human operator on a single micrograph, although the aggregate error
 over eleven micrographs is 7.3\%. Classical thresholding is not viable at all, at
 $\mathrm{AP}_{50} = 0.001$, for a reason measurable in the micrographs: about 20
@@ -865,7 +867,7 @@ grey levels separate a bead from the surrounding mat.
 
 \textbf{Preprocessing did not improve detection, and one variant improved
 counting.} No transform beat the raw input on $\mathrm{AP}_{50}$, while background
-subtraction cut counting error from 41.1\% to 31.3\%. And the specimen-wise
+subtraction cut counting error from 41.2\% to 31.5\%. And the specimen-wise
 protocol did not change the headline number, but reduced the fold-to-fold spread
 by a third, which is a weaker claim than the one anticipated in
 Section~\ref{sec:objectives} and the one the data support.
@@ -941,7 +943,7 @@ is a lower bound rather than a measurement. It does not bind for any other metho
 the largest output of YOLOv5u on the same micrograph being 292.
 
 \textbf{The YOLOv5u counting figure averages two different behaviours.} Its mean
-of 63.5\% describes neither, since three folds fall between 8.2\% and 18.3\% and
+of 67.9\% describes neither, since three folds fall between 8.2\% and 18.3\% and
 the fourth at 212.5\%. The threshold diagnostic of
 Section~\ref{sec:yolov5_results} is labelled a diagnostic for the same reason, as
 it re-scores held-out predictions.
@@ -954,7 +956,9 @@ and no configuration was repeated, so every figure in this chapter is a single-r
 point estimate and none of the reported standard deviations measures run-to-run
 variability. They are between-fold spreads over four folds, which is a different
 and weaker quantity: they describe how much the result depends on which specimen
-was held out.
+was held out. Counting error is the exception, summarised over the eleven
+micrographs rather than the four folds; a between-fold spread of it is named as
+such where one is quoted.
 
 With four folds, a standard deviation is itself estimated from four numbers and is
 not a confidence interval. Varoquaux \cite{varoquaux2018crossvalidation} shows
@@ -989,7 +993,7 @@ between-fold spreads of 0.049 and 0.073.
 
 Mask R-CNN leads the mask-predicting alternatives on every metric, at
 $\mathrm{AP}_{50} = 0.298 \pm 0.059$, AJI $0.325 \pm 0.053$ and a counting error
-of 41.1\%, and reaches neither criterion of Section~\ref{sec:objectives}. The
+of 41.2\%, and reaches neither criterion of Section~\ref{sec:objectives}. The
 comparison locates what the instance formulation contributes, the separation of
 touching objects rather than mask accuracy, and what it does not: the mask branch
 is worth every mask-level measurement and nothing on the count, while the two
@@ -1003,5 +1007,5 @@ beads, and resampling the dataset threefold reproduces the gain without adding
 information. No preprocessing variant improved detection, one improved counting,
 and the naive partitioning protocol did not measurably overstate performance.
 Predicted bead diameters agree with the manual measurement to 3.2\% in the median,
-while counting remains too variable per micrograph, 41.1\% against an aggregate
+while counting remains too variable per micrograph, 41.2\% against an aggregate
 7.3\% over eleven, for unattended use.

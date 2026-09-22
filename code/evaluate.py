@@ -122,12 +122,28 @@ def _fold_row(coco_gt, per_image, names, detections, ids, iou_type,
 # -1, so it is dropped; a band absent from every fold stays absent from the
 # summary. The sentinel only exists for the AP and AR bands, and the test is
 # applied to those alone: signed counting error is legitimately negative whenever
-# a method under-counts, and rejecting it as a sentinel would drop exactly the
+# a method over-counts, and rejecting it as a sentinel would drop exactly the
 # folds that carry the bias the mean is meant to expose.
 SUMMARY_KEYS = ("ap", "ap50", "ap75", "ap_small", "ap_medium", "ap_large",
                 "ar100", "ar_max", "ar_small", "ar_medium", "ar_large",
                 "aji", "pq", "sq", "rq", "counting_error",
                 "abs_counting_error", "merge_rate", "split_rate", "f1_box")
+
+
+def _counting_over_micrographs(per_image: dict) -> dict:
+    """Counting error summarised over the micrographs, not over the folds.
+
+    Every other metric here is a fold mean, because the fold is the unit the
+    protocol holds out. Counting error is the exception: the laboratory reads
+    one micrograph at a time, so the micrograph is the unit that matters, and
+    Section 5.3 of the thesis reports it as such. The two differ because the
+    folds are not the same size -- Z4 contributes two micrographs and the other
+    three specimens contribute three each -- so a mean of fold means weights a
+    Z4 micrograph half as much again as any other.
+    """
+    errs = [r["counting_error"] for r in per_image.values()]
+    return {"counting_error": summarise(errs),
+            "abs_counting_error": summarise([abs(e) for e in errs])}
 
 
 def _summarise_folds(per_fold: dict) -> dict:
@@ -164,6 +180,12 @@ def evaluate_train_partition(coco_gt, records, gt_masks, protocol: str,
     iou_type = "bbox" if box_only else "segm"
 
     per_fold = {}
+    # Keyed by fold and micrograph, because a micrograph appears in the training
+    # partition of three folds and carries a different prediction in each. The
+    # counting error of the test partition is summarised over micrographs, so
+    # this one must be too, or the generalisation gap would be the difference
+    # between two differently weighted means rather than between two partitions.
+    all_rows = {}
     for fold in folds_mod.load(protocol):
         mine = [d for d in detections if d.get("fold") == fold["name"]]
         names = [n for n in fold["train"] if n in records]
@@ -181,10 +203,13 @@ def evaluate_train_partition(coco_gt, records, gt_masks, protocol: str,
                         box_only)
         row["train_images"] = names
         per_fold[fold["name"]] = row
+        all_rows.update({(fold["name"], n): per_image[n] for n in names})
 
     if not per_fold:
         return None
-    return {"per_fold": per_fold, "overall": _summarise_folds(per_fold),
+    overall = _summarise_folds(per_fold)
+    overall.update(_counting_over_micrographs(all_rows))
+    return {"per_fold": per_fold, "overall": overall,
             "box_only": box_only, "iou_type": iou_type}
 
 
@@ -242,6 +267,7 @@ def evaluate_method(coco_gt, records, gt_masks, protocol: str, method: str) -> d
         per_fold[fold["name"]] = row
 
     overall = _summarise_folds(per_fold)
+    overall.update(_counting_over_micrographs(per_image))
 
     by_mag = {}
     for mag in MAGNIFICATIONS:

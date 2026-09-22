@@ -3,20 +3,21 @@
 \begin{table}[htbp]
     \centering
     \caption{Counting accuracy under the leave-one-specimen-out protocol. Counts
-    are pooled over the 11 held-out micrographs, while the error is the mean
-    absolute percentage difference per micrograph. Methods marked (box) predict
-    no masks, so their average precision is computed on boxes.}
+    are pooled over the 11 held-out micrographs, while both error columns are
+    averaged over them. Positive is an under-count and negative an over-count,
+    and the two differ by however much the errors cancel. Methods marked (box)
+    predict no masks, so their average precision is computed on boxes.}
     \label{tab:counting}
-    \begin{tabular}{lrrrr}
+    \begin{tabular}{lrrrrr}
         \toprule
-        Method & Detected & Annotated & Counting error (\%) & $\mathrm{AP}_{50}$ \\
+        Method & Detected & Annotated & Signed (\%) & Absolute (\%) & $\mathrm{AP}_{50}$ \\
         \midrule
-        Otsu + watershed & 2205 & 606 & 580.4 & 0.001 (mask) \\
-        U-Net + CC       & 325 & 606 & 44.2 & 0.152 (mask) \\
-        Mask R-CNN       & 562 & 606 & 41.1 & 0.298 (mask) \\
-        Faster R-CNN     & 602 & 606 & 37.8 & 0.305 (box) \\
-        YOLOv8           & 1223 & 606 & 93.2 & 0.254 (mask) \\
-        YOLOv5u          & 991 & 606 & 63.5 & 0.315 (box) \\
+        Otsu + watershed & 2205 & 606 & $-495.5$ & 502.1 & 0.001 (mask) \\
+        U-Net + CC       & 325 & 606 & $+42.3$ & 42.3 & 0.152 (mask) \\
+        Mask R-CNN       & 562 & 606 & $+3.0$ & 41.2 & 0.298 (mask) \\
+        Faster R-CNN     & 602 & 606 & $-6.9$ & 39.5 & 0.305 (box) \\
+        YOLOv8           & 1223 & 606 & $-90.2$ & 99.3 & 0.254 (mask) \\
+        YOLOv5u          & 991 & 606 & $-63.0$ & 67.9 & 0.315 (box) \\
         \bottomrule
     \end{tabular}
 \end{table}

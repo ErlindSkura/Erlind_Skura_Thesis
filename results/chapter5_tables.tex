@@ -25,18 +25,20 @@
 \begin{table}[htbp]
     \centering
     \caption{Leave-one-specimen-out fold composition and the bead counts
-    Mask R-CNN produced for each held-out specimen. Counting error is signed,
-    positive meaning an over-count, and is the mean over the fold's micrographs
-    rather than the difference between the two count columns.}
+    Mask R-CNN produced for each held-out specimen. Counting error is
+    $(\text{annotated} - \text{detected}) / \text{annotated}$, so a
+    positive value is an under-count and a negative value an over-count, and it
+    is the mean over the fold's micrographs rather than the difference between
+    the two count columns.}
     \label{tab:folds}
     \begin{tabular}{llrrrr}
         \toprule
         Fold & Test specimen & Micrographs & Annotated & Predicted & Counting error (\%) \\
         \midrule
-        1 & Z2 & 3 & 132 & 110 & -21.9 \\
-        2 & Z4 & 2 & 63 & 43 & -40.3 \\
-        3 & Z5 & 3 & 173 & 90 & -27.1 \\
-        4 & Z6 & 3 & 238 & 319 & 64.7 \\
+        1 & Z2 & 3 & 132 & 110 & $+21.9$ \\
+        2 & Z4 & 2 & 63 & 43 & $+40.3$ \\
+        3 & Z5 & 3 & 173 & 90 & $+27.1$ \\
+        4 & Z6 & 3 & 238 & 319 & $-64.7$ \\
         \midrule
         \multicolumn{2}{l}{\textbf{Total}} & \textbf{11} & \textbf{606} & \textbf{562} & \\
         \bottomrule
@@ -72,10 +74,10 @@
         \toprule
         Method & $\mathrm{AP}_{50}$ & AJI & Counting error (\%) & Merge rate (\%) \\
         \midrule
-        Otsu + watershed & 0.001 & 0.067 & 580.4 & 17.4 \\
-        U-Net + CC       & 0.152 & 0.305 & 44.2 & 48.7 \\
-        Mask R-CNN       & 0.298 & 0.325 & 41.1 & 24.9 \\
-        YOLOv8           & 0.254 & 0.254 & 93.2 & 34.5 \\
+        Otsu + watershed & 0.001 & 0.067 & 502.1 & 17.4 \\
+        U-Net + CC       & 0.152 & 0.305 & 42.3 & 48.7 \\
+        Mask R-CNN       & 0.298 & 0.325 & 41.2 & 24.9 \\
+        YOLOv8           & 0.254 & 0.254 & 99.3 & 34.5 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -83,20 +85,21 @@
 \begin{table}[htbp]
     \centering
     \caption{Counting accuracy under the leave-one-specimen-out protocol. Counts
-    are pooled over the 11 held-out micrographs, while the error is the mean
-    absolute percentage difference per micrograph. Methods marked (box) predict
-    no masks, so their average precision is computed on boxes.}
+    are pooled over the 11 held-out micrographs, while both error columns are
+    averaged over them. Positive is an under-count and negative an over-count,
+    and the two differ by however much the errors cancel. Methods marked (box)
+    predict no masks, so their average precision is computed on boxes.}
     \label{tab:counting}
-    \begin{tabular}{lrrrr}
+    \begin{tabular}{lrrrrr}
         \toprule
-        Method & Detected & Annotated & Counting error (\%) & $\mathrm{AP}_{50}$ \\
+        Method & Detected & Annotated & Signed (\%) & Absolute (\%) & $\mathrm{AP}_{50}$ \\
         \midrule
-        Otsu + watershed & 2205 & 606 & 580.4 & 0.001 (mask) \\
-        U-Net + CC       & 325 & 606 & 44.2 & 0.152 (mask) \\
-        Mask R-CNN       & 562 & 606 & 41.1 & 0.298 (mask) \\
-        Faster R-CNN     & 602 & 606 & 37.8 & 0.305 (box) \\
-        YOLOv8           & 1223 & 606 & 93.2 & 0.254 (mask) \\
-        YOLOv5u          & 991 & 606 & 63.5 & 0.315 (box) \\
+        Otsu + watershed & 2205 & 606 & $-495.5$ & 502.1 & 0.001 (mask) \\
+        U-Net + CC       & 325 & 606 & $+42.3$ & 42.3 & 0.152 (mask) \\
+        Mask R-CNN       & 562 & 606 & $+3.0$ & 41.2 & 0.298 (mask) \\
+        Faster R-CNN     & 602 & 606 & $-6.9$ & 39.5 & 0.305 (box) \\
+        YOLOv8           & 1223 & 606 & $-90.2$ & 99.3 & 0.254 (mask) \\
+        YOLOv5u          & 991 & 606 & $-63.0$ & 67.9 & 0.315 (box) \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -169,10 +172,10 @@
         \toprule
         Protocol & $\mathrm{AP}_{50}$ & AJI & Counting error (\%) \\
         \midrule
-        Random split over images & 0.303 & 0.313 & 44.7 \\
-        Leave-one-specimen-out   & 0.298 & 0.325 & 41.1 \\
+        Random split over images & 0.303 & 0.313 & 43.9 \\
+        Leave-one-specimen-out   & 0.298 & 0.325 & 41.2 \\
         \midrule
-        Difference & 0.005 & -0.012 & 3.6 \\
+        Difference & 0.005 & -0.012 & 2.7 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -211,10 +214,10 @@
         Preprocessing & Contrast & $\mathrm{AP}_{50}$ & $\mathrm{AP}_S$ &
         AJI & Counting error (\%) \\
         \midrule
-        None (baseline)            &  0.55 & 0.298 & 0.116 & 0.325 & 41.1 \\
-        Median filter, 3x3         &  0.61 & 0.289 & 0.108 & 0.320 & 36.4 \\
-        CLAHE                      &  0.37 & 0.262 & 0.094 & 0.290 & 39.3 \\
-        Background subtraction     &  0.59 & 0.263 & 0.104 & 0.307 & 31.3 \\
+        None (baseline)            &  0.55 & 0.298 & 0.116 & 0.325 & 41.2 \\
+        Median filter, 3x3         &  0.61 & 0.289 & 0.108 & 0.320 & 37.1 \\
+        CLAHE                      &  0.37 & 0.262 & 0.094 & 0.290 & 38.2 \\
+        Background subtraction     &  0.59 & 0.263 & 0.104 & 0.307 & 31.5 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -233,8 +236,8 @@
         Input scale & $\mathrm{AP}_{50}$ & $\mathrm{AP}_S$ & AJI &
         Counting error (\%) \\
         \midrule
-        Native resolution            & 0.298 $\pm$ 0.059 & 0.116 & 0.325 $\pm$ 0.053 & 41.1 \\
-        $3\times$ bicubic            & 0.373 $\pm$ 0.039 & 0.158 & 0.359 $\pm$ 0.052 & 42.7 \\
+        Native resolution            & 0.298 $\pm$ 0.059 & 0.116 & 0.325 $\pm$ 0.053 & 41.2 \\
+        $3\times$ bicubic            & 0.373 $\pm$ 0.039 & 0.158 & 0.359 $\pm$ 0.052 & 44.0 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -253,9 +256,9 @@
         \cmidrule(lr){2-4} \cmidrule(lr){5-7}
         Method & Train & Test & Gap & Train & Test & Gap \\
         \midrule
-        Mask R-CNN               & 0.437 & 0.298 & +0.139 & 32.6 & 41.1 & -8.5 \\
-        Faster R-CNN             & 0.412 & 0.305 & +0.107 & 35.7 & 37.8 & -2.2 \\
-        Mask R-CNN, $3\times$ bicubic & 0.459 & 0.373 & +0.086 & 46.0 & 42.7 & +3.3 \\
+        Mask R-CNN               & 0.437 & 0.298 & +0.139 & 32.5 & 41.2 & -8.7 \\
+        Faster R-CNN             & 0.412 & 0.305 & +0.107 & 35.7 & 39.5 & -3.8 \\
+        Mask R-CNN, $3\times$ bicubic & 0.459 & 0.373 & +0.086 & 45.6 & 44.0 & +1.6 \\
         \bottomrule
     \end{tabular}
 \end{table}

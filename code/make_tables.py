@@ -68,6 +68,17 @@ def _pm(s: dict, nd: int = 3) -> str:
     return f"{s['mean']:.{nd}f} $\\pm$ {s['std']:.{nd}f}"
 
 
+def _sf(x: float, nd: int = 1) -> str:
+    """A signed counting error, with the sign always written out.
+
+    Counting error is (annotated - detected) / annotated, so the sign carries
+    the direction of the bias and a bare magnitude loses it. Printed with an
+    explicit plus for an under-count so that the two directions cannot be read
+    as the same kind of number.
+    """
+    return f"${x:+.{nd}f}$"
+
+
 # --- tables ----------------------------------------------------------------
 
 
@@ -181,18 +192,20 @@ def table_counting(m: dict) -> str:
         kind = "box" if r.get("box_only") else "mask"
         ap50 = _f(o["ap50"]["mean"]) if "ap50" in o else "---"
         rows.append(f"        {METHOD_LABEL[key]:16s} & {n_pred} & {n_gt} & "
+                    f"{_sf(o['counting_error']['mean'])} & "
                     f"{_f(o['abs_counting_error']['mean'], 1)} & "
                     f"{ap50} ({kind}) \\\\")
     return f"""\\begin{{table}}[htbp]
     \\centering
     \\caption{{Counting accuracy under the leave-one-specimen-out protocol. Counts
-    are pooled over the 11 held-out micrographs, while the error is the mean
-    absolute percentage difference per micrograph. Methods marked (box) predict
-    no masks, so their average precision is computed on boxes.}}
+    are pooled over the 11 held-out micrographs, while both error columns are
+    averaged over them. Positive is an under-count and negative an over-count,
+    and the two differ by however much the errors cancel. Methods marked (box)
+    predict no masks, so their average precision is computed on boxes.}}
     \\label{{tab:counting}}
-    \\begin{{tabular}}{{lrrrr}}
+    \\begin{{tabular}}{{lrrrrr}}
         \\toprule
-        Method & Detected & Annotated & Counting error (\\%) & $\\mathrm{{AP}}_{{50}}$ \\\\
+        Method & Detected & Annotated & Signed (\\%) & Absolute (\\%) & $\\mathrm{{AP}}_{{50}}$ \\\\
         \\midrule
 {chr(10).join(rows)}
         \\bottomrule
@@ -509,15 +522,17 @@ def table_folds(m: dict) -> str:
         if not f:
             continue
         rows.append(f"        {i} & {sp} & {len(f['test_images'])} & {f['n_gt']} & "
-                    f"{f['n_pred']} & {_f(f['counting_error'], 1)} \\\\")
+                    f"{f['n_pred']} & {_sf(f['counting_error'])} \\\\")
     total_gt = sum(f["n_gt"] for f in r.values())
     total_pred = sum(f["n_pred"] for f in r.values())
     return f"""\\begin{{table}}[htbp]
     \\centering
     \\caption{{Leave-one-specimen-out fold composition and the bead counts
-    Mask R-CNN produced for each held-out specimen. Counting error is signed,
-    positive meaning an over-count, and is the mean over the fold's micrographs
-    rather than the difference between the two count columns.}}
+    Mask R-CNN produced for each held-out specimen. Counting error is
+    $(\\text{{annotated}} - \\text{{detected}}) / \\text{{annotated}}$, so a
+    positive value is an under-count and a negative value an over-count, and it
+    is the mean over the fold's micrographs rather than the difference between
+    the two count columns.}}
     \\label{{tab:folds}}
     \\begin{{tabular}}{{llrrrr}}
         \\toprule

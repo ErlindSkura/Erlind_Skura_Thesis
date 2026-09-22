@@ -571,15 +571,18 @@ four beads does not weigh as much as one holding 152.
 Segmentation metrics do not by themselves establish that a method is usable, so
 the following are reported as primary outcomes.
 
-\textbf{Counting error.} The relative error in the number of beads found in a
-micrograph, reported both signed and absolute, since a method whose errors cancel
-across specimens behaves differently from one that is biased:
+\textbf{Counting error.} The error in the number of beads found in a micrograph,
+as a fraction of the number actually present, reported both signed and absolute
+since a method whose errors cancel behaves differently from one that is biased:
 %
 
 \begin{equation}
-    e = 100 \times \frac{|P| - |G|}{|G|} \quad (\%).
+    e = 100 \times \frac{|G| - |P|}{|G|} \quad (\%),
     \label{eq:counting_error}
 \end{equation}
+%
+positive for an under-count and negative for an over-count, with the sign written
+out wherever the quantity appears.
 
 \textbf{Merge and split rates.} These are the two failure modes that corrupt a
 count, and since they have opposite effects on it they are reported separately.

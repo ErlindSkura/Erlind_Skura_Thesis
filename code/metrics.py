@@ -295,8 +295,14 @@ def f1_at_iou_boxes(gt_boxes, pred_boxes, thr: float = 0.5) -> float:
 
 
 def counting_error(n_gt: int, n_pred: int) -> float:
-    """Signed percentage error; positive means the method over-counted."""
-    return 0.0 if n_gt == 0 else 100.0 * (n_pred - n_gt) / n_gt
+    """Signed percentage error, as a fraction of the true count.
+
+    Defined as (annotated - detected) / annotated, so a positive value means
+    the method under-counted and a negative value means it over-counted. The
+    denominator is the true count, which makes the figure a fraction of what
+    is actually there rather than of what the method happened to report.
+    """
+    return 0.0 if n_gt == 0 else 100.0 * (n_gt - n_pred) / n_gt
 
 
 def equivalent_diameters(masks, um_per_px: float) -> np.ndarray:
