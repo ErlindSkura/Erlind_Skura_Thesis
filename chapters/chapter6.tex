@@ -40,7 +40,7 @@ of objects that touch. Faster R-CNN, which is Mask R-CNN with the mask branch
 removed, counts as well as the full model, 39.5\% against 41.2\%, for 15\% less
 training time, so the mask branch is not what makes the count work but what makes
 the size distribution measurable at all. YOLOv8 finds more of the real beads than
-any other method, a recall of 0.696 against 0.447, while reporting 1223 objects
+any other method, a recall of 0.696 against 0.450, while reporting 1223 objects
 against 606 annotated for a counting error of 99.3\%. YOLOv5u reaches the highest
 box $\mathrm{AP}_{50}$ in the study, $0.315 \pm 0.049$, and the highest
 $\mathrm{AP}_S$, 0.132, counting three specimens to within 8.2\%, 15.0\% and
@@ -55,7 +55,7 @@ magnification, from $\mathrm{AP}_{50} = 0.227$ at $500\times$ to 0.396 at
 $3000\times$, even though that group holds only 52 of the 606 beads, so object
 size in pixels rather than the number of training examples is the binding
 constraint; magnifying the dataset threefold raises $\mathrm{AP}_{50}$ to 0.373
-and recall to 0.655 without adding information, so the gain is itself the
+and recall to 0.670 without adding information, so the gain is itself the
 evidence. And the naive partitioning protocol did not measurably overstate
 performance, a random split giving 0.303 against 0.298 against a between-fold
 standard deviation of 0.059, although it produced a fold-to-fold spread 1.7 times

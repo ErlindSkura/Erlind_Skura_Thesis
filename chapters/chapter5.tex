@@ -210,8 +210,8 @@ The decomposition of Panoptic Quality is more informative than the headline
 figure. Segmentation Quality, the mean intersection over union of correctly
 matched beads, is 0.719 against a Recognition Quality of 0.486, so the model
 delineates well the beads it finds and finds fewer than half of them. Pooled over
-the 11 held-out micrographs at an overlap of 0.5 it matches 271 of 606 and emits
-291 detections that match nothing, a recall of 0.447 at a precision of 0.482. The
+the 11 held-out micrographs at an overlap of 0.5 it matches 273 of 606 and emits
+289 detections that match nothing, a recall of 0.450 at a precision of 0.486. The
 deficit is one of detection rather than of boundary accuracy, and the gap between
 $\mathrm{AP}_{50} = 0.298$ and $\mathrm{AP}_{75} = 0.084$ says the same from the
 other direction.
@@ -260,7 +260,7 @@ It reports 1223 objects against 606 annotated, a mean absolute counting error of
 99.3\% and a mean signed error of $-90.2\%$; on specimen Z6 alone it returns 723
 detections for 238 beads. That over-counting is not indiscriminate, which is what
 makes it interesting, since at an overlap of 0.5 it matches 422 of the 606
-annotated beads, a recall of 0.696 against 0.447 for Mask R-CNN, and it has the
+annotated beads, a recall of 0.696 against 0.450 for Mask R-CNN, and it has the
 highest Recognition Quality of any method at 0.510. It also emits 801 detections
 that match nothing, for a precision of 0.345, and it splits 28.5\% of the beads it
 finds.
@@ -565,9 +565,9 @@ $\mathrm{AP}_{50}$ rises from 0.298 to 0.373 and $\mathrm{AP}_S$ from 0.116 to
 and 0.035 respectively. AJI rises from 0.325 to 0.359 and Panoptic Quality from
 0.351 to 0.394, and the decomposition says where the gain comes from: Recognition
 Quality rises from 0.486 to 0.541 while Segmentation Quality moves only from 0.719
-to 0.733. Pooled over the 11 held-out micrographs the model now matches 397 of the
-606 annotated beads against 271 before, a recall of 0.655 against 0.447, at an
-essentially unchanged precision of 0.493 against 0.482.
+to 0.733. Pooled over the 11 held-out micrographs the model now matches 406 of the
+606 annotated beads against 273 before, a recall of 0.670 against 0.450, at a
+slightly higher precision of 0.504 against 0.486.
 
 Interpolation adds no information, and the result should not be read as though it
 did. What changes is the number of pixels per object: the median bead at
@@ -854,7 +854,7 @@ fold against 0.20 to 0.35 on the others.
 \textbf{Small objects, not scarce labels, are the binding constraint on
 detection.} Detection is best where the data are scarcest and the objects largest,
 and magnifying the dataset threefold raises $\mathrm{AP}_{50}$ from 0.298 to 0.373
-and recall from 0.447 to 0.655 without adding information, which is precisely why
+and recall from 0.450 to 0.670 without adding information, which is precisely why
 it is evidence. The model under-fits rather than memorises, reaching 0.437 on the
 micrographs it trained on, so the shortfall is one of capacity and training budget.
 
