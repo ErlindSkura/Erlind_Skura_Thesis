@@ -275,7 +275,7 @@ least what is reported.
 The comparison with Mask R-CNN is therefore not a simple ranking. YOLOv8 has the
 better recall and the worse precision, the better Recognition Quality and the
 worse Segmentation Quality at 0.658 against 0.719, and a counting error more than
-twice as large. For a laboratory that counts particles the second decides the
+twice as large. For a laboratory that counts beads the second decides the
 matter; for one wanting a candidate-generation stage ahead of manual review, the
 first might.
 
@@ -428,7 +428,7 @@ bounding boxes rather than masks, and the two are not interchangeable.
 \input{results/table_counting}
 
 Table~\ref{tab:ap_bands} decomposes average precision by object size. This matters
-more here than the pooled figure suggests, since 82.8\% of the annotated particles
+more here than the pooled figure suggests, since 82.8\% of the annotated beads
 fall in the small band of COCO and 1.2\% in its large band
 (Section~\ref{sec:small_objects}), so the pooled AP is close to an average over
 a single band while appearing to describe three. $\mathrm{AP}_S$ is the column that
@@ -453,16 +453,16 @@ than four. Nothing in this work should be concluded from it.
 The four preprocessing variants of Section~\ref{sec:preprocessing_method} can be
 characterised before any model is trained, by measuring on the annotations what
 contrast each leaves available. Table~\ref{tab:contrast} reports the mean
-grey-level separation between particle and mat and that separation divided by the
+grey-level separation between bead and mat and that separation divided by the
 standard deviation of the background. The second is the one that matters, since a
 transform that widens the gap while widening the spread by more has not made the
-particles easier to find.
+beads easier to find.
 
 \begin{table}[htbp]
     \centering
-    \caption{Particle-to-mat contrast under each preprocessing variant, measured
-    over the 606 annotated particles before any training. $\Delta$ is the mean grey
-    level outside a particle minus the mean inside and $\sigma$ is the background
+    \caption{Bead-to-mat contrast under each preprocessing variant, measured
+    over the 606 annotated beads before any training. $\Delta$ is the mean grey
+    level outside a bead minus the mean inside and $\sigma$ is the background
     standard deviation.}
     \label{tab:contrast}
     \begin{tabular}{lrrrr}
@@ -481,24 +481,24 @@ particles easier to find.
 CLAHE is the instructive case. It produces the widest raw separation of the four, at
 23.1 grey levels against 18.0 for the baseline, and on that number alone would be
 the obvious choice. It also nearly doubles the background standard deviation, from
-33.2 to 62.5, because the transform cannot distinguish a particle from the fibre
+33.2 to 62.5, because the transform cannot distinguish a bead from the fibre
 texture surrounding it and amplifies both. The usable contrast therefore falls by
 almost a third. Figure~\ref{fig:preprocessing} shows this directly, as in the CLAHE
-panel the fibres are as strongly modulated as the particle.
+panel the fibres are as strongly modulated as the bead.
 
 The other two transforms produce modest gains. The median filter improves
 $\Delta/\sigma$ by 11\% by reducing the background spread rather than by increasing
 the separation, which is the expected behaviour of a denoising filter on a signal
 that it does not otherwise disturb. Background subtraction improves it by 8\%, and
 its raw separation rises to 20.3, indicating that some of the measured
-particle-to-mat difference in the untransformed images is attributable to
-illumination gradient rather than to the particles.
+bead-to-mat difference in the untransformed images is attributable to
+illumination gradient rather than to the beads.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{figures/fig_preprocessing.pdf}
     \caption{One region of Z6-4 under each preprocessing variant, with the
-    contrast each yields over the whole dataset. In the CLAHE panel the particle is
+    contrast each yields over the whole dataset. In the CLAHE panel the bead is
     more strongly contrasted than in the baseline, and so is every fibre around
     it.}
     \label{fig:preprocessing}

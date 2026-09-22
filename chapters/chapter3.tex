@@ -126,19 +126,19 @@ who directs the group that produced the specimens.
     elongated fibre segment.
 
     \item \textbf{Swellings count.} Where a fibre thickens locally into such a
-    body, that swelling is annotated as a particle even though the fibre passes
+    body, that swelling is annotated as a bead even though the fibre passes
     through it. In these micrographs this is the common case rather than the
-    exception, which is why no distinction is drawn between a free particle and a
+    exception, which is why no distinction is drawn between a free bead and a
     thickened fibre segment.
 
-    \item \textbf{A cluster is one object.} Where several small particles lie
+    \item \textbf{A cluster is one object.} Where several small beads lie
     together, the group is outlined once rather than resolved into its members.
 \end{enumerate}
 
 The third rule carries a consequence Chapter~\ref{ch:results} has to live with. A
 method that splits a cluster into its visible members is scored as having made a
 split error, even where its output may be closer to the number of individual
-crystals present. What is counted here is therefore particle sites, and the merge
+crystals present. What is counted here is therefore bead sites, and the merge
 and split rates of Section~\ref{sec:comparison} measure agreement with that
 convention rather than with crystal-level truth; the distinction is revisited
 among the limitations in Section~\ref{sec:limitations}.
@@ -411,9 +411,9 @@ results are labelled YOLOv5u throughout.
 Three settings depart from the package defaults, each for a measured property of
 this dataset rather than by search. The input size is held at 1024 rather than the
 default 640, since downscaling a $1024 \times 736$ micrograph by 0.625 would take
-the median particle at $500\times$ from 14.3 to 8.9 pixels. Mosaic augmentation is
+the median bead at $500\times$ from 14.3 to 8.9 pixels. Mosaic augmentation is
 disabled, because composing four images and rescaling roughly halves the apparent
-object size while 82.8\% of the particles are already below the small-object
+object size while 82.8\% of the beads are already below the small-object
 threshold of COCO. The detection cap is raised to 400 for the same reason as for
 the region-based models.
 
@@ -430,10 +430,10 @@ Prior work from this institution reports that the preprocessing applied before a
 network sees a micrograph changes materially what it can learn, for images
 suffering from non-uniform illumination and low contrast
 \cite{uka2020preprocessing}. The present dataset shares the low contrast, with
-about eighteen grey levels separating a particle from the surrounding mat, but
+about eighteen grey levels separating a bead from the surrounding mat, but
 differs in one respect that governs which transforms are worth testing: in
 unstained brightfield the background is a smooth field, whereas here it is a dense
-fibre network with structure at the same spatial scale as the particles. The
+fibre network with structure at the same spatial scale as the beads. The
 transforms are therefore selected for this material rather than carried across.
 
 Four variants are compared, with the architecture, schedule, fold definitions and
@@ -449,16 +449,16 @@ input transform alone:
     \item \textbf{CLAHE.} Contrast-limited adaptive histogram equalisation,
     applied against the narrow separation. It is adaptive rather than global
     because the brightness of the mat varies across a frame by more than the
-    particle-to-mat difference.
+    bead-to-mat difference.
 
-    \item \textbf{Background subtraction.} The particles are darker than the mat,
+    \item \textbf{Background subtraction.} The beads are darker than the mat,
     so the illumination estimate is a grey closing, which erases dark features
     while preserving the slowly varying field. Its footprint has to exceed the
-    largest object present, and since the largest annotated particle spans 214
+    largest object present, and since the largest annotated bead spans 214
     pixels the footprint is set to 257.
 
     \item \textbf{Median filter.} A $3\times3$ median against sensor noise, kept
-    deliberately small, since the median particle is 20 pixels across and a window
+    deliberately small, since the median bead is 20 pixels across and a window
     approaching that size would remove the object along with the noise.
 \end{itemize}
 

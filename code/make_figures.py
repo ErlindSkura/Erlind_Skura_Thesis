@@ -246,7 +246,7 @@ def fig_preprocessing() -> None:
         ax.set_yticks([])
     fig.suptitle("CLAHE gives the widest grey-level separation and the worst "
                  "usable contrast: it raises the fibre texture as much as the "
-                 "particles", fontsize=11)
+                 "beads", fontsize=11)
     fig.savefig(FIGS / "fig_preprocessing.pdf", dpi=200, bbox_inches="tight")
     plt.close(fig)
 

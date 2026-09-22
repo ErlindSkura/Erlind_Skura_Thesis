@@ -216,7 +216,7 @@ def table_counting(m: dict) -> str:
 def table_ap_bands(m: dict) -> str:
     """Average precision split by COCO object-size band.
 
-    82.8% of the annotated particles fall in the small band, so a pooled AP is
+    82.8% of the annotated beads fall in the small band, so a pooled AP is
     close to an average over one band while appearing to describe all three. The
     bands are reported separately for that reason. A band the ground truth does not
     populate is left blank rather than shown as zero.
@@ -249,7 +249,7 @@ def table_ap_bands(m: dict) -> str:
 
 
 def measure_separation() -> dict[str, str]:
-    """Particle-to-mat contrast under each preprocessing variant.
+    """Bead-to-mat contrast under each preprocessing variant.
 
     Measured here from the micrographs and the annotations rather than stored as a
     constant, so the column cannot drift out of step with what ``preprocess.apply``
@@ -308,7 +308,7 @@ def table_preprocessing(m: dict) -> str:
     \\caption{{Effect of input preprocessing on Mask R-CNN, under the
     leave-one-specimen-out protocol. Architecture, schedule, folds and
     threshold-selection rule are identical across rows. The second column is the
-    particle-to-mat contrast measured on the annotations before training, that is
+    bead-to-mat contrast measured on the annotations before training, that is
     the mean grey-level separation divided by the background standard
     deviation.}}
     \\label{{tab:preprocessing}}
