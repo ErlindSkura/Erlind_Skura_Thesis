@@ -104,8 +104,10 @@ verifying that calibration against the bead size distribution. It is met if the
 median bead diameter agrees to within 20\% across $500\times$, $1000\times$ and
 $3000\times$.
 
-The second is a leakage-free evaluation protocol, defining a partitioning scheme
-appropriate to a dataset whose 11 images derive from only 4 specimens and
+The second is a leakage-free evaluation protocol, one in which nothing about the
+images a model is tested on is present in those it was trained on. This means
+defining a partitioning scheme appropriate to a dataset whose 11 images derive
+from only 4 specimens, and
 demonstrating quantitatively why a random split over images or over the augmented
 copies overstates performance. It is met by a reported gap between the naive and
 the specimen-wise protocol obtained with the same model.

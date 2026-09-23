@@ -118,8 +118,8 @@ this work did not perform, and a loss that up-weights recall; the model scores
 of 0.696 obtained by YOLOv8 gives the target.
 
 Calibrate the score threshold per magnification, not per fold. This is
-the cheapest experiment suggested by any result here and the one with the largest
-measured headroom. The single catastrophic fold of YOLOv5u is mostly an operating
+the cheapest experiment suggested by any result here and the one whose measured
+room for improvement is largest. The single catastrophic fold of YOLOv5u is mostly an operating
 point, since one threshold was selected for a specimen whose three magnifications
 need different ones, and that fold's error halves at the value the other folds
 chose. Selecting per magnification group, still on training data only, is a change
