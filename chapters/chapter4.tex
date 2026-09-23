@@ -13,15 +13,14 @@ configured and trained.
 
 The pipeline is organised as five stages, each independently runnable so the
 expensive stage, training, does not have to be repeated when only the reporting
-changes: i) ingest, reading the LabelMe JSON files, recovering specimen
-and magnification and extracting the pixel calibration from the instrument
-banner; ii) prepare, cropping the banner, rasterising the polygons into
-instance masks and emitting a COCO-format annotation file;
-iii) partition, assigning images to the four leave-one-specimen-out
-folds; iv) train and predict, fitting each method on each fold's training
-partition and predicting on its held-out specimen; and v) evaluate and
-report, computing segmentation metrics, counting and merge/split statistics and
-converting detections into physical units.
+changes. Ingest reads the LabelMe JSON files, recovers specimen and
+magnification and extracts the pixel calibration from the instrument banner.
+Prepare crops the banner, rasterises the polygons into instance masks and emits a
+COCO-format annotation file. Partition assigns images to the four
+leave-one-specimen-out folds. Train and predict fits each method on each fold's
+training partition and predicts on its held-out specimen. Evaluate and report
+computes segmentation metrics, counting and merge/split statistics and converts
+detections into physical units.
 
 \section{Data Preparation}
 
