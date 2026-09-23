@@ -207,10 +207,14 @@ reaches on a benchmark whose objects are within two pixels of the median size he
 \cite{xu2022tiny}, the result is 0.298 and is reported as not met, since rounding
 it up would buy a claim worth less than the admission.
 
-The decomposition of Panoptic Quality is more informative than the headline
-figure. Segmentation Quality, the mean intersection over union of correctly
-matched beads, is 0.719 against a Recognition Quality of 0.486, so the model
-delineates well the beads it finds and finds fewer than half of them. Pooled over
+Panoptic Quality is the product of two factors, and reading them separately says
+more than the single number does. Segmentation Quality is the mean intersection
+over union of the beads that were matched, so it measures how accurately their
+outlines were traced; Recognition Quality is the $F_1$ over the objects
+themselves, so it measures how many were found at all. Their product is the
+Panoptic Quality of a single image, and averaged over the eleven they are 0.719
+and 0.486 against the 0.351 above. The model therefore traces an accurate outline
+around the beads it does find, and finds fewer than half of them. Pooled over
 the 11 held-out images at an overlap of 0.5 it matches 273 of 606 and emits
 289 detections that match nothing, a recall of 0.450 at a precision of 0.486. The
 deficit is one of detection rather than of boundary accuracy, and the gap between
