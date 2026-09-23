@@ -10,8 +10,8 @@
 \author{Erlind}{Skura}  % {First Name}{Last Name}
 
 % Thesis titles
-\title{DEEP LEARNING FOR INSTANCE SEGMENTATION AND QUANTIFICATION OF BEADS IN SEM IMAGES OF ELECTROSPUN NANOFIBRE MATS}
-\titleenglish{DEEP LEARNING FOR INSTANCE SEGMENTATION AND QUANTIFICATION OF BEADS IN SEM IMAGES OF ELECTROSPUN NANOFIBRE MATS}
+\title{DEEP LEARNING FOR INSTANCE SEGMENTATION AND QUANTIFICATION OF BEADS IN SEM IMAGES OF ELECTROSPUN NANOFIBRE MEMBRANES}
+\titleenglish{DEEP LEARNING FOR INSTANCE SEGMENTATION AND QUANTIFICATION OF BEADS IN SEM IMAGES OF ELECTROSPUN NANOFIBRE MEMBRANES}
 \titlealbanian{MËSIMI I THELLË PËR SEGMENTIMIN E INSTANCAVE DHE KUANTIFIKIMIN E RRUAZAVE NË IMAZHE SEM TË MEMBRANAVE NANOFIBROZE TË ELEKTROTJERRURA}
 
 % Dates
@@ -45,9 +45,9 @@
 
 % Abstract (English)
 \abstract{
-Beads in electrospun nanofibre mats reduce porosity and mechanical
+Beads in electrospun nanofibre membranes reduce porosity and mechanical
 strength and are quantified by hand, one ImageJ outline at a time. This work
-automates that measurement. The dataset consists of 11 SEM micrographs of four
+automates that measurement. The dataset consists of 11 SEM images of four
 specimens at 500$\times$, 1000$\times$ and 3000$\times$, carrying 606
 manually delineated beads, and since the specimens are the only independent units
 in it, the evaluation is leave-one-specimen-out. Mask R-CNN is compared under an
@@ -55,7 +55,7 @@ identical protocol against five alternatives, namely a detection-only ablation o
 itself, YOLOv8, YOLOv5u, a U-Net semantic baseline and a classical
 Otsu-plus-watershed pipeline. Mask R-CNN is found to lead the
 mask-predicting methods, with $\mathrm{AP}_{50} = 0.298 \pm 0.059$, a counting
-error of 41.2\% per micrograph and a median bead diameter within 3.2\% of the
+error of 41.2\% per image and a median bead diameter within 3.2\% of the
 manual value, two thousandths short of the 0.30 criterion taken from a
 benchmark of matched object size. The semantic baseline matches its mask accuracy
 while merging 48.7\% of the beads and under-counting by 42\%, indicating that
@@ -98,7 +98,7 @@ mirë i testuar, i numëron tri mostra brenda 18,3\% dhe të katërtën me 212,5
 % Acknowledgments
 \acknowledgments{
 I would like to thank my supervisor, Assoc. Prof. Dr. Arban Uka, for proposing this
-problem, for providing the micrographs and the annotations on which the whole study
+problem, for providing the images and the annotations on which the whole study
 rests, and for his guidance throughout the work.
 
 I am also grateful to my family for their support during my studies, and to Epoka

@@ -29,6 +29,20 @@ IMAGES: dict[str, tuple[str, int]] = {
 SPECIMENS: tuple[str, ...] = ("Z2", "Z4", "Z5", "Z6")
 MAGNIFICATIONS: tuple[int, ...] = (500, 1000, 3000)
 
+# The supervisor asked for the specimens to be named S1 to S4 in the thesis.
+# The identifiers above stay as they are, because they are the names of the
+# files the laboratory supplied and of every stored prediction, and renaming
+# those would sever the results from their provenance. The mapping is applied
+# where a name is printed, so the thesis says S1 and the data still says Z2.
+SPECIMEN_LABEL: dict[str, str] = {"Z2": "S1", "Z4": "S2", "Z5": "S3", "Z6": "S4"}
+
+
+def label(name: str) -> str:
+    """Display name for a specimen (``Z5``) or an image (``Z5-2``)."""
+    specimen, _, suffix = name.partition("-")
+    shown = SPECIMEN_LABEL.get(specimen, specimen)
+    return f"{shown}-{suffix}" if suffix else shown
+
 # Calibrated from the burned-in scale bars: the field width is 284.4 um at
 # 1000x and scales inversely with magnification, over 1024 px.
 NM_PER_PX: dict[int, float] = {500: 555.6, 1000: 277.8, 3000: 92.6}

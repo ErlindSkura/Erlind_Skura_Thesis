@@ -13,14 +13,14 @@ configured and trained.
 
 The pipeline is organised as five stages, each independently runnable so the
 expensive stage, training, does not have to be repeated when only the reporting
-changes: i) \textbf{ingest}, reading the LabelMe JSON files, recovering specimen
+changes: i) ingest, reading the LabelMe JSON files, recovering specimen
 and magnification and extracting the pixel calibration from the instrument
-banner; ii) \textbf{prepare}, cropping the banner, rasterising the polygons into
+banner; ii) prepare, cropping the banner, rasterising the polygons into
 instance masks and emitting a COCO-format annotation file;
-iii) \textbf{partition}, assigning micrographs to the four leave-one-specimen-out
-folds; iv) \textbf{train and predict}, fitting each method on each fold's training
-partition and predicting on its held-out specimen; and v) \textbf{evaluate and
-report}, computing segmentation metrics, counting and merge/split statistics and
+iii) partition, assigning images to the four leave-one-specimen-out
+folds; iv) train and predict, fitting each method on each fold's training
+partition and predicting on its held-out specimen; and v) evaluate and
+report, computing segmentation metrics, counting and merge/split statistics and
 converting detections into physical units.
 
 \section{Data Preparation}
@@ -48,7 +48,7 @@ per object.
 
 \subsection{Banner Handling and Calibration}
 
-The instrument banner occupies the bottom 32 rows of every micrograph. Calibration
+The instrument banner occupies the bottom 32 rows of every image. Calibration
 is performed before cropping, where the scale bar is located as the longest run of
 saturated pixels in the lower-left region of the banner and its pixel length divided
 by the physical length printed beside it gives the pixel size. The recovered values
@@ -62,14 +62,14 @@ edge and no annotation extends into the banner region.
 \subsection{Fold Assignment}
 
 Fold membership is derived from the specimen prefix of the filename, so all
-micrographs of one specimen move together. The four folds are Z2, Z4, Z5 and Z6. The
+images of one specimen move together. The four folds are S1, S2, S3 and S4. The
 assignment is written to disk as an explicit manifest rather than recomputed at
 training time, so every method is guaranteed to see identical partitions and
 the comparison between them is exact.
 
 The deliberately flawed control configuration described in
 Section~\ref{sec:protocol} uses the same machinery with the specimen constraint
-disabled, splitting the 11 micrographs at random.
+disabled, splitting the 11 images at random.
 
 \section{Augmentation}
 
@@ -78,7 +78,7 @@ reasons set out in Section~\ref{sec:supplied_aug}. The pre-computed copies shipp
 with the dataset are not used.
 
 The transformations are chosen so as to be label-preserving for this modality.
-Micrographs of a non-woven mat have no canonical orientation, so horizontal and
+Images of a non-woven membrane have no canonical orientation, so horizontal and
 vertical flips and rotations in multiples of $90^{\circ}$ are physically meaningful.
 Random scaling is included deliberately and with a wider range than would be usual,
 since scale robustness across the $500\times$ to $3000\times$ span is the central
@@ -88,7 +88,7 @@ would distort bead shape, and bead shape is a measured output rather than an
 incidental property.
 
 Random cropping to fixed-size tiles is used both as augmentation and as a practical
-measure, since a $1024 \times 736$ micrograph containing up to 152 small beads is
+measure, since a $1024 \times 736$ image containing up to 152 small beads is
 awkward to fit in memory at the batch sizes needed for stable training.
 
 \section{Model Configuration}
@@ -105,7 +105,7 @@ far smaller than a typical COCO object, and default anchors would leave the smal
 beads without a well-matched proposal.
 
 The maximum number of detections per image is raised well above the COCO default of
-100, since a single $500\times$ micrograph contains up to 152 beads and the default
+100, since a single $500\times$ image contains up to 152 beads and the default
 would silently truncate the count, which is an error that would corrupt precisely
 the quantity being measured.
 
@@ -115,7 +115,7 @@ The semantic baseline uses a ResNet encoder initialised from ImageNet weights
 together with a symmetric decoder with skip connections. It is trained with a
 combined cross-entropy and Dice loss to counter the strong
 foreground/background imbalance, since bead pixels constitute only 2 to 20\% of a
-micrograph. Writing $\hat{y}_i$ for the predicted probability at pixel $i$ and
+image. Writing $\hat{y}_i$ for the predicted probability at pixel $i$ and
 $y_i \in \{0,1\}$ for the annotation,
 %
 \begin{equation}
@@ -146,7 +146,7 @@ Chapter~\ref{ch:results}.
 
 Faster R-CNN is built from the same torchvision family as Mask R-CNN and from the
 same COCO-pretrained ResNet-50 and feature pyramid weights, with the mask predictor
-absent. The anchor ladder, the detection budget of 400, the region proposal limits,
+absent. The anchor ladder, the cap of 400 detections per image, the region proposal limits,
 the optimiser, the learning-rate schedule and the input-size pinning are set by the
 same code path, so the two models differ in the mask branch and in nothing else
 that was configured.
@@ -166,8 +166,8 @@ results depend.
 The package expects a dataset on disk in its own layout, so each fold is exported
 to a scratch directory as images plus one label file per image, with the instance
 polygons converted to normalised vertex lists. That export is written to local
-disk rather than to the mounted Drive, since the step budget converts to roughly
-750 epochs over eight micrographs and the package rewrites its \texttt{last.pt}
+disk rather than to the mounted Drive, since the iteration count converts to roughly
+750 epochs over eight images and the package rewrites its \texttt{last.pt}
 checkpoint at the end of every epoch, which over a network filesystem would
 dominate the run time.
 
@@ -229,8 +229,8 @@ precision is computed with the reference COCO implementation
 No local GPU was available, so the training stages run on Google Colab with an
 NVIDIA T4. This constrains the design in two ways. A session can be interrupted,
 so each stage writes its predictions to persistent storage and can be resumed
-independently rather than the pipeline being one long run. And the total budget is
-limited, which is why the comparison is between six methods under one protocol
+independently rather than the pipeline being one long run. And the total GPU time
+is limited, which is why the comparison is between six methods under one protocol
 rather than a wider hyperparameter search, since the leave-one-specimen-out
 protocol already multiplies every configuration by four.
 
@@ -246,23 +246,23 @@ Table~\ref{tab:runtime}.
 Six problems were encountered while building the pipeline, and each changed a
 design decision.
 
-\textbf{The augmented copies could not be used as supplied.} The dataset arrives
+The augmented copies could not be used as supplied. The dataset arrives
 as 143 image--annotation pairs, which initially appears to be a usable sample
 size, while the filenames reveal 11 originals with 12 transformed copies each.
 The transformations are correctly applied, so the copies are not defective, but
 they are not independent either, and letting them cross a partition boundary would
 have produced optimistic results.
 
-\textbf{The banner is augmented along with the image.} The flipped copies show the
+The banner is augmented along with the image. The flipped copies show the
 instrument banner mirrored and the translated copies carry black padding along the
 vacated edge, which reinforced the decision to crop it before any processing.
 
-\textbf{Object size varies sixfold across the dataset.} The median bead is 14
+Object size varies sixfold across the dataset. The median bead is 14
 pixels across at $500\times$ and 76 at $3000\times$, which drove the choice of a
 feature pyramid backbone, the resetting of the anchor scales and the wide
 random-scaling range in the augmentation policy.
 
-\textbf{Augmentation initially shifted every mask by one pixel.} Reflections were
+Augmentation initially shifted every mask by one pixel. Reflections were
 first implemented as $x \mapsto W - 1 - x$, correct for an integer pixel index but
 not for polygon vertices, which are continuous coordinates and reflect as
 $x \mapsto W - x$. Half a pixel at each edge is invisible on a large object, but
@@ -274,16 +274,16 @@ the correct convention and 0.87 under the incorrect one. That check is now
 permanent in the test suite, since the failure produced no error message and no
 visibly wrong image, only slightly wrong labels.
 
-\textbf{Evaluating a thousand objects per image was forty times slower than
-necessary.} Instances were initially held as full-frame masks, one
+Evaluating a thousand objects per image was forty times slower than
+necessary. Instances were initially held as full-frame masks, one
 $1024 \times 736$ array per object, and the classical baseline emits over a
-thousand objects for a single micrograph, so its parameter search spent almost all
+thousand objects for a single image, so its parameter search spent almost all
 its time reading zeros: a single Aggregated Jaccard Index computation took 5.95
 seconds. Holding each instance as a bounding box plus a mask covering only that
 box, and computing intersections only for pairs whose boxes overlap, reduced that
 to 0.02 seconds and the full parameter search from over an hour to a few minutes.
 
-\textbf{The smoke run destroyed a completed set of results.} The fast correctness
+The smoke run destroyed a completed set of results. The fast correctness
 check of Section~\ref{sec:deployment} originally wrote its predictions to the same
 directory as a real run, so re-running it after a completed four-fold experiment
 silently overwrote several hours of predictions with output from eight training
@@ -294,38 +294,34 @@ its working and results directories before any pipeline module is imported.
 
 \section{Code Organization}
 
-\begin{itemize}
-    \item \texttt{config.py} -- dataset facts, calibration constants and paths, in
-    one place so no constant is defined twice.
-    \item \texttt{dataset\_stats.py} -- descriptive statistics and the dataset
-    figures of Chapter~\ref{ch:methodology}.
-    \item \texttt{prepare\_data.py} -- banner cropping and COCO conversion.
-    \item \texttt{folds.py} -- the fold manifests for both protocols.
-    \item \texttt{data\_io.py} -- annotation loading, polygon rasterisation and the
-    augmentation geometry, deliberately free of any deep-learning dependency so
-    the classical baseline and the evaluation code run without PyTorch.
-    \item \texttt{datasets.py}, \texttt{models.py} -- the PyTorch dataset, the
-    Mask R-CNN configuration and the U-Net definition.
-    \item \texttt{train\_maskrcnn.py}, \texttt{train\_fasterrcnn.py},
-    \texttt{train\_unet.py}, \texttt{train\_yolo.py} and \texttt{classical.py} --
-    the six methods, the two one-stage models being driven by a single script that
-    selects the family from the weights filename.
-    \item \texttt{predio.py} -- the shared prediction format. Every method writes
-    COCO results, the mask-predicting ones as run-length-encoded masks and the
-    box-only ones as boxes with no segmentation field.
-    \item \texttt{metrics.py}, \texttt{evaluate.py} -- segmentation metrics,
-    counting and merge/split statistics, and physical quantification.
-    \item \texttt{runtime.py} -- the wall-clock instrumentation behind
-    Table~\ref{tab:runtime}.
-    \item \texttt{make\_tables.py}, \texttt{make\_figures.py} -- the tables and
-    figures of Chapter~\ref{ch:results} and the dataset figures, generated from
-    the measured metrics.
-    \item \texttt{run\_all.py} -- runs the pipeline end to end, with a
-    \texttt{-{}-smoke} mode that executes a few iterations to verify nothing
-    crashes before committing hours of GPU time.
-    \item \texttt{notebooks/Thesis\_Colab.ipynb} -- the notebook used to run the
-    training stages.
-\end{itemize}
+Table~\ref{tab:modules} lists the modules and what each is responsible for.
+
+\begin{table}[htbp]
+    \centering
+    \caption{The modules of the implementation. Each concern is owned by one
+    file, so a rule such as the partitioning guarantee is written once and
+    inherited everywhere it applies.}
+    \label{tab:modules}
+    \begin{tabular}{p{0.32\textwidth}p{0.58\textwidth}}
+        \toprule
+        Module & Responsibility \\
+        \midrule
+        \texttt{config.py} & Dataset facts, calibration constants and paths, in one place so no constant is defined twice. \\
+        \texttt{dataset\_stats.py} & Descriptive statistics and the dataset figures of Chapter~\ref{ch:methodology}. \\
+        \texttt{prepare\_data.py} & Banner cropping and COCO conversion. \\
+        \texttt{folds.py} & The fold manifests for both protocols. \\
+        \texttt{data\_io.py} & Annotation loading, polygon rasterisation and the augmentation geometry, free of any deep-learning dependency so the classical baseline and the evaluation code run without PyTorch. \\
+        \texttt{datasets.py}, \texttt{models.py} & The PyTorch dataset, the Mask R-CNN configuration and the U-Net definition. \\
+        \texttt{train\_maskrcnn.py}, \texttt{train\_fasterrcnn.py}, \texttt{train\_unet.py}, \texttt{train\_yolo.py}, \texttt{classical.py} & The six methods, the two one-stage models being driven by a single script that selects the family from the weights filename. \\
+        \texttt{predio.py} & The shared prediction format. Every method writes COCO results, the mask-predicting ones as run-length-encoded masks and the box-only ones as boxes with no segmentation field. \\
+        \texttt{metrics.py}, \texttt{evaluate.py} & Segmentation metrics, counting and merge/split statistics, and physical quantification. \\
+        \texttt{runtime.py} & The wall-clock instrumentation behind Table~\ref{tab:runtime}. \\
+        \texttt{make\_tables.py}, \texttt{make\_figures.py} & The tables and figures of Chapter~\ref{ch:results} and the dataset figures, generated from the measured metrics. \\
+        \texttt{run\_all.py} & Runs the pipeline end to end, with a \texttt{-{}-smoke} mode that executes a few iterations to verify nothing crashes before committing hours of GPU time. \\
+        \texttt{notebooks/Thesis\_Colab.ipynb} & The notebook used to run the training stages. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 Chapter~\ref{ch:results} is populated by \texttt{make\_tables.py} rather than by
 hand, so no number can reach the thesis without a run having produced it.
@@ -337,26 +333,24 @@ The pipeline is deployed as a Google Colab notebook that clones the repository,
 mounts the specimen data from Drive and runs each stage as a separate cell. Three
 properties of that arrangement are deliberate.
 
-\textbf{Each stage is independently resumable.} A Colab session can be
+Each stage is independently resumable. A Colab session can be
 disconnected at any point, and a four-fold run of six methods takes long enough
 that this is likely rather than merely possible, so every stage writes its
 predictions to persistent storage before the next begins.
 
-\textbf{A smoke path runs the entire pipeline in about two minutes.} It executes
+A smoke path runs the entire pipeline in about two minutes. It executes
 eight training iterations per fold and a single classical parameter combination.
 Its numbers are meaningless; its purpose is to establish that nothing crashes
 before committing hours of GPU time. It writes to a separate working directory,
 for the reason given in Section~\ref{sec:challenges}.
 
-\textbf{Reporting is reproducible from stored metrics.} The evaluation and
+Reporting is reproducible from stored metrics. The evaluation and
 table-generation stages read only the saved predictions, so the tables and figures
 of Chapter~\ref{ch:results} regenerate without repeating any training, and a
 change in how a result is presented cannot alter the result.
 
 The complete repository, including the notebook, is available at
 \url{https://github.com/ErlindSkura/Erlind_Skura_Thesis}.
-
-\section{Summary}
 
 The pipeline separates ingest, preparation, partitioning, training and evaluation
 so the partitioning guarantee of Chapter~\ref{ch:methodology} is enforced in one

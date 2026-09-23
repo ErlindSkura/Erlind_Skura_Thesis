@@ -3,7 +3,7 @@
 Each figure here exists to carry evidence for a claim the thesis makes and that
 prose alone cannot show: that the supplied augmented copies are unusable, that
 beads overlap, that bead-to-background contrast is too weak for thresholding, and
-that the per-micrograph counting error is far wider than the aggregate suggests.
+that the per-image counting error is far wider than the aggregate suggests.
 
 Figures produced by the pipeline itself -- the qualitative comparison and the
 size-distribution agreement -- are written by make_tables.py instead, because
@@ -26,7 +26,7 @@ import numpy as np
 from matplotlib.patches import Rectangle
 from PIL import Image, ImageDraw
 
-from config import BANNER_H, DATA_ROOT, IMAGES, NM_PER_PX, RESULTS, WORK_H
+from config import BANNER_H, DATA_ROOT, IMAGES, NM_PER_PX, RESULTS, WORK_H, label
 
 FIGS = Path(__file__).resolve().parent.parent / "figures"
 
@@ -53,7 +53,7 @@ def fig_augmentation_problem() -> None:
 
     This is the visual evidence for discarding the 132 pre-computed copies: they
     are not merely redundant, they carry a mirrored instrument banner and black
-    fill that no real micrograph would contain.
+    fill that no real image would contain.
     """
     panels = [
         ("Z2-1", "original"),
@@ -131,7 +131,7 @@ def fig_overlap() -> None:
     ax1.imshow(grey, cmap="gray")
     ax1.add_patch(Rectangle((x0, y0), x1 - x0, y1 - y0, fill=False,
                             edgecolor=ACCENT, linewidth=1.5))
-    ax1.set_title(f"{name} — {len(polys)} annotated beads", fontsize=10)
+    ax1.set_title(f"{label(name)} — {len(polys)} annotated beads", fontsize=10)
     ax1.axis("off")
 
     ax2.imshow(grey[y0:y1, x0:x1], cmap="gray")
@@ -161,7 +161,7 @@ def fig_overlap() -> None:
 
     pct = 100 * contested.sum() / max((acc > 0).sum(), 1)
     fig.suptitle(f"Beads touch and overlap: {pct:.1f}% of annotated bead pixels in "
-                 f"this micrograph, and 8.8% across the dataset,\nare claimed by "
+                 f"this image, and 8.8% across the dataset,\nare claimed by "
                  f"more than one bead", fontsize=11)
     fig.savefig(FIGS / "fig_overlap.pdf", dpi=200, bbox_inches="tight")
     plt.close(fig)
@@ -195,12 +195,12 @@ def fig_contrast() -> None:
                 label=f"inside (mean {grey[m].mean():.0f})")
         ax.axvline(grey[~m].mean(), color=GREY, linestyle=":", linewidth=1)
         ax.axvline(grey[m].mean(), color=ACCENT, linestyle=":", linewidth=1)
-        ax.set_title(f"{name} — {IMAGES[name][1]}$\\times$", fontsize=10)
+        ax.set_title(f"{label(name)} — {IMAGES[name][1]}$\\times$", fontsize=10)
         ax.set_xlabel("grey level")
         ax.legend(fontsize=7.5, loc="upper left")
         ax.grid(alpha=0.25)
     axes[0].set_ylabel("density")
-    fig.suptitle("Beads are darker than the surrounding mat by only about 20 grey "
+    fig.suptitle("Beads are darker than the surrounding membrane by only about 20 grey "
                  "levels, and the distributions overlap almost entirely",
                  fontsize=11)
     fig.savefig(FIGS / "fig_contrast.pdf", dpi=200, bbox_inches="tight")
@@ -255,7 +255,7 @@ def fig_preprocessing() -> None:
 
 
 def fig_counting() -> None:
-    """Predicted against annotated bead count, per micrograph.
+    """Predicted against annotated bead count, per image.
 
     The aggregate shortfall is 10.4%, which flatters the method: the per-image
     errors run from -68% to +95% and largely cancel. A scatter shows that in a
@@ -280,14 +280,14 @@ def fig_counting() -> None:
                        edgecolor="black", linewidth=1.2, zorder=3,
                        label=f"${mag}\\times$")
     for name, v in per_image.items():
-        ax.annotate(name, (v["n_gt"], v["n_pred"]), fontsize=7,
+        ax.annotate(label(name), (v["n_gt"], v["n_pred"]), fontsize=7,
                     xytext=(4, -9), textcoords="offset points", color=GREY)
 
     ax.set_xlim(0, lim)
     ax.set_ylim(0, lim)
     ax.set_xlabel("annotated beads")
     ax.set_ylabel("beads predicted by Mask R-CNN")
-    ax.set_title("Counting agreement per held-out micrograph", fontsize=11)
+    ax.set_title("Counting agreement per held-out image", fontsize=11)
     ax.legend(fontsize=8, loc="upper left")
     ax.grid(alpha=0.25)
     ax.set_aspect("equal")
@@ -340,7 +340,7 @@ def fig_bead_examples() -> None:
                      fontsize=10)
         ax.axis("off")
 
-    fig.suptitle("The median bead of specimen Z6 at each magnification, shown at "
+    fig.suptitle(f"The median bead of specimen {label('Z6')} at each magnification, shown at "
                  "the same display size", fontsize=11)
     fig.savefig(FIGS / "fig_bead_examples.pdf", dpi=200, bbox_inches="tight")
     plt.close(fig)

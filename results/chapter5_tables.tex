@@ -28,17 +28,17 @@
     Mask R-CNN produced for each held-out specimen. Counting error is
     $(\text{annotated} - \text{detected}) / \text{annotated}$, so a
     positive value is an under-count and a negative value an over-count, and it
-    is the mean over the fold's micrographs rather than the difference between
+    is the mean over the fold's images rather than the difference between
     the two count columns.}
     \label{tab:folds}
     \begin{tabular}{llrrrr}
         \toprule
-        Fold & Test specimen & Micrographs & Annotated & Predicted & Counting error (\%) \\
+        Fold & Test specimen & Images & Annotated & Predicted & Counting error (\%) \\
         \midrule
-        1 & Z2 & 3 & 132 & 110 & $+21.9$ \\
-        2 & Z4 & 2 & 63 & 43 & $+40.3$ \\
-        3 & Z5 & 3 & 173 & 90 & $+27.1$ \\
-        4 & Z6 & 3 & 238 & 319 & $-64.7$ \\
+        1 & S1 & 3 & 132 & 110 & $+21.9$ \\
+        2 & S2 & 2 & 63 & 43 & $+40.3$ \\
+        3 & S3 & 3 & 173 & 90 & $+27.1$ \\
+        4 & S4 & 3 & 238 & 319 & $-64.7$ \\
         \midrule
         \multicolumn{2}{l}{\textbf{Total}} & \textbf{11} & \textbf{606} & \textbf{562} & \\
         \bottomrule
@@ -53,10 +53,10 @@
         \toprule
         Test specimen & $\mathrm{AP}_{50}$ & $\mathrm{AP}_{75}$ & AP & AJI \\
         \midrule
-        Z2 & 0.334 & 0.079 & 0.125 & 0.305 \\
-        Z4 & 0.355 & 0.129 & 0.155 & 0.397 \\
-        Z5 & 0.223 & 0.043 & 0.100 & 0.273 \\
-        Z6 & 0.281 & 0.083 & 0.101 & 0.323 \\
+        S1 & 0.334 & 0.079 & 0.125 & 0.305 \\
+        S2 & 0.355 & 0.129 & 0.155 & 0.397 \\
+        S3 & 0.223 & 0.043 & 0.100 & 0.273 \\
+        S4 & 0.281 & 0.083 & 0.101 & 0.323 \\
         \midrule
         Mean $\pm$ s.d. & 0.298 $\pm$ 0.059 & 0.084 $\pm$ 0.035 & 0.120 $\pm$ 0.026 & 0.325 $\pm$ 0.053 \\
         \bottomrule
@@ -67,7 +67,7 @@
     \centering
     \caption{The mask-predicting methods under an identical protocol, averaged over
     the four leave-one-specimen-out folds. Counting error is the mean absolute
-    percentage difference per micrograph. Detection-only methods appear in
+    percentage difference per image. Detection-only methods appear in
     Table~\ref{tab:counting}.}
     \label{tab:method_comparison}
     \begin{tabular}{lrrrr}
@@ -85,7 +85,7 @@
 \begin{table}[htbp]
     \centering
     \caption{Counting accuracy under the leave-one-specimen-out protocol. Counts
-    are pooled over the 11 held-out micrographs, while both error columns are
+    are pooled over the 11 held-out images, while both error columns are
     averaged over them. Positive is an under-count and negative an over-count,
     and the two differ by however much the errors cancel. Methods marked (box)
     predict no masks, so their average precision is computed on boxes.}
@@ -129,7 +129,7 @@
 \begin{table}[htbp]
     \centering
     \caption{Mask R-CNN performance by magnification, pooled over the four
-    leave-one-specimen-out folds. Every micrograph is scored by the model that
+    leave-one-specimen-out folds. Every image is scored by the model that
     did not see its specimen.}
     \label{tab:magnification}
     \begin{tabular}{lrrrrr}
@@ -146,7 +146,7 @@
 \begin{table}[htbp]
     \centering
     \caption{Predicted bead size distribution against the manual ground truth,
-    pooled over the 11 held-out micrographs. Diameters are equivalent circular
+    pooled over the 11 held-out images. Diameters are equivalent circular
     diameters in micrometres.}
     \label{tab:physical}
     \begin{tabular}{lrrrrr}
@@ -166,7 +166,7 @@
 \begin{table}[htbp]
     \centering
     \caption{The same model under a specimen-wise protocol and under a random
-    split over the 11 micrographs, with identical fold sizes.}
+    split over the 11 images, with identical fold sizes.}
     \label{tab:leakage}
     \begin{tabular}{lrrr}
         \toprule
@@ -184,7 +184,7 @@
     \centering
     \caption{Training cost per fold, averaged over the four leave-one-specimen-out
     folds. Trained on Tesla T4. An epoch is one crop-equivalent pass over the fold's eight training
-    micrographs. Step times are medians, measured with the device synchronised,
+    images. Step times are medians, measured with the device synchronised,
     and exclude the first step.}
     \label{tab:runtime}
     \begin{tabular}{lrrrrrr}
@@ -205,7 +205,7 @@
     \caption{Effect of input preprocessing on Mask R-CNN, under the
     leave-one-specimen-out protocol. Architecture, schedule, folds and
     threshold-selection rule are identical across rows. The second column is the
-    bead-to-mat contrast measured on the annotations before training, that is
+    bead-to-membrane contrast measured on the annotations before training, that is
     the mean grey-level separation divided by the background standard
     deviation.}
     \label{tab:preprocessing}
@@ -246,7 +246,7 @@
     \centering
     \caption{Training accuracy against test accuracy under the
     leave-one-specimen-out protocol. Each fold's model is scored on the
-    micrographs it was trained on and on the specimen it was held out from. The
+    images it was trained on and on the specimen it was held out from. The
     gap is train minus test in each metric's own units.}
     \label{tab:generalisation}
     \begin{tabular}{lrrrrrr}

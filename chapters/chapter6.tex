@@ -4,17 +4,17 @@
 \section{Conclusion}
 
 This thesis addressed the automated quantification of beads in SEM
-micrographs of electrospun nanofibre mats, a measurement currently performed by
+images of electrospun nanofibre membranes, a measurement currently performed by
 hand and therefore slow and difficult to reproduce.
 
-The dataset is reported in Chapter~\ref{ch:methodology}: eleven micrographs of
+The dataset is reported in Chapter~\ref{ch:methodology}: eleven images of
 four specimens at three magnifications, carrying 606 manually delineated beads,
-characterised and placed on a physical scale from each micrograph's burned-in
+characterised and placed on a physical scale from each image's burned-in
 scale bar, with the calibration validated by the median equivalent bead diameter
 agreeing to within 15\% across the three magnifications. Two properties determine
 how the data have to be used. The 143 image--annotation pairs supplied are 11
 originals and 132 transformed copies, so the effective sample size is 11 and the
-copies cannot cross a partition boundary; and the eleven micrographs derive from
+copies cannot cross a partition boundary; and the eleven images derive from
 only four specimens, so the specimen rather than the image is the unit of
 partitioning. Both are reflected in the leave-one-specimen-out protocol.
 
@@ -27,9 +27,9 @@ thousandths short of the 0.30 a standard detector reaches on a benchmark matched
 to this object size, the latter a figure measured on boxes, which the two
 detection-only methods do clear at 0.305 and 0.315. Its decomposed Panoptic
 Quality, 0.719 against 0.486, locates the deficit: the model delineates well the
-beads it finds and finds fewer than half of them. Scored on the micrographs it
+beads it finds and finds fewer than half of them. Scored on the images it
 trained on it reaches 0.437, so the shortfall is one of capacity and training
-budget rather than of generalisation.
+length rather than of generalisation.
 
 The comparison against the five alternatives answers the question the thesis was
 built around, and each fails in a way that isolates a different component. The
@@ -48,7 +48,7 @@ $\mathrm{AP}_S$, 0.132, counting three specimens to within 8.2\%, 15.0\% and
 212.5\% traceable to confidence scores that are not comparable across
 magnifications within a specimen. The classical Otsu-plus-watershed pipeline fails
 outright at $\mathrm{AP}_{50} = 0.001$, because beads are separated from the
-surrounding mat by only about 20 grey levels.
+surrounding membrane by only about 20 grey levels.
 
 Three findings were not anticipated. Detection improves monotonically with
 magnification, from $\mathrm{AP}_{50} = 0.227$ at $500\times$ to 0.396 at
@@ -61,58 +61,55 @@ performance, a random split giving 0.303 against 0.298 against a between-fold
 standard deviation of 0.059, although it produced a fold-to-fold spread 1.7 times
 as wide. A fourth result is negative in a narrower sense: none of the three
 preprocessing transforms improved detection, Mask R-CNN scoring 0.298 on raw
-micrographs against 0.289, 0.263 and 0.262, while background subtraction cut
+images against 0.289, 0.263 and 0.262, while background subtraction cut
 counting error from 41.2\% to 31.5\%.
 
 \section{Research Contributions}
 
-\begin{enumerate}
-    \item A characterised and physically calibrated dataset of 606 beads
-    across 11 SEM micrographs of four electrospun specimens, with per-magnification
-    pixel sizes recovered from the instrument's own scale bars and validated for
-    internal consistency to within 15\%.
+This work makes six contributions. The first is a characterised and physically
+calibrated dataset of 606 beads across 11 SEM images of four electrospun
+specimens, with per-magnification pixel sizes recovered from the instrument's own
+scale bars and validated for internal consistency to within 15\%.
 
-    \item An evaluation protocol matched to the hierarchical structure of small
-    microscopy datasets, in which the specimen is the unit of partitioning,
-    together with a measurement of what a naive split actually costs. That
-    measurement returned no resolvable difference in the mean and a fold-to-fold
-    spread 1.7 times as wide, which is a more useful result than the inflation
-    that had been expected.
+The second is an evaluation protocol matched to the hierarchical structure of
+small microscopy datasets, in which the specimen is the unit of partitioning,
+together with a measurement of what a naive split actually costs. That measurement
+returned no resolvable difference in the mean and a fold-to-fold spread 1.7 times
+as wide, which is a more useful result than the inflation that had been expected.
 
-    \item A controlled comparison of six methods on identical micrographs under an
-    identical protocol, isolating object separation rather than mask accuracy as
-    what instance-level modelling contributes on this modality, quantified as a
-    23.8 percentage point difference in merge rate, and isolating the mask branch
-    as worth every mask-level measurement and nothing at all on the count.
+The third is a controlled comparison of six methods on identical images under an
+identical protocol, isolating object separation rather than mask accuracy as what
+instance-level modelling contributes on this modality, quantified as a 23.8
+percentage point difference in merge rate, and isolating the mask branch as worth
+every mask-level measurement and nothing at all on the count.
 
-    \item A measurement of preprocessing as an experimental factor rather than a
-    default, on a material whose background carries structure at the same spatial
-    scale as the objects, showing that the transform which most improves the raw
-    bead-to-mat separation is the one that most harms detection.
+The fourth is a measurement of preprocessing as an experimental factor rather than
+a default, on a material whose background carries structure at the same spatial
+scale as the objects, showing that the transform which most improves the raw
+bead-to-membrane separation is the one that most harms detection.
 
-    \item A demonstration that the binding constraint is pixels per object rather
-    than the number of annotated objects, obtained by magnifying the dataset
-    threefold and holding everything else fixed, and separately by scoring each
-    fold's model on its own training partition and finding a model that under-fits.
+The fifth is a demonstration that the binding constraint is pixels per object
+rather than the number of annotated objects, obtained by magnifying the dataset
+threefold and holding everything else fixed, and separately by scoring each fold's
+model on its own training partition and finding a model that under-fits.
 
-    \item An open implementation covering annotation conversion, scale
-    calibration, training, evaluation and the reporting of bead count, areal
-    density and size distribution in physical units, in which every table in
-    Chapter~\ref{ch:results} is generated from the stored metrics rather than
-    transcribed, and whose complete set of results regenerates in 10.8 hours on a
-    single freely available GPU.
-\end{enumerate}
+The sixth is an open implementation covering annotation conversion, scale
+calibration, training, evaluation and the reporting of bead count, areal density
+and size distribution in physical units, in which every table in
+Chapter~\ref{ch:results} is generated from the stored metrics rather than
+transcribed, and whose complete set of results regenerates in 10.8 hours on a
+single freely available GPU.
 
 \section{Limitations}
 
-The limitations are set out in full in Section~\ref{sec:limitations}: four specimens of a single material system, 52 annotated beads at the highest magnification, a single annotator, a single annotation class, no hyperparameter search, two one-stage methods without a matched input budget, and a single training run per configuration at a fixed seed.
+The limitations are set out in full in Section~\ref{sec:limitations}: four specimens of a single material system, 52 annotated beads at the highest magnification, a single annotator, a single annotation class, no hyperparameter search, two one-stage methods without a matched input resolution, and a single training run per configuration at a fixed seed.
 
 \section{Future Work}
 \label{sec:futurework}
 
 \subsection{Short-term}
 
-\textbf{Address the recognition deficit directly.} A Segmentation Quality of 0.719
+Address the recognition deficit directly. A Segmentation Quality of 0.719
 against a Recognition Quality of 0.486 indicates that effort should go into
 finding beads rather than refining masks. The first steps are a longer schedule
 than the 1500 iterations the available GPU time allowed, a hyperparameter search
@@ -120,7 +117,7 @@ this work did not perform, and a loss that up-weights recall; the model scores
 0.437 on data it has already seen, so this is the right place to spend. The recall
 of 0.696 obtained by YOLOv8 gives the target.
 
-\textbf{Calibrate the score threshold per magnification, not per fold.} This is
+Calibrate the score threshold per magnification, not per fold. This is
 the cheapest experiment suggested by any result here and the one with the largest
 measured headroom. The single catastrophic fold of YOLOv5u is mostly an operating
 point, since one threshold was selected for a specimen whose three magnifications
@@ -128,54 +125,55 @@ need different ones, and that fold's error halves at the value the other folds
 chose. Selecting per magnification group, still on training data only, is a change
 of a few lines and costs no additional training.
 
-\textbf{Suppress false positives rather than chase recall.} The recall advantage
+Suppress false positives rather than chase recall. The recall advantage
 of YOLOv8 is bought with 801 spurious detections. A post-hoc classifier over
 detections would test whether the recall of one method and the precision of
 another can be obtained together.
 
-\textbf{Extend the specimen count.} The most valuable addition is more specimens
+Extend the specimen count. The most valuable addition is more specimens
 rather than more images of the same ones. Four support four folds; ten would
 support a materially stronger claim and would give the protocol comparison of
 Section~\ref{sec:leakage} the resolution these four folds lacked.
 
-\textbf{Measure inter-annotator agreement.} A second annotator re-delineating a
+Measure inter-annotator agreement. A second annotator re-delineating a
 subset would convert the largest stated limitation into a measured quantity and
 establish the ceiling against which any model should be judged, since at
 $\mathrm{AP}_{50} = 0.298$ it is not known how much of the shortfall is model
 error and how much is disagreement a second human would also show.
 
-\textbf{Use the unannotated micrographs.} If further micrographs exist without
+Use the unannotated images. If further images exist without
 annotations, they can be used for self-training or consistency-based
 semi-supervised learning, both well suited to a regime with abundant images and
 scarce labels.
 
-\textbf{Shape-prior architectures.} Beads are approximately ellipsoidal and
-convex, which is exactly the assumption behind StarDist \cite{schmidt2018stardist}
+Architectures carrying a shape prior are a third direction. Beads are
+approximately ellipsoidal and convex, which is exactly the assumption behind StarDist \cite{schmidt2018stardist}
 and the flow-based representation of Cellpose \cite{stringer2021cellpose}. Both
 are designed for the touching-object problem Chapter~\ref{ch:results} identifies
 as the central difficulty.
 
 \subsection{Long-term}
 
-\textbf{Image at the magnification the measurement needs.} Higher magnification
+Image at the magnification the measurement needs. Higher magnification
 gives better boundaries, while a count is only as good as the number of objects in
 the field, so a mixed protocol, a wide field for density and several high-power
 fields for size, may measure both better than any single setting. Testing it
-requires micrographs acquired for the purpose.
+requires images acquired for the purpose.
 
-\textbf{Joint fibre and bead analysis.} Bead quantification is one half of the
-morphological characterisation of a nanofibre mat, the fibre diameter distribution
+Fibre and bead analysis belong together. Bead quantification is one half of the
+morphological characterisation of a nanofibre membrane, the fibre diameter distribution
 being the other, which tools such as DiameterJ \cite{hotaling2015diameterj}
-address separately. A single model reporting both from one micrograph would cover
+address separately. A single model reporting both from one image would cover
 what a laboratory actually needs.
 
-\textbf{From measurement to process feedback.} If bead statistics could be linked
+Measurement could in turn feed back into the process. If bead statistics could be
+linked
 to the spinning parameters that produced them, the pipeline would move from
-characterisation towards prediction, estimating from a micrograph which parameter
-is out of range. This requires micrographs labelled with their process conditions,
+characterisation towards prediction, estimating from an image which parameter
+is out of range. This requires images labelled with their process conditions,
 which the present dataset does not carry.
 
-\textbf{Annotation assistance from foundation models.} The Segment Anything Model
+Foundation models could assist the annotation itself. The Segment Anything Model
 \cite{kirillov2023segment} cannot recognise beads on its own, but prompted with a
 detector's boxes it could refine mask boundaries, or accelerate the annotation of
 new specimens by turning a click into a polygon. Given that annotation effort is
@@ -184,7 +182,7 @@ the binding constraint, this is the intervention with the highest leverage.
 \section{Final Remarks}
 
 The pipeline built here does not yet replace the operator with the mouse. At an
-$\mathrm{AP}_{50}$ of 0.298 and a per-micrograph counting error ranging from
+$\mathrm{AP}_{50}$ of 0.298 and a per-image counting error ranging from
 $+75\%$ to $-119\%$, no laboratory should report its output on a single field as a
 measurement without checking it.
 

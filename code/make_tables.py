@@ -21,7 +21,7 @@ import numpy as np
 from PIL import Image
 
 import predio
-from config import MAGNIFICATIONS, PREDICTIONS, RESULTS, SPECIMENS
+from config import MAGNIFICATIONS, PREDICTIONS, RESULTS, SPECIMENS, label
 from data_io import load_records, rasterise
 
 METHOD_LABEL = {"classical": "Otsu + watershed", "unet": "U-Net + CC",
@@ -89,7 +89,7 @@ def table_maskrcnn(m: dict) -> str:
         f = r["per_fold"].get(sp)
         if not f:
             continue
-        rows.append(f"        {sp} & {_f(f['ap50'])} & {_f(f['ap75'])} & "
+        rows.append(f"        {label(sp)} & {_f(f['ap50'])} & {_f(f['ap75'])} & "
                     f"{_f(f['ap'])} & {_f(f['aji'])} \\\\")
     o = r["overall"]
     return f"""\\begin{{table}}[htbp]
@@ -130,7 +130,7 @@ def table_comparison(m: dict) -> str:
     \\centering
     \\caption{{The mask-predicting methods under an identical protocol, averaged over
     the four leave-one-specimen-out folds. Counting error is the mean absolute
-    percentage difference per micrograph. Detection-only methods appear in
+    percentage difference per image. Detection-only methods appear in
     Table~\\ref{{tab:counting}}.}}
     \\label{{tab:method_comparison}}
     \\begin{{tabular}}{{lrrrr}}
@@ -156,7 +156,7 @@ def table_leakage(m: dict) -> str | None:
     return f"""\\begin{{table}}[htbp]
     \\centering
     \\caption{{The same model under a specimen-wise protocol and under a random
-    split over the 11 micrographs, with identical fold sizes.}}
+    split over the 11 images, with identical fold sizes.}}
     \\label{{tab:leakage}}
     \\begin{{tabular}}{{lrrr}}
         \\toprule
@@ -198,7 +198,7 @@ def table_counting(m: dict) -> str:
     return f"""\\begin{{table}}[htbp]
     \\centering
     \\caption{{Counting accuracy under the leave-one-specimen-out protocol. Counts
-    are pooled over the 11 held-out micrographs, while both error columns are
+    are pooled over the 11 held-out images, while both error columns are
     averaged over them. Positive is an under-count and negative an over-count,
     and the two differ by however much the errors cancel. Methods marked (box)
     predict no masks, so their average precision is computed on boxes.}}
@@ -249,9 +249,9 @@ def table_ap_bands(m: dict) -> str:
 
 
 def measure_separation() -> dict[str, str]:
-    """Bead-to-mat contrast under each preprocessing variant.
+    """Bead-to-membrane contrast under each preprocessing variant.
 
-    Measured here from the micrographs and the annotations rather than stored as a
+    Measured here from the images and the annotations rather than stored as a
     constant, so the column cannot drift out of step with what ``preprocess.apply``
     actually does. Normalised by the background standard deviation: a transform
     that widens the grey-level gap while widening the spread by more has reduced
@@ -308,7 +308,7 @@ def table_preprocessing(m: dict) -> str:
     \\caption{{Effect of input preprocessing on Mask R-CNN, under the
     leave-one-specimen-out protocol. Architecture, schedule, folds and
     threshold-selection rule are identical across rows. The second column is the
-    bead-to-mat contrast measured on the annotations before training, that is
+    bead-to-membrane contrast measured on the annotations before training, that is
     the mean grey-level separation divided by the background standard
     deviation.}}
     \\label{{tab:preprocessing}}
@@ -367,7 +367,7 @@ def table_generalisation(m: dict) -> str:
 
     The gap is the quantity of interest, so it is a column rather than something
     the reader is left to subtract. Both partitions are scored by the same code
-    on the same ground truth; the only difference is which micrographs the model
+    on the same ground truth; the only difference is which images the model
     had already seen.
     """
     rows = []
@@ -392,7 +392,7 @@ def table_generalisation(m: dict) -> str:
     \\centering
     \\caption{{Training accuracy against test accuracy under the
     leave-one-specimen-out protocol. Each fold's model is scored on the
-    micrographs it was trained on and on the specimen it was held out from. The
+    images it was trained on and on the specimen it was held out from. The
     gap is train minus test in each metric's own units.}}
     \\label{{tab:generalisation}}
     \\begin{{tabular}}{{lrrrrrr}}
@@ -437,7 +437,7 @@ def table_runtime(m: dict) -> str:
     \\centering
     \\caption{{Training cost per fold, averaged over the four leave-one-specimen-out
     folds.{hw} An epoch is one crop-equivalent pass over the fold's eight training
-    micrographs. Step times are medians, measured with the device synchronised,
+    images. Step times are medians, measured with the device synchronised,
     and exclude the first step.}}
     \\label{{tab:runtime}}
     \\begin{{tabular}}{{lrrrrrr}}
@@ -463,7 +463,7 @@ def table_magnification(m: dict) -> str:
     return f"""\\begin{{table}}[htbp]
     \\centering
     \\caption{{Mask R-CNN performance by magnification, pooled over the four
-    leave-one-specimen-out folds. Every micrograph is scored by the model that
+    leave-one-specimen-out folds. Every image is scored by the model that
     did not see its specimen.}}
     \\label{{tab:magnification}}
     \\begin{{tabular}}{{lrrrrr}}
@@ -499,7 +499,7 @@ def table_physical(m: dict) -> str:
     return f"""\\begin{{table}}[htbp]
     \\centering
     \\caption{{Predicted bead size distribution against the manual ground truth,
-    pooled over the 11 held-out micrographs. Diameters are equivalent circular
+    pooled over the 11 held-out images. Diameters are equivalent circular
     diameters in micrometres.}}
     \\label{{tab:physical}}
     \\begin{{tabular}}{{lrrrrr}}
@@ -521,7 +521,7 @@ def table_folds(m: dict) -> str:
         f = r.get(sp)
         if not f:
             continue
-        rows.append(f"        {i} & {sp} & {len(f['test_images'])} & {f['n_gt']} & "
+        rows.append(f"        {i} & {label(sp)} & {len(f['test_images'])} & {f['n_gt']} & "
                     f"{f['n_pred']} & {_sf(f['counting_error'])} \\\\")
     total_gt = sum(f["n_gt"] for f in r.values())
     total_pred = sum(f["n_pred"] for f in r.values())
@@ -531,12 +531,12 @@ def table_folds(m: dict) -> str:
     Mask R-CNN produced for each held-out specimen. Counting error is
     $(\\text{{annotated}} - \\text{{detected}}) / \\text{{annotated}}$, so a
     positive value is an under-count and a negative value an over-count, and it
-    is the mean over the fold's micrographs rather than the difference between
+    is the mean over the fold's images rather than the difference between
     the two count columns.}}
     \\label{{tab:folds}}
     \\begin{{tabular}}{{llrrrr}}
         \\toprule
-        Fold & Test specimen & Micrographs & Annotated & Predicted & Counting error (\\%) \\\\
+        Fold & Test specimen & Images & Annotated & Predicted & Counting error (\\%) \\\\
         \\midrule
 {chr(10).join(rows)}
         \\midrule
@@ -621,15 +621,87 @@ def fig_qualitative(m: dict, names=("Z6-1", "Z2-2")) -> None:
                     fontsize=8, color="white", va="top",
                     bbox=dict(facecolor="black", alpha=0.55, pad=2,
                               edgecolor="none"))
-        axes[row, 0].text(0.03, 0.04, f"{name} — {rec.magnification}$\\times$",
+        axes[row, 0].text(0.03, 0.04, f"{label(name)} — {rec.magnification}$\\times$",
                           transform=axes[row, 0].transAxes, fontsize=8,
                           color="white",
                           bbox=dict(facecolor="black", alpha=0.55, pad=2,
                                     edgecolor="none"))
 
-    fig.suptitle("Held-out micrographs: every panel is scored by a model that "
+    fig.suptitle("Held-out images: every panel is scored by a model that "
                  "never saw this specimen", fontsize=10)
     fig.savefig(FIGS / "fig_qualitative.pdf", dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
+
+def fig_detection(m: dict, method: str = "maskrcnn",
+                  names=("Z6-1", "Z2-2")) -> None:
+    """The detector's own output: boxes on one panel, filled areas on the next.
+
+    Three panels per image rather than two, because a reader cannot judge a
+    detection without seeing what was there to detect. The colour is per
+    instance rather than per class, so two beads the model merged into one
+    appear in a single colour and the failure is visible without counting.
+    """
+    from matplotlib.patches import Rectangle
+
+    records = load_records()
+    dets, _ = predio.load(PREDICTIONS / "loso" / f"{method}.json")
+    by_image = predio.group_by_image(dets)
+
+    fig, axes = plt.subplots(len(names), 3, figsize=(9.6, 2.45 * len(names)),
+                             layout="constrained")
+    axes = np.atleast_2d(axes)
+    rng = np.random.default_rng(0)
+
+    for row, name in enumerate(names):
+        rec = records[name]
+        gray = np.asarray(Image.open(rec.path).convert("L"))
+        masks, _ = predio.to_masks(by_image.get(rec.image_id, []))
+        rgb = np.stack([gray] * 3, axis=-1).astype(np.float64) / 255.0
+
+        axes[row, 0].imshow(rgb)
+        axes[row, 0].set_ylabel(f"{label(name)} — {rec.magnification}$\\times$",
+                                fontsize=8)
+
+        # boxes
+        axes[row, 1].imshow(rgb)
+        for msk in masks:
+            ys, xs = np.nonzero(np.asarray(msk, dtype=bool))
+            if not ys.size:
+                continue
+            axes[row, 1].add_patch(Rectangle(
+                (xs.min(), ys.min()), xs.max() - xs.min(), ys.max() - ys.min(),
+                fill=False, edgecolor=(0.15, 0.85, 1.0), linewidth=0.7))
+
+        # filled areas, one hue per instance
+        filled = rgb.copy()
+        for msk in masks:
+            mm = np.asarray(msk, dtype=bool)
+            colour = rng.random(3) * 0.75 + 0.25
+            filled[mm] = 0.35 * filled[mm] + 0.65 * colour
+        axes[row, 2].imshow(filled)
+
+        for col in range(3):
+            axes[row, col].set_xticks([])
+            axes[row, col].set_yticks([])
+        axes[row, 1].text(0.03, 0.94, f"{len(masks)} detected",
+                          transform=axes[row, 1].transAxes, fontsize=8,
+                          color="white", va="top",
+                          bbox=dict(facecolor="black", alpha=0.55, pad=2,
+                                    edgecolor="none"))
+        axes[row, 0].text(0.03, 0.94, f"{len(rec.polys)} annotated",
+                          transform=axes[row, 0].transAxes, fontsize=8,
+                          color="white", va="top",
+                          bbox=dict(facecolor="black", alpha=0.55, pad=2,
+                                    edgecolor="none"))
+
+    for col, title in enumerate(("SEM image as acquired",
+                                 "Predicted bounding boxes",
+                                 "Predicted areas, one colour per bead")):
+        axes[0, col].set_title(title, fontsize=9)
+
+    fig.savefig(FIGS / "fig_detection.pdf", dpi=200, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -661,7 +733,7 @@ def fig_size_agreement(m: dict) -> None:
     ax.set_xlabel("equivalent bead diameter (µm)")
     ax.set_ylabel("density")
     ax.set_title("Predicted against manual bead size distribution, all held-out "
-                 "micrographs", fontsize=10)
+                 "images", fontsize=10)
     ax.legend(fontsize=8)
     ax.grid(alpha=0.3)
     fig.tight_layout()
@@ -723,6 +795,8 @@ def run() -> None:
     print(f"wrote {len(tables)} tables to {RESULTS}")
 
     fig_qualitative(m)
+
+    fig_detection(m)
     fig_size_agreement(m)
     print(f"wrote figures to {FIGS}")
 

@@ -3,7 +3,7 @@
 Reads the LabelMe annotations shipped in ``Segmentations_VB`` and writes the
 dataset figures used in Chapter 3 into ``figures/``.
 
-Only the 11 original micrographs are analysed. The 132 augmented copies are
+Only the 11 original images are analysed. The 132 augmented copies are
 deliberately excluded: they carry no additional information and counting them
 would inflate every statistic by a factor of 13.
 """
@@ -20,6 +20,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+
+from config import label
 from PIL import Image, ImageDraw
 
 # --- paths -----------------------------------------------------------------
@@ -27,7 +29,7 @@ from PIL import Image, ImageDraw
 DATA = Path(r"C:/Users/Erlind.Skura/Downloads/Segmentations_VB/Segmentations")
 FIGS = Path(__file__).resolve().parent.parent / "figures"
 
-# The 11 original micrographs, keyed by specimen and magnification. The suffix
+# The 11 original images, keyed by specimen and magnification. The suffix
 # encodes magnification, not a repeat: -1 is 500x, -2 is 1kx, -3/-4 is 3kx.
 IMAGES = {
     "Z2-1": ("Z2", 500), "Z2-2": ("Z2", 1000), "Z2-3": ("Z2", 3000),
@@ -40,7 +42,7 @@ IMAGES = {
 # 1000x and scales inversely with magnification, over 1024 px.
 NM_PER_PX = {500: 555.6, 1000: 277.8, 3000: 92.6}
 
-BANNER_H = 32  # burned-in Zeiss info bar at the bottom of every micrograph
+BANNER_H = 32  # burned-in Zeiss info bar at the bottom of every image
 
 
 def polygon_area(points: list[list[float]]) -> float:
@@ -112,7 +114,7 @@ def fig_dataset_overview(stats: dict) -> None:
             draw.line([tuple(p) for p in s["points"]] + [tuple(s["points"][0])],
                       fill=(255, 40, 40), width=3)
         ax.imshow(im)
-        ax.set_title(f"{name} — {stats[name]['mag']}× — {stats[name]['n']} beads",
+        ax.set_title(f"{label(name)} — {stats[name]['mag']}× — {stats[name]['n']} beads",
                      fontsize=9)
         ax.axis("off")
     fig.tight_layout()
@@ -121,15 +123,15 @@ def fig_dataset_overview(stats: dict) -> None:
 
 
 def fig_bead_statistics(stats: dict) -> None:
-    """Bead count per micrograph and size distribution across magnifications."""
+    """Bead count per image and size distribution across magnifications."""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 3.8))
 
     names = list(stats)
     colors = {500: "#4C72B0", 1000: "#DD8452", 3000: "#55A868"}
-    ax1.bar(names, [stats[n]["n"] for n in names],
+    ax1.bar([label(n) for n in names], [stats[n]["n"] for n in names],
             color=[colors[stats[n]["mag"]] for n in names])
     ax1.set_ylabel("annotated beads")
-    ax1.set_title("Beads per micrograph", fontsize=10)
+    ax1.set_title("Beads per image", fontsize=10)
     ax1.tick_params(axis="x", rotation=60, labelsize=8)
     handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in colors.values()]
     ax1.legend(handles, [f"{m}×" for m in colors], fontsize=8, title="magnification",
@@ -165,7 +167,7 @@ def fig_split_protocol() -> None:
                 ax.text(i + 0.46, j + 0.46, "—", ha="center", va="center",
                         color="grey")
     ax.set_xticks([i + 0.46 for i in range(4)])
-    ax.set_xticklabels(specimens)
+    ax.set_xticklabels([label(sp) for sp in specimens])
     ax.set_yticks([j + 0.46 for j in range(3)])
     ax.set_yticklabels([f"{m}×" for m in mags])
     ax.set_xlim(0, 4); ax.set_ylim(0, 3)

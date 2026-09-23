@@ -20,7 +20,7 @@ repulsion of the surface charge overcomes the surface tension of the pendant
 droplet, which deforms into a Taylor cone and emits a charged jet. The jet
 undergoes a bending instability and stretches by orders of magnitude while the
 solvent evaporates, leaving a solid fibre deposited as a randomly oriented
-non-woven mat \cite{doshi1995electrospinning, huang2003review}. A detailed account
+non-woven membrane \cite{doshi1995electrospinning, huang2003review}. A detailed account
 of the jet dynamics is given by Reneker and Yarin
 \cite{reneker2008electrospinning}.
 
@@ -38,17 +38,17 @@ practice.
 
 Since bead content responds so directly to these parameters, bead count and size
 are used as the diagnostic output of a parameter sweep, and a recipe is refined
-until the mat is bead-free or the bead population acceptably small. Beads also
-matter physically, as they reduce the specific surface area that makes these mats
+until the membrane is bead-free or the bead population acceptably small. Beads also
+matter physically, as they reduce the specific surface area that makes these membranes
 useful in filtration and catalysis, perturb the pore-size distribution that
 governs permeability and act as stress concentrators that lower tensile strength.
 
-\subsection{Scanning Electron Microscopy of Nanofibre Mats}
+\subsection{Scanning Electron Microscopy of Nanofibre Membranes}
 
 SEM is the standard characterisation tool for these materials. It resolves features
 well below the diffraction limit of light microscopy and produces images in which
 the contrast derives largely from surface topography, making it suitable for the
-assessment of fibre morphology. Micrographs are typically acquired at several
+assessment of fibre morphology. Images are typically acquired at several
 magnifications, a low one to sample enough fibres for a representative
 measurement and a higher one to resolve individual features. The
 instrument software burns an information banner into the image, in which the scale
@@ -85,7 +85,7 @@ its scope is the fibre network rather than discrete beads.
 
 These pipelines are transparent, require no training data and have interpretable
 failure modes, but they depend on the foreground being separable by intensity. In
-micrographs of a dense fibre mat this does not hold, as bright fibres cross the
+images of a dense fibre membrane this does not hold, as bright fibres cross the
 field at every angle and occupy the same grey levels as the bead surfaces.
 Watershed splitting also has a well-known tendency to over-segment on noisy
 distance transforms, which is the failure that corrupts a count most directly.
@@ -163,7 +163,7 @@ better on this data but not which component is responsible.
 The objects counted here are small in the precise sense used by the COCO
 benchmark, where an object is \emph{small} when its area falls below
 $32 \times 32 = 1024$ pixels. Under that convention 82.8\% of the beads
-annotated here are small, rising to 97\% in the $500\times$ micrographs, and only
+annotated here are small, rising to 97\% in the $500\times$ images, and only
 1.2\% are large (Section~\ref{sec:calibration}). This determines which published
 results are a fair point of comparison, since detector accuracy degrades sharply
 and systematically with object size, a decline documented across architectures in
@@ -221,7 +221,7 @@ The dedicated benchmarks confirm this in absolute terms. On SODA-D, whose object
 average 20.3 pixels, a standard Faster R-CNN reaches 28.9 AP
 \cite{cheng2023soda}. The aerial benchmark AI-TOD-v2 \cite{xu2022tiny} is more
 severe still, its objects averaging 12.7 pixels, comparable to the 14.3-pixel
-median of the $500\times$ micrographs here, where a standard Faster R-CNN reaches
+median of the $500\times$ images here, where a standard Faster R-CNN reaches
 only 12.8 AP and scores 0.0 on the very-tiny band of 2--8 pixels; even the method
 proposed in that paper reaches 24.7 AP. TinyPerson \cite{yu2020tinyperson}
 identifies the scale mismatch between pre-training and target data as the cause of
@@ -309,7 +309,7 @@ throughout this thesis: objects that touch, backgrounds that are not uniform, an
 too few annotated images to train from scratch.
 
 Uka et al.\ \cite{uka2020faster} applied Faster R-CNN to counting cells in
-low-contrast micrographs, motivated by the observation that manual counting does
+low-contrast images, motivated by the observation that manual counting does
 not scale and that unstained acquisition makes the objects harder to separate from
 the background; that combination of a counting endpoint with a detector isolating
 each object in its own region is the argument made in
@@ -394,7 +394,7 @@ half the objects it finds, which is exactly the failure the U-Net baseline of
 Section~\ref{sec:comparison} exhibits.
 
 % Both figures are computed by code/evaluate.py and stored in results/metrics.json
-% under loso.<method>.pixel_agreement, pooled over the 11 held-out micrographs.
+% under loso.<method>.pixel_agreement, pooled over the 11 held-out images.
 Measured on the present dataset in that group's own metric, the same U-Net
 architecture reaches a pixel-level DICE of 0.667 and an IoU of 0.501, and Mask
 R-CNN 0.625 and 0.454. The gap against 0.90 is therefore not between this work and
@@ -404,12 +404,12 @@ network.
 
 \subsection{Segmentation from Few Annotated Images}
 
-Training on a handful of annotated micrographs is standard in microscopy, and the
+Training on a handful of annotated images is standard in microscopy, and the
 countermeasures are well established: transfer learning from large natural-image
 corpora such as ImageNet \cite{deng2009imagenet} or COCO \cite{lin2014microsoft},
 and aggressive geometric and photometric augmentation \cite{shorten2019survey}.
 Microscopy is more forgiving than most domains here, since flips and rotations are
-genuinely label-preserving, a micrograph having no canonical orientation.
+genuinely label-preserving, an image having no canonical orientation.
 
 Augmentation also introduces a hazard that is easy to overlook. If augmented
 copies are generated before the data are partitioned, transformed versions of the
@@ -463,11 +463,9 @@ determine laboratory usefulness alongside conventional segmentation metrics, and
 by adopting a specimen-wise protocol whose effect relative to the naive
 alternative is measured rather than assumed.
 
-\section{Summary}
-
 Beads are the standard diagnostic of a misconfigured electrospinning process
 and are currently quantified by hand, since the existing automated tools target the
-fibre network instead. Classical thresholding fails on these micrographs because
+fibre network instead. Classical thresholding fails on these images because
 beads and fibres are not separable by intensity. Encoder--decoder networks segment
 the bead class well but merge touching instances, thus corrupting precisely the
 quantity of interest. Region-based instance segmentation separates instances by

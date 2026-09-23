@@ -6,17 +6,17 @@
     Mask R-CNN produced for each held-out specimen. Counting error is
     $(\text{annotated} - \text{detected}) / \text{annotated}$, so a
     positive value is an under-count and a negative value an over-count, and it
-    is the mean over the fold's micrographs rather than the difference between
+    is the mean over the fold's images rather than the difference between
     the two count columns.}
     \label{tab:folds}
     \begin{tabular}{llrrrr}
         \toprule
-        Fold & Test specimen & Micrographs & Annotated & Predicted & Counting error (\%) \\
+        Fold & Test specimen & Images & Annotated & Predicted & Counting error (\%) \\
         \midrule
-        1 & Z2 & 3 & 132 & 110 & $+21.9$ \\
-        2 & Z4 & 2 & 63 & 43 & $+40.3$ \\
-        3 & Z5 & 3 & 173 & 90 & $+27.1$ \\
-        4 & Z6 & 3 & 238 & 319 & $-64.7$ \\
+        1 & S1 & 3 & 132 & 110 & $+21.9$ \\
+        2 & S2 & 2 & 63 & 43 & $+40.3$ \\
+        3 & S3 & 3 & 173 & 90 & $+27.1$ \\
+        4 & S4 & 3 & 238 & 319 & $-64.7$ \\
         \midrule
         \multicolumn{2}{l}{\textbf{Total}} & \textbf{11} & \textbf{606} & \textbf{562} & \\
         \bottomrule

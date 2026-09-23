@@ -5,7 +5,7 @@
 
 This chapter defines the experimental design. It begins with the dataset, since its
 size and structure constrain everything that follows. A sample of 11 annotated
-micrographs drawn from four specimens is small and strongly hierarchical, and the
+images drawn from four specimens is small and strongly hierarchical, and the
 evaluation protocol therefore has to be built around this fact rather than around
 convention. Roberts et al.\ \cite{roberts2017crossvalidation} set out why data with
 a hierarchical structure require the partition to respect that hierarchy, while
@@ -19,7 +19,7 @@ to be reported in micrometres, the six methods under comparison, and the metrics
 The study is experimental and comparative. Six methods drawn from four families,
 namely a classical thresholding pipeline, a semantic encoder--decoder network, two
 region-based detectors and two one-stage detectors, are applied to the same
-micrographs under an identical partitioning scheme, and are assessed both by
+images under an identical partitioning scheme, and are assessed both by
 conventional segmentation metrics and by the counting and sizing errors that
 determine whether the output is usable in the laboratory.
 
@@ -35,17 +35,17 @@ methods vary one component at a time within this structure.
 
 \subsection{Acquisition and Structure}
 
-The dataset consists of SEM micrographs of electrospun nanofibre mats, acquired on
+The dataset consists of SEM images of electrospun nanofibre membranes, acquired on
 a Zeiss instrument at an accelerating voltage of 15.00\,kV and at working
-distances between 8.5 and 11.0\,mm. Every micrograph is $1024 \times 768$ pixels,
+distances between 8.5 and 11.0\,mm. Every image is $1024 \times 768$ pixels,
 8-bit greyscale, stored as JPEG.
 
-The 11 micrographs are not independent samples. They derive from four specimens,
-denoted Z2, Z4, Z5 and Z6, each imaged at $500\times$, $1000\times$ and
+The 11 images are not independent samples. They derive from four specimens,
+denoted S1, S2, S3 and S4, each imaged at $500\times$, $1000\times$ and
 $3000\times$. The numeric suffix in a filename encodes the magnification rather
-than a repeat acquisition, so Z2-1, Z2-2 and Z2-3 are three views of one specimen.
-One combination is absent, as specimen Z4 has no $500\times$ micrograph, and
-specimen Z6 uses the identifier Z6-4 for its $3000\times$ view. The four specimens
+than a repeat acquisition, so S1-1, S1-2 and S1-3 are three views of one specimen.
+One combination is absent, as specimen S2 has no $500\times$ image, and
+specimen S4 uses the identifier S4-4 for its $3000\times$ view. The four specimens
 are four different production methods and not four repeats of one, which is what
 makes the partitioning choice of Section~\ref{sec:protocol} consequential rather
 than procedural: holding out a specimen holds out a production method, so a model
@@ -55,28 +55,28 @@ across the frame.
 \begin{table}[htbp]
     \centering
 
-    \caption{The 11 annotated micrographs. Specimen and magnification are recovered
+    \caption{The 11 annotated images. Specimen and magnification are recovered
     from the filename and confirmed against the instrument banner burned into each
-    image. All micrographs are $1024 \times 768$ px at 15.00\,kV.}
+    image. All images are $1024 \times 768$ px at 15.00\,kV.}
     \label{tab:dataset}
     \begin{tabular}{llrrrr}
         \toprule
         Image & Specimen & Mag. & WD (mm) & Beads & Median $d$ (px) \\
         \midrule
-        Z2-1 & Z2 & $500\times$  & 10.0 & 71  & 14.2 \\
-        Z2-2 & Z2 & $1000\times$ & 10.0 & 51  & 28.8 \\
-        Z2-3 & Z2 & $3000\times$ & 10.0 & 10  & 76.3 \\
+        S1-1 & S1 & $500\times$  & 10.0 & 71  & 14.2 \\
+        S1-2 & S1 & $1000\times$ & 10.0 & 51  & 28.8 \\
+        S1-3 & S1 & $3000\times$ & 10.0 & 10  & 76.3 \\
         \midrule
-        Z4-2 & Z4 & $1000\times$ & 9.0  & 59  & 24.4 \\
-        Z4-3 & Z4 & $3000\times$ & 9.0  & 4   & 68.0 \\
+        S2-2 & S2 & $1000\times$ & 9.0  & 59  & 24.4 \\
+        S2-3 & S2 & $3000\times$ & 9.0  & 4   & 68.0 \\
         \midrule
-        Z5-1 & Z5 & $500\times$  & 8.5  & 102 & 12.9 \\
-        Z5-2 & Z5 & $1000\times$ & 8.5  & 57  & 22.1 \\
-        Z5-3 & Z5 & $3000\times$ & 8.5  & 14  & 53.9 \\
+        S3-1 & S3 & $500\times$  & 8.5  & 102 & 12.9 \\
+        S3-2 & S3 & $1000\times$ & 8.5  & 57  & 22.1 \\
+        S3-3 & S3 & $3000\times$ & 8.5  & 14  & 53.9 \\
         \midrule
-        Z6-1 & Z6 & $500\times$  & 11.0 & 152 & 15.7 \\
-        Z6-2 & Z6 & $1000\times$ & 11.0 & 62  & 28.7 \\
-        Z6-4 & Z6 & $3000\times$ & 11.0 & 24  & 75.4 \\
+        S4-1 & S4 & $500\times$  & 11.0 & 152 & 15.7 \\
+        S4-2 & S4 & $1000\times$ & 11.0 & 62  & 28.7 \\
+        S4-4 & S4 & $3000\times$ & 11.0 & 24  & 75.4 \\
         \midrule
         \textbf{Total} & 4 specimens & 3 mags & & \textbf{606} & \\
         \bottomrule
@@ -91,7 +91,7 @@ model is required.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{figures/fig_dataset_overview.pdf}
-    \caption{Specimen Z2 imaged at $500\times$, $1000\times$ and $3000\times$, with
+    \caption{Specimen S1 imaged at $500\times$, $1000\times$ and $3000\times$, with
     the manual bead annotations overlaid in red. The same beads appear at roughly
     14, 29 and 76 pixels across, and the count within the field falls from 71 to 10
     as the field of view narrows.}
@@ -101,9 +101,9 @@ model is required.
 \subsection{Annotation}
 
 The annotations were produced in LabelMe (version 5.4.1) and are supplied as one
-JSON file per micrograph. Every annotated object is a closed polygon carrying the
+JSON file per image. Every annotated object is a closed polygon carrying the
 single class label \texttt{bead}, and the polygons contain between 8 and 40
-vertices, with a median of 16. Across the 11 micrographs there are 606 annotated
+vertices, with a median of 16. Across the 11 images there are 606 annotated
 beads. No annotation intersects the instrument banner region described in
 Section~\ref{sec:banner}.
 
@@ -118,22 +118,19 @@ being segmented, so the three rules to which the annotator worked are stated her
 rather than left implicit in the polygons. They were specified by the supervisor,
 who directs the group that produced the specimens.
 
-\begin{enumerate}
-    \item \textbf{Circularity.} The embedded zeolite particles, referred to
-    throughout this thesis as beads since the two terms denote the same objects,
-    are approximately circular in projection. An object is annotated when it
-    presents as a compact, roughly circular body, and not when it presents as an
-    elongated fibre segment.
+The first rule is circularity. The embedded zeolite particles, referred to
+throughout this thesis as beads since the two terms denote the same objects, are
+approximately circular in projection, so an object is annotated when it presents
+as a compact, roughly circular body, and not when it presents as an elongated
+fibre segment.
 
-    \item \textbf{Swellings count.} Where a fibre thickens locally into such a
-    body, that swelling is annotated as a bead even though the fibre passes
-    through it. In these micrographs this is the common case rather than the
-    exception, which is why no distinction is drawn between a free bead and a
-    thickened fibre segment.
+The second is that swellings count. Where a fibre thickens locally into such a
+body, that swelling is annotated as a bead even though the fibre passes through
+it. In these images this is the common case rather than the exception, which is
+why no distinction is drawn between a free bead and a thickened fibre segment.
 
-    \item \textbf{A cluster is one object.} Where several small beads lie
-    together, the group is outlined once rather than resolved into its members.
-\end{enumerate}
+The third is that a cluster is one object. Where several small beads lie together,
+the group is outlined once rather than resolved into its members.
 
 The third rule carries a consequence Chapter~\ref{ch:results} has to live with. A
 method that splits a cluster into its visible members is scored as having made a
@@ -145,7 +142,7 @@ among the limitations in Section~\ref{sec:limitations}.
 
 Two properties of the annotation constrain the implementation and are shown in
 Figures~\ref{fig:bead_examples} and \ref{fig:overlap}. The same physical object is
-presented at very different resolutions, as the median bead of specimen Z6
+presented at very different resolutions, as the median bead of specimen S4
 measures about 8\,$\mu$m at every magnification while spanning 16 pixels at
 $500\times$ and 77 at $3000\times$. And beads touch: 8.8\% of annotated bead
 pixels lie inside more than one polygon, so the annotation is not a partition of
@@ -155,7 +152,7 @@ merge and split errors are decided.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{figures/fig_bead_examples.pdf}
-    \caption{The median bead of specimen Z6 at each magnification, each crop
+    \caption{The median bead of specimen S4 at each magnification, each crop
     scaled to the same display size. The physical diameter is nearly constant
     while the pixel diameter varies almost fivefold.}
     \label{fig:bead_examples}
@@ -164,7 +161,7 @@ merge and split errors are decided.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{figures/fig_overlap.pdf}
-    \caption{A region of Z6-1 in which annotated beads share pixels. Red outlines
+    \caption{A region of S4-1 in which annotated beads share pixels. Red outlines
     are the manual annotation and shaded pixels are claimed by more than one
     bead.}
     \label{fig:overlap}
@@ -173,7 +170,7 @@ merge and split errors are decided.
 \subsection{Physical Calibration}
 \label{sec:calibration}
 
-Each micrograph carries a burned-in scale bar. Measuring the bar in pixels and
+Each image carries a burned-in scale bar. Measuring the bar in pixels and
 dividing by its stated physical length yields the pixel size, and the values
 recovered in this way are mutually consistent, since the field width is
 $284.4\,\mu$m at $1000\times$ and scales inversely with magnification, as it must.
@@ -230,8 +227,8 @@ are compared in Figure~\ref{fig:bead_statistics}.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{figures/fig_bead_statistics.pdf}
-    \caption{Left: annotated beads per micrograph, coloured by magnification; the
-    $3000\times$ micrographs contribute only 52 of the 606 annotated beads. Right:
+    \caption{Left: annotated beads per image, coloured by magnification; the
+    $3000\times$ images contribute only 52 of the 606 annotated beads. Right:
     equivalent bead diameter in micrometres, grouped by magnification. The three
     distributions overlap, as they must if the calibration is correct.}
     \label{fig:bead_statistics}
@@ -245,7 +242,7 @@ by the image border and excluded, and only 52 beads are observed in total.
 \subsection{The Instrument Banner}
 \label{sec:banner}
 
-Every micrograph carries a burned-in information banner occupying the bottom 32
+Every image carries a burned-in information banner occupying the bottom 32
 pixels, containing the scale bar, working distance, accelerating voltage and
 magnification. The banner is not part of the specimen: it is high-contrast,
 identical in structure across images, and correlates with magnification, so a
@@ -267,8 +264,8 @@ polygon coordinates were transformed along with the images and remain correctly
 registered in every variant.
 
 These copies are nevertheless excluded, for three reasons. The first is
-statistical: thirteen copies of one micrograph contain the information of one
-micrograph, so reporting 143 images, or 7\,878 bead instances, would misstate the
+statistical: thirteen copies of one image contain the information of one
+image, so reporting 143 images, or 7\,878 bead instances, would misstate the
 sample size by a factor of 13.
 
 \begin{figure}[htbp]
@@ -284,7 +281,7 @@ sample size by a factor of 13.
 
 The second reason is methodological and more serious. Since the copies were
 generated before partitioning, a random split over the 143 files would place
-transformed versions of the same source micrograph in both the training and the
+transformed versions of the same source image in both the training and the
 test partition, and the test score would then partly measure memorisation.
 Augmentation is still used, as it is essential at this sample size, but applied on
 the fly during training, after partitioning, so no test image has a transformed
@@ -299,10 +296,10 @@ artefact a network can key on.
 \section{Evaluation Protocol}
 \label{sec:protocol}
 
-The four specimens, and not the eleven micrographs, are the independent units of
-this dataset. Micrographs Z2-1, Z2-2 and Z2-3 are three views of the same physical
+The four specimens, and not the eleven images, are the independent units of
+this dataset. Images S1-1, S1-2 and S1-3 are three views of the same physical
 material, sharing its polymer, its spinning parameters and its particular
-population of beads, so a partition placing Z2-1 in training and Z2-3 in testing
+population of beads, so a partition placing S1-1 in training and S1-3 in testing
 measures generalisation to a new magnification of a specimen already seen rather
 than to a new specimen.
 
@@ -310,21 +307,21 @@ than to a new specimen.
     \centering
     \includegraphics[width=0.75\textwidth]{figures/fig_split_protocol.pdf}
     \caption{Layout of the dataset. Each column is a specimen and each row a
-    magnification, and the shaded cells are the 11 available micrographs. Specimen
-    Z4 has no $500\times$ micrograph.}
+    magnification, and the shaded cells are the 11 available images. Specimen
+    S2 has no $500\times$ image.}
     \label{fig:split_protocol}
 \end{figure}
 
-The protocol adopted is therefore \textbf{leave-one-specimen-out
-cross-validation}. Each of the four folds trains on all micrographs of three
-specimens and tests on all micrographs of the fourth, so every micrograph is used
+The protocol adopted is therefore \emph{leave-one-specimen-out
+cross-validation}. Each of the four folds trains on all images of three
+specimens and tests on all images of the fourth, so every image is used
 for testing exactly once and no specimen is ever split. Results are reported as
 the mean over folds together with the spread, which at this sample size is itself
 an important number.
 
 To quantify what this protocol costs, and therefore what a naive protocol would
 have overstated, a second and deliberately flawed configuration is also run, in
-which the 11 micrographs are split at random without regard to specimen. The
+which the 11 images are split at random without regard to specimen. The
 difference is reported in Chapter~\ref{ch:results}, and this comparison is one of
 the stated contributions of the thesis, since it converts a methodological
 argument into a measured quantity.
@@ -334,13 +331,13 @@ argument into a measured quantity.
 \subsection{Classical Baseline: Otsu Thresholding with Watershed}
 
 The classical pipeline represents current laboratory practice. The cropped
-micrograph is contrast-normalised, thresholded with Otsu's method
+image is contrast-normalised, thresholded with Otsu's method
 \cite{otsu1979threshold} and cleaned with morphological opening and closing, and
 the resulting binary mask is split into instances by a watershed transform
 \cite{vincent1991watersheds} applied to its distance transform with local maxima
 as markers. Components smaller than a minimum area, expressed in physical units
 through the calibration of Section~\ref{sec:calibration}, are discarded. The
-baseline requires no training data, so it is evaluated on all 11 micrographs
+baseline requires no training data, so it is evaluated on all 11 images
 directly, with its parameters tuned once on the training folds and held fixed.
 
 \subsection{Semantic Baseline: U-Net}
@@ -371,11 +368,11 @@ bead occupies 0.04\% of the image area.
 The endpoint this work exists to serve is a count, and a count requires only
 detection. Faster R-CNN \cite{ren2015faster} is therefore included as a controlled
 ablation of the mask branch of Mask R-CNN: the two share the ResNet-50 and feature
-pyramid backbone, the anchor sizes, the detection budget, the optimiser, the
+pyramid backbone, the anchor sizes, the cap on detections, the optimiser, the
 schedule, the fold definitions and the rule fixing the score threshold on each
 fold's training partition. The mask branch is the only difference, so a gap
 between them is attributable to it. The same architecture was applied to counting
-cells in low-contrast micrographs by Uka et al.\ \cite{uka2020faster}.
+cells in low-contrast images by Uka et al.\ \cite{uka2020faster}.
 
 Its predictions are stored as boxes with no segmentation field, so it is absent
 from every mask-level result: the Aggregated Jaccard Index, Panoptic Quality, the
@@ -397,7 +394,7 @@ no component as responsible. The segmentation variant is used, so it predicts
 masks and is scored on every metric the region-based instance model is.
 
 YOLOv5u is included alongside it, sharing the Ultralytics training loop, the same
-three departures from its defaults and the same gradient budget, while differing
+three departures from its defaults and the same number of training iterations, while differing
 in the backbone and in carrying no mask branch, since the package ships no
 segmentation weights for YOLOv5. Two models rather than one make the family
 comparison less dependent on a single checkpoint.
@@ -410,7 +407,7 @@ results are labelled YOLOv5u throughout.
 
 Three settings depart from the package defaults, each for a measured property of
 this dataset rather than by search. The input size is held at 1024 rather than the
-default 640, since downscaling a $1024 \times 736$ micrograph by 0.625 would take
+default 640, since downscaling a $1024 \times 736$ image by 0.625 would take
 the median bead at $500\times$ from 14.3 to 8.9 pixels. Mosaic augmentation is
 disabled, because composing four images and rescaling roughly halves the apparent
 object size while 82.8\% of the beads are already below the small-object
@@ -419,7 +416,7 @@ the region-based models.
 
 One consequence has to be stated with the results. The data pipeline of the
 package expects a fixed directory of images rather than the crops the region-based
-models draw on demand, so both YOLO models train on whole micrographs at 1024
+models draw on demand, so both YOLO models train on whole images at 1024
 pixels while the region-based models train on $512 \times 512$ crops. Their
 training cost is therefore not comparable with that of the region-based models.
 
@@ -427,10 +424,10 @@ training cost is therefore not comparable with that of the region-based models.
 \label{sec:preprocessing_method}
 
 Prior work from this institution reports that the preprocessing applied before a
-network sees a micrograph changes materially what it can learn, for images
+network sees an image changes materially what it can learn, for images
 suffering from non-uniform illumination and low contrast
 \cite{uka2020preprocessing}. The present dataset shares the low contrast, with
-about eighteen grey levels separating a bead from the surrounding mat, but
+about eighteen grey levels separating a bead from the surrounding membrane, but
 differs in one respect that governs which transforms are worth testing: in
 unstained brightfield the background is a smooth field, whereas here it is a dense
 fibre network with structure at the same spatial scale as the beads. The
@@ -440,29 +437,27 @@ Four variants are compared, with the architecture, schedule, fold definitions an
 threshold-selection rule held fixed, so any difference is attributable to the
 input transform alone:
 
-\begin{itemize}
-    \item \textbf{None.} The baseline, and not merely a formality. Both detectors
-    are initialised from weights trained on natural images, which carry
-    expectations about intensity statistics, so a transform can as easily cost
-    accuracy as buy it, and a variant that loses to this row is a finding.
+The first variant applies no transform at all, and it is not merely a formality.
+Both detectors are initialised from weights trained on natural images, which carry
+expectations about intensity statistics, so a transform can as easily cost
+accuracy as buy it, and a variant that loses to this baseline is a finding.
 
-    \item \textbf{CLAHE.} Contrast-limited adaptive histogram equalisation,
-    applied against the narrow separation. It is adaptive rather than global
-    because the brightness of the mat varies across a frame by more than the
-    bead-to-mat difference.
+The second is CLAHE, contrast-limited adaptive histogram equalisation, applied
+against the narrow separation. It is adaptive rather than global because the
+brightness of the membrane varies across a frame by more than the
+bead-to-membrane difference.
 
-    \item \textbf{Background subtraction.} The beads are darker than the mat,
-    so the illumination estimate is a grey closing, which erases dark features
-    while preserving the slowly varying field. Its footprint has to exceed the
-    largest object present, and since the largest annotated bead spans 214
-    pixels the footprint is set to 257.
+The third is background subtraction. The beads are darker than the membrane, so
+the illumination estimate is a grey closing, which erases dark features while
+preserving the slowly varying field. Its footprint has to exceed the largest
+object present, and since the largest annotated bead spans 214 pixels the
+footprint is set to 257.
 
-    \item \textbf{Median filter.} A $3\times3$ median against sensor noise, kept
-    deliberately small, since the median bead is 20 pixels across and a window
-    approaching that size would remove the object along with the noise.
-\end{itemize}
+The fourth is a median filter, a $3\times3$ median against sensor noise, kept
+deliberately small since the median bead is 20 pixels across and a window
+approaching that size would remove the object along with the noise.
 
-Each variant is applied to the whole micrograph before cropping, at the single
+Each variant is applied to the whole image before cropping, at the single
 point where the training and inference paths share code. This is a correctness
 requirement rather than a convenience, since a model trained on equalised images
 and evaluated on raw ones would still produce numbers, wrong in a way no metric
@@ -473,7 +468,7 @@ would reveal.
 \subsection{Segmentation and Detection Metrics}
 
 Throughout this section, $G = \{g_1, \dots, g_n\}$ denotes the set of annotated bead
-masks in a micrograph and $P = \{p_1, \dots, p_m\}$ the set of predicted masks, with
+masks in an image and $P = \{p_1, \dots, p_m\}$ the set of predicted masks, with
 $|\cdot|$ the area of a mask in pixels. The overlap between two masks is measured by
 the intersection over union,
 %
@@ -563,7 +558,7 @@ fuses them. It is reported for one reason: the semantic segmentation literature,
 including the prior work of Section~\ref{sec:epoka_prior}, reports DICE and IoU
 computed this way, and those values cannot be read against an average precision,
 so computing both from the same predictions is what makes them comparable. The
-counts are pooled over micrographs before the ratio is formed, so a frame holding
+counts are pooled over images before the ratio is formed, so a frame holding
 four beads does not weigh as much as one holding 152.
 
 \subsection{Laboratory Metrics}
@@ -571,7 +566,7 @@ four beads does not weigh as much as one holding 152.
 Segmentation metrics do not by themselves establish that a method is usable, so
 the following are reported as primary outcomes.
 
-\textbf{Counting error.} The error in the number of beads found in a micrograph,
+The counting error is the error in the number of beads found in an image,
 as a fraction of the number actually present, reported both signed and absolute
 since a method whose errors cancel behaves differently from one that is biased:
 %
@@ -584,7 +579,7 @@ since a method whose errors cancel behaves differently from one that is biased:
 positive for an under-count and negative for an over-count, with the sign written
 out wherever the quantity appears.
 
-\textbf{Merge and split rates.} These are the two failure modes that corrupt a
+The merge and split rates are the two failure modes that corrupt a
 count, and since they have opposite effects on it they are reported separately.
 Both are defined through the asymmetric coverage of one mask by another,
 %
@@ -618,8 +613,8 @@ asymmetric: a prediction swallowing two beads has a low $\mathrm{IoU}$ with each
 while containing both almost entirely, so an overlap-based criterion would miss
 exactly the case being measured.
 
-\textbf{Areal density.} Beads per square millimetre, the form in which the
-measurement is used for process comparison. For a micrograph of $W \times H$
+Areal density is beads per square millimetre, the form in which the
+measurement is used for process comparison. For an image of $W \times H$
 pixels at a pixel size of $s$ micrometres,
 %
 
@@ -629,7 +624,7 @@ pixels at a pixel size of $s$ micrometres,
     \label{eq:density}
 \end{equation}
 
-\textbf{Size distribution agreement.} The predicted and the manual distributions of
+Size distribution agreement compares the predicted and the manual distributions of
 equivalent bead diameter in micrometres, compared by their medians and interquartile
 ranges and by a two-sample Kolmogorov--Smirnov test.
 
@@ -643,10 +638,8 @@ Chapter~\ref{ch:implementation}. No local GPU was available, so the training
 stages were run on Google Colab with an NVIDIA T4, with consequences for the
 experimental design set out in Section~\ref{sec:environment}.
 
-\section{Summary}
-
-The dataset comprises 11 SEM micrographs of four electrospun specimens, imaged at
-three magnifications and annotated with 606 bead polygons. Each micrograph is
+The dataset comprises 11 SEM images of four electrospun specimens, imaged at
+three magnifications and annotated with 606 bead polygons. Each image is
 calibrated against its burned-in scale bar, and the calibration is validated by
 the agreement of the physical bead size distribution across magnifications. Since
 the specimen is the only independent unit, evaluation uses leave-one-specimen-out
