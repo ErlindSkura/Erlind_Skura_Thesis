@@ -411,8 +411,9 @@ default 640, since downscaling a $1024 \times 736$ image by 0.625 would take
 the median bead at $500\times$ from 14.3 to 8.9 pixels. Mosaic augmentation is
 disabled, because composing four images and rescaling roughly halves the apparent
 object size while 82.8\% of the beads are already below the small-object
-threshold of COCO. The detection cap is raised to 400 for the same reason as for
-the region-based models.
+threshold of COCO. Each model is likewise allowed to return up to 400 objects from one
+image, since a single image here can hold 152 annotated beads and the default
+would discard real detections without reporting that it had.
 
 One consequence has to be stated with the results. The data pipeline of the
 package expects a fixed directory of images rather than the crops the region-based
