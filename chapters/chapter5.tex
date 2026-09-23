@@ -674,9 +674,12 @@ image directly into training. The remaining dependence between two images of
 one specimen at different magnifications is far weaker, being different fields of
 view at different scales that share only the general morphology of the specimen.
 
-There is little headroom to inflate. A protocol can only flatter a model
-capable of memorising. At $\mathrm{AP}_{50} = 0.30$ and a Recognition Quality of
-0.49, this model is under-fitting rather than memorising, and
+There is little room for a leak to inflate anything. A leak helps only in so far
+as the model can memorise what leaked, so a model scoring near its ceiling on its
+own training data has much to gain from seeing test material early, and one that
+cannot fit its training data has almost nothing. This model is the second kind,
+reaching $\mathrm{AP}_{50} = 0.437$ on the images it trained on against 0.298
+held out, so it is under-fitting rather than memorising, and
 Section~\ref{sec:generalisation} measures that directly.
 
 With 11 images, both protocols are noisy. The folds of the random split
