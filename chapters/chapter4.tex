@@ -159,8 +159,8 @@ different claims, and a zero would report the second while meaning the first.
 \subsection{YOLOv8 and YOLOv5u}
 
 YOLOv8 is trained through the Ultralytics package rather than through the
-torchvision path, which imposes two implementation differences on which the
-results depend.
+torchvision path. That choice forces two differences in the implementation, and
+the results depend on both.
 
 The package expects a dataset on disk in its own layout, so each fold is exported
 to a scratch directory as images plus one label file per image, with the instance
