@@ -204,10 +204,10 @@ shoelace formula, with indices taken modulo $N$,
     \label{eq:shoelace}
 \end{equation}
 %
-rather than by counting the pixels of a rasterised mask. The distinction is not
-pedantic in this case, since at $500\times$ the median bead is only about 14 pixels
-across, so a one-pixel error along its boundary changes the area by roughly
-15\%. The equivalent diameter in micrometres then follows from the pixel size $s$ of
+rather than by counting the pixels of a rasterised mask. The distinction matters
+here, since at $500\times$ the median bead is only about 14 pixels across, so an
+error of one pixel in its diameter changes the area by roughly 15\%, and of one
+pixel all round its boundary by roughly 30\%. The equivalent diameter in micrometres then follows from the pixel size $s$ of
 Table~\ref{tab:calibration},
 %
 \begin{equation}
