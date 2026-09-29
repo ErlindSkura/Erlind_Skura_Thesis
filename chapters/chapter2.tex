@@ -98,7 +98,7 @@ resolution, and the skip connections restore the high-frequency detail that is l
 to pooling. The architecture was designed explicitly for the regime of interest
 here, having been demonstrated on training sets of a few dozen annotated images
 together with heavy augmentation. Falk et al.\ \cite{falk2019unet} later packaged
-it for cell counting and morphometry, thus confirming that it transfers to
+it for cell counting and morphometry, confirming that it transfers to
 quantification tasks.
 
 The U-Net is still a semantic model. The standard remedy for instance
@@ -125,7 +125,7 @@ targets. StarDist \cite{schmidt2018stardist} represents each object as a
 star-convex polygon, well matched to roundish convex objects, and Cellpose
 \cite{stringer2021cellpose} learns spatial gradient flows towards object centres
 and generalises across cell types without retraining. Beads are
-roughly ellipsoidal and convex, so these shape priors are a plausible fit
+roughly ellipsoidal and convex, so these shape priors are a likely fit
 and are noted here as alternatives.
 
 \subsection{One-Stage Detection}
@@ -146,7 +146,7 @@ The reason for testing such a model here is not speed but the different inductiv
 bias. A region-based model reasons about one object at a time inside its own
 proposal, whereas a one-stage model reasons about the whole frame at once and must
 resolve neighbouring objects through non-maximum suppression rather than by
-construction. For a dataset in which the objects touch this is a substantive
+construction. For a dataset in which the objects touch this is a real
 difference, and Chapter~\ref{ch:results} measures in which direction it operates.
 
 Two cautions carry into how the result should be read. The weakness of this family
@@ -301,10 +301,10 @@ pooled COCO figures, which are dominated by objects an order of magnitude larger
 \subsection{Prior Work at Epoka University}
 \label{sec:epoka_prior}
 
-The problem addressed here has a direct antecedent in the research of the host
-institution, which for several years has concerned the counting and segmentation
+The problem addressed here grows directly out of earlier work at the host
+institution, which for several years has worked on the counting and segmentation
 of small, low-contrast objects in microscopy. The modality differs, being
-unstained brightfield rather than SEM, but the difficulties are those that recur
+unstained brightfield rather than SEM, but the difficulties are the ones that come back
 throughout this thesis: objects that touch, backgrounds that are not uniform, and
 too few annotated images to train from scratch.
 
@@ -391,7 +391,7 @@ separated. Average precision is an \emph{instance-level} measure, where every
 object must be found, outlined and matched one-to-one, and every spurious
 detection counts against the score. A model can hold an IoU near 0.9 while merging
 half the objects it finds, which is exactly the failure the U-Net baseline of
-Section~\ref{sec:comparison} exhibits.
+Section~\ref{sec:comparison} shows.
 
 % Both figures are computed by code/evaluate.py and stored in results/metrics.json
 % under loso.<method>.pixel_agreement, pooled over the 11 held-out images.
@@ -467,7 +467,7 @@ Beads are the standard diagnostic of a misconfigured electrospinning process
 and are currently quantified by hand, since the existing automated tools target the
 fibre network instead. Classical thresholding fails on these images because
 beads and fibres are not separable by intensity. Encoder--decoder networks segment
-the bead class well but merge touching instances, thus corrupting precisely the
+the bead class well but merge touching instances, corrupting exactly the
 quantity of interest. Region-based instance segmentation separates instances by
 construction and is therefore the approach adopted here. The following chapter sets
 out the dataset, the calibration and the evaluation protocol in detail.

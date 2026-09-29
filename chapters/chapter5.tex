@@ -42,9 +42,9 @@ this is evidence both that the calibration is correct and that the annotation is
 internally consistent across magnifications, as an annotator who had applied a
 different size threshold at different magnifications would have broken it.
 
-The residual downward trend is consistent with border clipping rather than with
+The remaining downward trend is consistent with border clipping rather than with
 calibration error. At $3000\times$ the field is 94.8\,$\mu$m wide, so a bead of
-8\,$\mu$m occupies a much larger fraction of it and is correspondingly more likely
+8\,$\mu$m occupies a much larger fraction of it and is therefore more likely
 to intersect the image boundary and be excluded. Only 52 of the 606 beads come
 from $3000\times$ images, so this group is also the noisiest.
 
@@ -496,7 +496,7 @@ $\Delta/\sigma$ by 11\% by reducing the background spread rather than by increas
 the separation, which is the expected behaviour of a denoising filter on a signal
 that it does not otherwise disturb. Background subtraction improves it by 8\%, and
 its raw separation rises to 20.3, indicating that some of the measured
-bead-to-membrane difference in the untransformed images is attributable to
+bead-to-membrane difference in the untransformed images comes from
 illumination gradient rather than to the beads.
 
 \begin{figure}[htbp]
@@ -662,8 +662,8 @@ overstate performance.
 
 The second objective of Section~\ref{sec:objectives} asked for a demonstration
 that the naive alternative overstates performance, and that demonstration did not
-materialise. The protocol remains the correct one, but on the strength of
-structural argument rather than of measured inflation. Three factors plausibly
+appear. The protocol remains the correct one, but on the strength of
+structural argument rather than of measured inflation. Three factors could
 explain the absence of a gap, and the first is the most likely.
 
 The leak that mattered had already been removed. The 132 pre-computed
@@ -966,7 +966,7 @@ comparison, and their threefold training cost is largely a consequence of that
 difference.
 
 The detection cap binds for YOLOv8 on one image. It returns exactly
-400 objects on S4-1, so its over-count there, and hence its pooled counting error,
+400 objects on S4-1, so its over-count there, and with it its pooled counting error,
 is a lower bound rather than a measurement. It does not bind for any other method,
 the largest output of YOLOv5u on the same image being 292.
 

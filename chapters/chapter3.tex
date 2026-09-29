@@ -234,7 +234,7 @@ are compared in Figure~\ref{fig:bead_statistics}.
     \label{fig:bead_statistics}
 \end{figure}
 
-The residual downward trend with magnification, from 7.92 to 6.75\,$\mu$m, is
+The remaining downward trend with magnification, from 7.92 to 6.75\,$\mu$m, is
 consistent with a sampling effect rather than a calibration error. At $3000\times$
 the field is only 94.8\,$\mu$m wide, so a large bead is more likely to be clipped
 by the image border and excluded, and only 52 beads are observed in total.
@@ -381,8 +381,8 @@ detection. Faster R-CNN \cite{ren2015faster} is therefore included as a controll
 ablation of the mask branch of Mask R-CNN: the two share the ResNet-50 and feature
 pyramid backbone, the anchor sizes, the cap on detections, the optimiser, the
 schedule, the fold definitions and the rule fixing the score threshold on each
-fold's training partition. The mask branch is the only difference, so a gap
-between them is attributable to it. The same architecture was applied to counting
+fold's training partition. The mask branch is the only difference, so any gap
+between them must come from it. The same architecture was applied to counting
 cells in low-contrast images by Uka et al.\ \cite{uka2020faster}.
 
 Its predictions are stored as boxes with no segmentation field, so it is absent
@@ -451,7 +451,7 @@ fibre network with structure at the same spatial scale as the beads. The
 transforms are therefore selected for this material rather than carried across.
 
 Four variants are compared, with the architecture, schedule, fold definitions and
-threshold-selection rule held fixed, so any difference is attributable to the
+threshold-selection rule held fixed, so any difference must come from the
 input transform alone:
 
 The first variant applies no transform at all, and it is not merely a formality.
