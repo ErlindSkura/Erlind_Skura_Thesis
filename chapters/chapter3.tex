@@ -120,7 +120,7 @@ who directs the group that produced the specimens.
 
 The first rule is circularity. The embedded zeolite particles, referred to
 throughout this thesis as beads since the two terms denote the same objects, are
-approximately circular in projection, so an object is annotated when it presents
+roughly circular in projection, so an object is annotated when it presents
 as a compact, roughly circular body, and not when it presents as an elongated
 fibre segment.
 
@@ -263,7 +263,7 @@ each axis and in combination, and two horizontal stretches of 20\% and 40\%. The
 polygon coordinates were transformed along with the images and remain correctly
 registered in every variant.
 
-These copies are nevertheless excluded, for three reasons. The first is
+These copies are excluded even so, for three reasons. The first is
 statistical: thirteen copies of one image contain the information of one
 image, so reporting 143 images, or 7\,878 bead instances, would misstate the
 sample size by a factor of 13.
@@ -531,7 +531,7 @@ therefore enters the denominator and lowers the score, which is what makes the
 index sensitive to over-segmentation where a per-object average is not.
 
 Panoptic quality \cite{kirillov2019panoptic} is reported to separate
-recognition from delineation. A predicted and an annotated mask are matched when
+recognition from outlining. A predicted and an annotated mask are matched when
 $\mathrm{IoU}(g, p) > 0.5$, and since no mask can exceed that overlap with more than
 one partner, the matching is unique and requires no assignment solver. Writing
 $\mathit{TP}$ for the matched pairs and $\mathit{FP}$, $\mathit{FN}$ for the
@@ -608,9 +608,9 @@ Both are defined through the asymmetric coverage of one mask by another,
 \end{equation}
 %
 with a threshold of $\tau = 0.5$ throughout. A prediction is a \emph{merge} when it
-contains at least half of each of two or more annotated beads, and every bead that
-it absorbed counts as merged, whereas an annotated bead is \emph{split} when it
-contains at least half of each of two or more predictions:
+contains at least half of each of two or more annotated beads, and every bead it
+absorbed counts as merged. An annotated bead is \emph{split} when it contains at
+least half of each of two or more predictions:
 %
 \begin{align}
     \mathrm{merge\ rate} &= \frac{100}{|G|}

@@ -183,7 +183,7 @@ Chapter~\ref{ch:results}, although not on the same footing, since the package
 ships no segmentation variant of YOLOv5 and that family therefore enters on the
 box-only path alongside Faster R-CNN.
 
-One point of nomenclature has to be stated, since the version numbers invite a
+One point of naming has to be stated, since the version numbers invite a
 reading the weights do not support. The checkpoint used is \texttt{yolov5su.pt},
 which is not the YOLOv5 of the original release: Ultralytics distributes the
 YOLOv5 backbone fitted with the anchor-free, objectness-free split head of YOLOv8.
@@ -287,7 +287,7 @@ check of Section~\ref{sec:deployment} originally wrote its predictions to the sa
 directory as a real run, so re-running it after a completed four-fold experiment
 silently overwrote several hours of predictions with output from eight training
 iterations. A smoke run produces a well-formed predictions file, so nothing fails
-and nothing warns, and the only symptom is that every subsequently reported number
+and nothing warns, and the only symptom is that every number reported afterwards
 is wrong. The fix is structural rather than procedural: a smoke run now redirects
 its working and results directories before any pipeline module is imported.
 

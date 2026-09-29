@@ -11,7 +11,7 @@ pore structure, which explains their use in air and water filtration, in wound
 dressings, in drug delivery and as scaffolds for tissue engineering.
 
 The process, however, is not uniformly well behaved. When the electrostatic
-stretching force is not sufficient to overcome the surface tension of the jet, the
+stretching force is not strong enough to overcome the surface tension of the jet, the
 solution collapses locally into droplets which solidify as ellipsoidal swellings
 along the fibre. These \emph{beads}, first characterised systematically by
 Fong, Chun and Reneker \cite{fong1999beaded}, are commonly taken as an indicator
@@ -53,8 +53,8 @@ instance segmentation problem rather than a semantic one.
 
 The data are scarce and acquired at several magnifications. The dataset contains
 11 annotated images drawn from four specimens, each imaged at $500\times$,
-$1000\times$ and $3000\times$. A bead measuring approximately 14 pixels across at
-$500\times$ measures approximately 76 pixels across at $3000\times$, so the same
+$1000\times$ and $3000\times$. A bead measuring about 14 pixels across at
+$500\times$ measures about 76 pixels across at $3000\times$, so the same
 physical object appears with a sixfold difference in apparent size. A model
 trained on such data must be scale-robust, while the evaluation protocol has to
 take into account that the four specimens, and not the eleven images, are the
@@ -69,15 +69,15 @@ is given explicit attention throughout this thesis.
 
 \section{Problem Statement}
 
-This thesis addresses the automated detection, delineation and quantification of
+This thesis addresses the automated detection, outlining and counting of
 beads in SEM images of electrospun nanofibre membranes. The work is
 organised around four research questions. The first asks whether a deep instance
-segmentation model is able to delineate individual beads in SEM images of
-nanofibre membranes with an accuracy sufficient to replace manual annotation, when
+segmentation model is able to outline individual beads in SEM images of
+nanofibre membranes accurately enough to replace manual annotation, when
 only 11 annotated images from four specimens are available. The second asks
 whether instance-level modelling offers a measurable advantage over semantic
 segmentation in this task, in particular in the separation of touching beads and
-consequently in the accuracy of the reported bead count. The third asks how a deep
+so in the accuracy of the reported bead count. The third asks how a deep
 model compares with the classical image-processing pipeline, consisting of
 thresholding followed by watershed splitting, which represents current laboratory
 practice. The fourth asks whether the derived physical quantities, namely bead
@@ -113,7 +113,7 @@ copies overstates performance. It is met by a reported gap between the naive and
 the specimen-wise protocol obtained with the same model.
 
 The third is instance segmentation of the beads themselves, training Mask R-CNN
-to delineate individual beads under leave-one-specimen-out cross-validation. It is
+to outline individual beads under leave-one-specimen-out cross-validation. It is
 met at $\mathrm{AP}_{50} \geq 0.30$ averaged over the four folds, which is what a
 standard region-based detector achieves on a published benchmark of comparable
 object size.
@@ -134,7 +134,7 @@ This replaces the $\mathrm{AP}_{50} \geq 0.70$ recorded when the work was
     The AI-TOD-v2 figure is a \emph{box} average precision while the 0.298 here is
     a \emph{mask} average precision, the stricter of the two. Measured on boxes,
     as the reference is, the detection-only methods of Chapter~\ref{ch:results} do
-    clear the criterion, at 0.305 and 0.315. It is nevertheless kept at the mask
+    clear the criterion, at 0.305 and 0.315. It is still kept at the mask
     level, where it is not met, because the objective stated here is instance
     segmentation rather than detection.
 
@@ -157,7 +157,7 @@ distributional comparison of predicted versus manual bead diameters.
 \section{Contributions}
 
 This work makes four contributions. The first is a characterised and physically
-calibrated dataset of 606 manually delineated beads across 11 SEM images of four
+calibrated dataset of 606 manually outlined beads across 11 SEM images of four
 electrospun specimens, with per-magnification pixel sizes recovered from the
 instrument's own scale bars and validated for internal consistency. The second is
 an evaluation protocol for this class of small, hierarchically structured

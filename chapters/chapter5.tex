@@ -526,11 +526,11 @@ scores $\mathrm{AP}_{50} = 0.298$ on the raw images, against 0.289 with the
 median filter, 0.263 with background subtraction and 0.262 with CLAHE, and the
 ordering on $\mathrm{AP}_S$ is the same; architecture, schedule, folds and
 threshold-selection rule were identical across the four rows. The contrast
-statistic therefore succeeded at one of its two jobs: it identified the harmful
-transform correctly, since CLAHE loses a third of the usable contrast and is last
-or joint-last on every accuracy column, but failed to identify a beneficial one,
-having predicted gains of 11\% and 8\% for the median filter and background
-subtraction, both of which cost detection accuracy instead. The two cautions
+statistic therefore did one of its two jobs. It identified the harmful transform
+correctly: CLAHE loses a third of the usable contrast and is last or joint-last on
+every accuracy column. It failed to identify a helpful one, predicting gains of
+11\% and 8\% for the median filter and background subtraction, both of which cost
+detection accuracy instead. The two cautions
 recorded above, before the runs rather than after them, are the likeliest
 explanation.
 
@@ -825,7 +825,7 @@ using the pipeline as a drop-in replacement for manual counting on a single fiel
 The predicted median diameter of Mask R-CNN is 7.72\,$\mu$m against 7.97\,$\mu$m
 measured manually, a difference of 3.2\%, with an interquartile range of 5.65 to
 9.14\,$\mu$m against 6.42 to 10.16\,$\mu$m. The predicted distribution is narrower
-and smaller, consistent with a detector that misses the beads hardest to delineate
+and smaller, consistent with a detector that misses the beads hardest to outline
 and trims the boundaries of those it keeps.
 
 All four two-sample Kolmogorov--Smirnov tests reject the hypothesis that the
@@ -854,7 +854,7 @@ objects than exist, whose sizes happen to span a similar range to the real beads
 while Mask R-CNN, the best method by every other measure here, has a worse $D$ than
 both.
 
-Distributional agreement alone is therefore not a sufficient criterion, since a
+Agreement between the distributions is therefore not enough on its own, since a
 method can reproduce the size distribution of a population that it has substantially
 failed to identify. Had this work reported only the size distribution, which is one
 of the two quantities that the laboratory asked for, it would have ranked the two
@@ -885,7 +885,7 @@ and recall from 0.450 to 0.670 without adding information, which is precisely wh
 it is evidence. The model under-fits rather than memorises, reaching 0.437 on the
 images it trained on, so the shortfall is one of capacity and training length.
 
-The absolute performance is not yet sufficient for unattended use. An
+The absolute performance is not yet good enough for unattended use. An
 $\mathrm{AP}_{50}$ of 0.298 and a per-image counting error of 41.2\% do not support
 replacing a human operator on a single image, although the aggregate error
 over eleven images is 7.3\%. The two box-only methods do clear the 0.30

@@ -101,7 +101,7 @@ together with heavy augmentation. Falk et al.\ \cite{falk2019unet} later package
 it for cell counting and morphometry, thus confirming that it transfers to
 quantification tasks.
 
-U-Net nevertheless remains a semantic model. The standard remedy for instance
+The U-Net is still a semantic model. The standard remedy for instance
 separation, which consists in predicting object boundaries as an auxiliary class and
 using them to split the foreground, is effective but indirect, as its accuracy
 depends on how reliably thin boundaries can be predicted.
@@ -125,7 +125,7 @@ targets. StarDist \cite{schmidt2018stardist} represents each object as a
 star-convex polygon, well matched to roundish convex objects, and Cellpose
 \cite{stringer2021cellpose} learns spatial gradient flows towards object centres
 and generalises across cell types without retraining. Beads are
-approximately ellipsoidal and convex, so these shape priors are a plausible fit
+roughly ellipsoidal and convex, so these shape priors are a plausible fit
 and are noted here as alternatives.
 
 \subsection{One-Stage Detection}
@@ -164,11 +164,12 @@ benchmark, where an object is \emph{small} when its area falls below
 $32 \times 32 = 1024$ pixels. Under that convention 82.8\% of the beads
 annotated here are small, rising to 97\% in the $500\times$ images, and only
 1.2\% are large (Section~\ref{sec:calibration}). This determines which published
-results are a fair point of comparison, since detector accuracy degrades sharply
-and systematically with object size, a decline documented across architectures in
-the survey of Liu et al.\ \cite{liu2021survey} and attributed there to the few
-pixels each object contributes, the loss of that signal through downsampling, and
-the coarse alignment between small objects and the anchors meant to capture them.
+results are a fair point of comparison, since detector accuracy falls sharply and
+systematically as objects get smaller. Liu et al.\ \cite{liu2021survey} document
+that decline across architectures and give three reasons for it: each object
+contributes few pixels to begin with, much of that signal is lost through
+downsampling, and small objects align poorly with the anchors meant to catch
+them.
 
 Table~\ref{tab:coco_size} holds model and dataset fixed and splits the score by
 object size alone, for five architectures on COCO, every entry taken from the
@@ -387,7 +388,7 @@ subtracted. An IoU of that kind is a \emph{pixel-level} measure over a foregroun
 occupying a large fraction of the frame: it asks how well the predicted region
 overlaps the true region, and is indifferent to whether two touching objects were
 separated. Average precision is an \emph{instance-level} measure, where every
-object must be found, delineated and matched one-to-one, and every spurious
+object must be found, outlined and matched one-to-one, and every spurious
 detection counts against the score. A model can hold an IoU near 0.9 while merging
 half the objects it finds, which is exactly the failure the U-Net baseline of
 Section~\ref{sec:comparison} exhibits.

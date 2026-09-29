@@ -8,7 +8,7 @@ images of electrospun nanofibre membranes, a measurement currently performed by
 hand and therefore slow and difficult to reproduce.
 
 The dataset is reported in Chapter~\ref{ch:methodology}: eleven images of
-four specimens at three magnifications, carrying 606 manually delineated beads,
+four specimens at three magnifications, carrying 606 manually outlined beads,
 characterised and placed on a physical scale from each image's burned-in
 scale bar, with the calibration validated by the median equivalent bead diameter
 agreeing to within 15\% across the three magnifications. Two properties determine
@@ -26,7 +26,7 @@ short of the $\mathrm{AP}_{50} \geq 0.70$ recorded at the proposal stage and two
 thousandths short of the 0.30 a standard detector reaches on a benchmark matched
 to this object size, the latter a figure measured on boxes, which the two
 detection-only methods do clear at 0.305 and 0.315. Its decomposed Panoptic
-Quality, 0.719 against 0.486, locates the deficit: the model delineates well the
+Quality, 0.719 against 0.486, locates the deficit: the model outlines well the
 beads it finds and finds fewer than half of them. Scored on the images it
 trained on it reaches 0.437, so the shortfall is one of capacity and training
 length rather than of generalisation.
@@ -95,10 +95,10 @@ model on its own training partition and finding a model that under-fits.
 
 The sixth is an open implementation covering annotation conversion, scale
 calibration, training, evaluation and the reporting of bead count, areal density
-and size distribution in physical units, in which every table in
-Chapter~\ref{ch:results} is generated from the stored metrics rather than
-transcribed, and whose complete set of results regenerates in 10.8 hours on a
-single freely available GPU.
+and size distribution in physical units. Every table in
+Chapter~\ref{ch:results} is generated from the stored metrics rather than typed
+in, and the complete set of results regenerates in 10.8 hours on a single freely
+available GPU.
 
 \section{Limitations}
 
@@ -135,7 +135,7 @@ rather than more images of the same ones. Four support four folds; ten would
 support a materially stronger claim and would give the protocol comparison of
 Section~\ref{sec:leakage} the resolution these four folds lacked.
 
-Measure inter-annotator agreement. A second annotator re-delineating a
+Measure inter-annotator agreement. A second annotator re-outlining a
 subset would convert the largest stated limitation into a measured quantity and
 establish the ceiling against which any model should be judged, since at
 $\mathrm{AP}_{50} = 0.298$ it is not known how much of the shortfall is model
@@ -147,7 +147,7 @@ semi-supervised learning, both well suited to a regime with abundant images and
 scarce labels.
 
 Architectures carrying a shape prior are a third direction. Beads are
-approximately ellipsoidal and convex, which is exactly the assumption behind StarDist \cite{schmidt2018stardist}
+roughly ellipsoidal and convex, which is exactly the assumption behind StarDist \cite{schmidt2018stardist}
 and the flow-based representation of Cellpose \cite{stringer2021cellpose}. Both
 are designed for the touching-object problem Chapter~\ref{ch:results} identifies
 as the central difficulty.
@@ -177,7 +177,7 @@ Foundation models could assist the annotation itself. The Segment Anything Model
 \cite{kirillov2023segment} cannot recognise beads on its own, but prompted with a
 detector's boxes it could refine mask boundaries, or accelerate the annotation of
 new specimens by turning a click into a polygon. Given that annotation effort is
-the binding constraint, this is the intervention with the highest leverage.
+the binding constraint, this is the intervention that would gain the most.
 
 \section{Final Remarks}
 
