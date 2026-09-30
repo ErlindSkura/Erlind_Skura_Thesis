@@ -72,19 +72,24 @@ is given explicit attention throughout this thesis.
 
 This thesis addresses the automated detection, outlining and counting of
 beads in SEM images of electrospun nanofibre membranes. The work is
-organised around four research questions. The first asks whether a deep instance
-segmentation model is able to outline individual beads in SEM images of
-nanofibre membranes accurately enough to replace manual annotation, when
-only 11 annotated images from four specimens are available. The second asks
-whether instance-level modelling offers a measurable advantage over semantic
-segmentation in this task, in particular in the separation of touching beads and
-so in the accuracy of the reported bead count. The third asks how a deep
-model compares with the classical image-processing pipeline, consisting of
-thresholding followed by watershed splitting, which represents current laboratory
-practice. The fourth asks whether the derived physical quantities, namely bead
-count, areal density and size distribution expressed in micrometres, agree with
-those obtained from the manual annotation closely enough to be used in process
-optimisation.
+organised around four research questions.
+
+The first concerns feasibility. A deep instance segmentation model has to outline
+individual beads in SEM images of nanofibre membranes accurately enough to
+replace manual annotation, and it has to do so from only 11 annotated images of
+four specimens.
+
+The second concerns what instance-level modelling contributes. Any advantage it
+holds over semantic segmentation should be measurable, and should show itself in
+the separation of touching beads and so in the accuracy of the reported count.
+
+The third sets a deep model against the classical image-processing pipeline of
+thresholding followed by watershed splitting, which is current laboratory
+practice.
+
+The fourth concerns the measurement itself. Bead count, areal density and the
+size distribution in micrometres have to agree with the manual values closely
+enough to be used in process optimisation.
 
 The scope is restricted to beads in images of a single material
 system, imaged on one instrument. Fibre diameter measurement, three-dimensional

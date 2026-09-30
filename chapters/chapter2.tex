@@ -153,8 +153,8 @@ Two cautions carry into how the result should be read. The weakness of this fami
 on small objects is documented rather than incidental, and
 Section~\ref{sec:small_objects} quantifies it. And a comparison against a
 region-based model varies the backbone, the label assignment, the loss and the
-augmentation schedule at once, so it answers whether a different family performs
-better on this data but not which component is responsible.
+augmentation schedule at once, so it establishes whether a different family performs
+better on this data, but not which component is responsible.
 
 \subsection{Detection of Small Objects}
 \label{sec:small_objects}
@@ -387,9 +387,9 @@ for first. The segmentation work of this group reports an intersection over unio
 between 0.90 and 0.93, against the $\mathrm{AP}_{50}$ of 0.298 reported in
 Chapter~\ref{ch:results}. The two are not on the same scale and cannot be
 subtracted. An IoU of that kind is a \emph{pixel-level} measure over a foreground
-occupying a large fraction of the frame: it asks how well the predicted region
-overlaps the true region, and is indifferent to whether two touching objects were
-separated. Average precision is an \emph{instance-level} measure, where every
+occupying a large fraction of the frame: it measures how well the predicted
+region overlaps the true region, and takes no account of whether two touching
+objects were separated. Average precision is an \emph{instance-level} measure, where every
 object must be found, outlined and matched one-to-one, and every spurious
 detection counts against the score. A model can hold an IoU near 0.9 while merging
 half the objects it finds, which is exactly the failure the U-Net baseline of
