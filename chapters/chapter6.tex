@@ -64,6 +64,37 @@ preprocessing transforms improved detection, Mask R-CNN scoring 0.298 on raw
 images against 0.289, 0.263 and 0.262, while background subtraction cut
 counting error from 41.2\% to 31.5\%.
 
+The pipeline built here does not yet replace the operator with the mouse. At an
+$\mathrm{AP}_{50}$ of 0.298 and a per-image counting error ranging from
+$+75\%$ to $-119\%$, no laboratory should report its output on a single field as a
+measurement without checking it.
+
+What the work does establish is where the difficulty lies, which is worth more at
+this stage than a higher number would have been. It is not segmentation accuracy,
+since the masks overlap their targets by 0.72 on average, and it is not the size
+distribution, since the predicted median diameter agrees with the manual
+measurement to 3.2\%. It is the detection of small, low-contrast objects that
+touch one another, and the measurements that isolate it are the
+recognition-versus-segmentation split of Panoptic Quality, the merge and split
+rates, the magnification trend, and the threefold resampling that reproduces that
+trend without adding a single new observation.
+
+One methodological result deserves to outlive the specific numbers: the ranking of
+the methods depends on which quantity is asked for. YOLOv8 beats the U-Net on
+average precision and loses to it on counting. YOLOv5u posts the best detection
+scores together with a counting error that is either the best measured or the
+second worst, depending on which specimen is held out. The two methods agreeing
+best with the manual size distribution are the two that over-count most severely.
+A study reporting a single accuracy figure would have ranked the methods wrongly
+for the laboratory that has to use them, and would not have been able to tell.
+
+Three of the results are negative: the accuracy criterion was not met, the
+contamination effect the protocol was designed to prevent did not appear, and no
+preprocessing transform improved detection. All are reported as measured, and the
+second is the more useful finding, since it tells the next person working on a
+dataset of this shape that the expensive precaution matters for the variance of
+their estimate rather than for its mean.
+
 \section{Research Contributions}
 
 This work makes six contributions. The first is a characterised and physically
@@ -106,8 +137,6 @@ The limitations are set out in full in Section~\ref{sec:limitations}: four speci
 
 \section{Future Work}
 \label{sec:futurework}
-
-\subsection{Short-term}
 
 The recognition deficit is the first thing to address. A Segmentation Quality of 0.719
 against a Recognition Quality of 0.486 indicates that effort should go into
@@ -152,9 +181,8 @@ and the flow-based representation of Cellpose \cite{stringer2021cellpose}. Both
 are designed for the touching-object problem Chapter~\ref{ch:results} identifies
 as the central difficulty.
 
-\subsection{Long-term}
-
-Images could be acquired at the magnification each measurement needs. Higher
+Over a longer horizon, images could be acquired at the magnification each
+measurement needs. Higher
 magnification
 gives better boundaries, while a count is only as good as the number of objects in
 the field, so a mixed protocol, a wide field for density and several high-power
@@ -179,36 +207,3 @@ Foundation models could assist the annotation itself. The Segment Anything Model
 detector's boxes it could refine mask boundaries, or accelerate the annotation of
 new specimens by turning a click into a polygon. Given that annotation effort is
 the binding constraint, this is the intervention that would gain the most.
-
-\section{Final Remarks}
-
-The pipeline built here does not yet replace the operator with the mouse. At an
-$\mathrm{AP}_{50}$ of 0.298 and a per-image counting error ranging from
-$+75\%$ to $-119\%$, no laboratory should report its output on a single field as a
-measurement without checking it.
-
-What the work does establish is where the difficulty lies, which is worth more at
-this stage than a higher number would have been. It is not segmentation accuracy,
-since the masks overlap their targets by 0.72 on average, and it is not the size
-distribution, since the predicted median diameter agrees with the manual
-measurement to 3.2\%. It is the detection of small, low-contrast objects that
-touch one another, and the measurements that isolate it are the
-recognition-versus-segmentation split of Panoptic Quality, the merge and split
-rates, the magnification trend, and the threefold resampling that reproduces that
-trend without adding a single new observation.
-
-One methodological result deserves to outlive the specific numbers: the ranking of
-the methods depends on which quantity is asked for. YOLOv8 beats the U-Net on
-average precision and loses to it on counting. YOLOv5u posts the best detection
-scores together with a counting error that is either the best measured or the
-second worst, depending on which specimen is held out. The two methods agreeing
-best with the manual size distribution are the two that over-count most severely.
-A study reporting a single accuracy figure would have ranked the methods wrongly
-for the laboratory that has to use them, and would not have been able to tell.
-
-Three of the results are negative: the accuracy criterion was not met, the
-contamination effect the protocol was designed to prevent did not appear, and no
-preprocessing transform improved detection. All are reported as measured, and the
-second is the more useful finding, since it tells the next person working on a
-dataset of this shape that the expensive precaution matters for the variance of
-their estimate rather than for its mean.
