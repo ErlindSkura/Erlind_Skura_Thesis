@@ -97,7 +97,7 @@ learned pipeline, and selecting it on test data would have inflated every number
 in this chapter. The U-Net thresholds and the three parameters of the classical
 pipeline were chosen the same way.
 
-The gap between the two families is itself a finding. The region-based detectors
+The difference between the two families is itself a finding. The region-based detectors
 settle between 0.60 and 0.70 whereas the two YOLO models maximise training $F_1$
 between 0.10 and 0.35, so the same criterion selects an operating point three to
 four times lower. This is a statement about how the families calibrate their
@@ -217,7 +217,7 @@ and 0.486 against the 0.351 above. The model therefore traces an accurate outlin
 around the beads it does find, and finds fewer than half of them. Pooled over
 the 11 held-out images at an overlap of 0.5 it matches 273 of 606 and emits
 289 detections that match nothing, a recall of 0.450 at a precision of 0.486. The
-deficit is one of detection rather than of boundary accuracy, and the gap between
+deficit is one of detection rather than of boundary accuracy, and the difference between
 $\mathrm{AP}_{50} = 0.298$ and $\mathrm{AP}_{75} = 0.084$ says the same from the
 other direction.
 
@@ -459,7 +459,7 @@ characterised before any model is trained, by measuring on the annotations what
 contrast each leaves available. Table~\ref{tab:contrast} reports the mean
 grey-level separation between bead and membrane and that separation divided by the
 standard deviation of the background. The second is the one that matters, since a
-transform that widens the gap while widening the spread by more has not made the
+transform that widens the difference while widening the spread by more has not made the
 beads easier to find.
 
 \begin{table}[htbp]
@@ -663,7 +663,7 @@ The second objective of Section~\ref{sec:objectives} asked for a demonstration
 that the naive alternative overstates performance, and that demonstration did not
 appear. The protocol remains the correct one, but on the strength of
 structural argument rather than of measured inflation. Three factors could
-explain the absence of a gap, and the first is the most likely.
+explain the absence of a difference, and the first is the most likely.
 
 The contamination that mattered had already been removed. The 132 pre-computed
 augmented copies were discarded before any partitioning
@@ -673,8 +673,8 @@ image directly into training. The remaining dependence between two images of
 one specimen at different magnifications is far weaker, being different fields of
 view at different scales that share only the general morphology of the specimen.
 
-There is little room for contamination to inflate anything. It helps a model only
-in so far as the model can memorise what it saw, so a model scoring near its ceiling on its
+There is little room for contamination to inflate anything. It helps only in so
+far as the model can memorise what it saw, so one scoring near its ceiling on its
 own training data has much to gain from seeing test material early, and one that
 cannot fit its training data has almost nothing. This model is the second kind,
 reaching $\mathrm{AP}_{50} = 0.437$ on the images it trained on against 0.298
@@ -703,7 +703,7 @@ annotations.
     \input{results/table_generalisation}%
 }{}
 
-The gap is real and modest. Mask R-CNN scores $\mathrm{AP}_{50} = 0.437$ on data
+The difference is real and modest. Mask R-CNN scores $\mathrm{AP}_{50} = 0.437$ on data
 it has seen against 0.298 on data it has not. The ratio is the wrong way to read
 it: what matters is that 0.437 is itself a modest score, so the model does not
 come close to fitting even its training partition. A network that had memorised
@@ -712,9 +712,9 @@ deficit reported throughout the chapter is one of capacity and training length
 rather than of generalisation.
 
 Two comparisons within the table sharpen that. Faster R-CNN, the same architecture
-with the mask head removed, has a smaller gap than Mask R-CNN, 0.107 against
+with the mask head removed, differs less than Mask R-CNN, 0.107 against
 0.139, the expected direction for a model with fewer parameters to fit. The
-threefold-magnified model has the smallest gap of the three, 0.086, together with
+threefold-magnified model has the smallest difference of the three, 0.086, together with
 the highest test score, so its gain is not bought by fitting the training data
 harder, which is what a resampling artefact would have looked like.
 
@@ -746,7 +746,7 @@ bead spans roughly the receptive field of the finest pyramid level and is only a
 few pixels larger than the smallest anchor, so its boundary is decided by a
 handful of pixels, whereas at 76 pixels it is comfortably resolved.
 Table~\ref{tab:magnification} shows that the feature pyramid and the rescaled
-anchors narrow the gap without closing it.
+anchors narrow the difference without closing it.
 
 Counting does not follow the same ordering. The mean absolute counting error is
 lowest at $500\times$, 29.1\%, and higher at both other settings, 48.8\% at
@@ -785,7 +785,7 @@ reliable measurement, and 7.3\% against 41.2\% is a factor of six, none of which
 comes from the model being right.
 
 That cancellation is a property of the method rather than of aggregation. Faster
-R-CNN aggregates to $+0.7\%$ against a mean absolute error of 39.5\%, a wider gap
+R-CNN aggregates to $+0.7\%$ against a mean absolute error of 39.5\%, a wider difference
 still. YOLOv5u gains nothing, its aggregate of $-63.5\%$ nearly matching its mean
 absolute error because its error is one-signed and concentrated on a single
 specimen, while the aggregate of $-101.8\%$ for YOLOv8 is worse than its mean
@@ -922,7 +922,7 @@ in one of the two models tested and not the other: YOLOv8 reaches an
 $\mathrm{AP}_S$ of 0.091 against 0.116 for Mask R-CNN, while YOLOv5u reaches
 0.132, the highest of the six. At this object size the weakness is therefore not a
 property of the family as such, and four folds cannot establish whether the
-backbone or the mask branch accounts for the gap.
+backbone or the mask branch accounts for the difference.
 
 The absolute values are well below those reported on nuclei benchmarks such as the
 dataset of Kumar et al.\ \cite{kumar2017dataset}, and the relevant difference is

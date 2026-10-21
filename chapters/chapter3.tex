@@ -357,7 +357,7 @@ The semantic baseline is a U-Net \cite{ronneberger2015unet} with a ResNet encode
 trained to predict a binary bead-versus-background mask, with instances recovered
 afterwards by connected-component labelling. It is included specifically to
 isolate the cost of merging: it is expected to segment bead pixels well while
-merging clusters of touching beads into single components, and the gap between its
+merging clusters of touching beads into single components, and the difference between its
 pixel-level and its count-level performance is the quantity of interest.
 
 \subsection{Instance Segmentation: Mask R-CNN}
@@ -380,8 +380,8 @@ detection. Faster R-CNN \cite{ren2015faster} is therefore included as a controll
 ablation of the mask branch of Mask R-CNN: the two share the ResNet-50 and feature
 pyramid backbone, the anchor sizes, the cap on detections, the optimiser, the
 schedule, the fold definitions and the rule fixing the score threshold on each
-fold's training partition. The mask branch is the only difference, so any gap
-between them must come from it. The same architecture was applied to counting
+fold's training partition. The mask branch is the only difference, so anything separating
+them must come from it. The same architecture was applied to counting
 cells in low-contrast images by Uka et al.\ \cite{uka2020faster}.
 
 Its predictions are stored as boxes with no segmentation field, so it is absent
@@ -399,7 +399,7 @@ ablation above, namely whether a different family of architecture performs bette
 on this data. It is not a controlled comparison and is not read as one, since it
 shares nothing with the region-based models, having a different backbone, an
 anchor-free head, a different label assignment rule, a different loss and its own
-augmentation and optimiser schedule, so a gap between it and Mask R-CNN identifies
+augmentation and optimiser schedule, so a difference between it and Mask R-CNN identifies
 no component as responsible. The segmentation variant is used, so it predicts
 masks and is scored on every metric the region-based instance model is.
 
