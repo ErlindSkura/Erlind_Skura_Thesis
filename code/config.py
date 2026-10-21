@@ -43,7 +43,7 @@ def label(name: str) -> str:
     shown = SPECIMEN_LABEL.get(specimen, specimen)
     return f"{shown}-{suffix}" if suffix else shown
 
-# Calibrated from the burned-in scale bars: the field width is 284.4 um at
+# Calibrated from the burned-in scale bars: the field width is 284.5 um at
 # 1000x and scales inversely with magnification, over 1024 px.
 NM_PER_PX: dict[int, float] = {500: 555.6, 1000: 277.8, 3000: 92.6}
 

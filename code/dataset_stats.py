@@ -38,7 +38,7 @@ IMAGES = {
     "Z6-1": ("Z6", 500), "Z6-2": ("Z6", 1000), "Z6-4": ("Z6", 3000),
 }
 
-# Calibrated from the burned-in scale bars: the field width is 284.4 um at
+# Calibrated from the burned-in scale bars: the field width is 284.5 um at
 # 1000x and scales inversely with magnification, over 1024 px.
 NM_PER_PX = {500: 555.6, 1000: 277.8, 3000: 92.6}
 
