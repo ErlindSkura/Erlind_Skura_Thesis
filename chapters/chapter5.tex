@@ -655,7 +655,7 @@ $\mathrm{AP}_{50} = 0.303$ against 0.298 for leave-one-specimen-out, a differenc
 of 0.005 in favour of the random split, against a between-fold standard deviation
 of 0.059. The other two metrics run the other way, as AJI is 0.313 against 0.325
 and mean absolute counting error 43.9\% against 41.2\%. Only one of the three
-differences runs in the direction a leak would produce, and it is a twelfth of
+differences runs in the direction contamination would produce, and it is a twelfth of
 the between-fold spread. On this dataset the naive protocol does not measurably
 overstate performance.
 
@@ -665,7 +665,7 @@ appear. The protocol remains the correct one, but on the strength of
 structural argument rather than of measured inflation. Three factors could
 explain the absence of a gap, and the first is the most likely.
 
-The leak that mattered had already been removed. The 132 pre-computed
+The contamination that mattered had already been removed. The 132 pre-computed
 augmented copies were discarded before any partitioning
 (Section~\ref{sec:supplied_aug}). They are near-duplicates of their originals, so
 letting them cross a partition boundary would put a transformed version of a test
@@ -673,8 +673,8 @@ image directly into training. The remaining dependence between two images of
 one specimen at different magnifications is far weaker, being different fields of
 view at different scales that share only the general morphology of the specimen.
 
-There is little room for a leak to inflate anything. A leak helps only in so far
-as the model can memorise what leaked, so a model scoring near its ceiling on its
+There is little room for contamination to inflate anything. It helps a model only
+in so far as the model can memorise what it saw, so a model scoring near its ceiling on its
 own training data has much to gain from seeing test material early, and one that
 cannot fit its training data has almost nothing. This model is the second kind,
 reaching $\mathrm{AP}_{50} = 0.437$ on the images it trained on against 0.298

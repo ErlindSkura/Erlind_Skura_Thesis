@@ -303,9 +303,8 @@ population of beads, so a partition placing S1-1 in training and S1-3 in testing
 measures generalisation to a new magnification of a specimen already seen rather
 than to a new specimen.
 
-A partition that does this is said to \emph{leak}. Leakage is the presence, in
-the data a model is trained on, of information about the data it will be tested
-on. It does not require the same image to appear twice: a second view of the same
+A partition that does this is \emph{contaminated}: the data a model is trained
+on carries information about the data it will be tested on. It does not require the same image to appear twice: a second view of the same
 specimen, or a rotated copy of the same image, carries much of the same
 information, and a model that has learned those particular beads will score well
 on the test partition without having generalised to anything. The score is then a
