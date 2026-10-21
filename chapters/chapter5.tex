@@ -665,11 +665,10 @@ appear. The protocol remains the correct one, but on the strength of
 structural argument rather than of measured inflation. Three factors could
 explain the absence of a difference, and the first is the most likely.
 
-The contamination that mattered had already been removed. The 132 pre-computed
-augmented copies were discarded before any partitioning
-(Section~\ref{sec:supplied_aug}). They are near-duplicates of their originals, so
-letting them cross a partition boundary would put a transformed version of a test
-image directly into training. The remaining dependence between two images of
+The 132 pre-computed augmented copies, which were the serious risk, had already
+been discarded before any partitioning (Section~\ref{sec:supplied_aug}). They are
+near-duplicates of their originals, so letting them cross a partition boundary
+would put a transformed version of a test image directly into training. The remaining dependence between two images of
 one specimen at different magnifications is far weaker, being different fields of
 view at different scales that share only the general morphology of the specimen.
 
