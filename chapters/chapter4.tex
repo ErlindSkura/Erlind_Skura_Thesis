@@ -183,7 +183,7 @@ Chapter~\ref{ch:results}, although not on the same footing, since the package
 ships no segmentation variant of YOLOv5 and that family therefore enters on the
 box-only path alongside Faster R-CNN.
 
-One point of naming has to be stated, since the version numbers invite a
+The naming needs one clarification, since the version numbers invite a
 reading the weights do not support. The checkpoint used is \texttt{yolov5su.pt},
 which is not the YOLOv5 of the original release: Ultralytics distributes the
 YOLOv5 backbone fitted with the anchor-free, objectness-free split head of YOLOv8.
@@ -333,7 +333,7 @@ mounts the specimen data from Drive and runs each stage as a separate cell. Thre
 properties of that arrangement are deliberate.
 
 Each stage is independently resumable. A Colab session can be
-disconnected at any point, and a four-fold run of six methods takes long enough
+disconnected at any time, and a four-fold run of six methods takes long enough
 that this is likely rather than merely possible, so every stage writes its
 predictions to persistent storage before the next begins.
 

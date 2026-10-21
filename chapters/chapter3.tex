@@ -474,8 +474,8 @@ The fourth is a median filter, a $3\times3$ median against sensor noise, kept
 deliberately small since the median bead is 20 pixels across and a window
 approaching that size would remove the object along with the noise.
 
-Each variant is applied to the whole image before cropping, at the single
-point where the training and inference paths share code. This is a correctness
+Each variant is applied to the whole image before cropping, at the one
+place where the training and inference paths share code. This is a correctness
 requirement rather than a convenience, since a model trained on equalised images
 and evaluated on raw ones would still produce numbers, wrong in a way no metric
 would reveal.
