@@ -109,7 +109,7 @@ The limitations are set out in full in Section~\ref{sec:limitations}: four speci
 
 \subsection{Short-term}
 
-Address the recognition deficit directly. A Segmentation Quality of 0.719
+The recognition deficit is the first thing to address. A Segmentation Quality of 0.719
 against a Recognition Quality of 0.486 indicates that effort should go into
 finding beads rather than refining masks. The first steps are a longer schedule
 than the 1500 iterations the available GPU time allowed, a hyperparameter search
@@ -117,31 +117,31 @@ this work did not perform, and a loss that up-weights recall; the model scores
 0.437 on data it has already seen, so this is the right place to spend. The recall
 of 0.696 obtained by YOLOv8 gives the target.
 
-Calibrate the score threshold per magnification, not per fold. This is
-the cheapest experiment suggested by any result here and the one whose measured
+The score threshold would be better calibrated per magnification than per
+fold. This is the cheapest experiment suggested by any result here and the one whose measured
 room for improvement is largest. The single catastrophic fold of YOLOv5u is mostly an operating
 point, since one threshold was selected for a specimen whose three magnifications
 need different ones, and that fold's error halves at the value the other folds
 chose. Selecting per magnification group, still on training data only, is a change
 of a few lines and costs no additional training.
 
-Suppress false positives rather than chase recall. The recall advantage
+False positives are worth suppressing before recall is chased further. The recall advantage
 of YOLOv8 is bought with 801 spurious detections. A post-hoc classifier over
 detections would test whether the recall of one method and the precision of
 another can be obtained together.
 
-Extend the specimen count. The most valuable addition is more specimens
+The specimen count is worth extending. The most valuable addition is more specimens
 rather than more images of the same ones. Four support four folds; ten would
 support a materially stronger claim and would give the protocol comparison of
 Section~\ref{sec:leakage} the resolution these four folds lacked.
 
-Measure inter-annotator agreement. A second annotator re-outlining a
+Inter-annotator agreement is worth measuring. A second annotator re-outlining a
 subset would convert the largest stated limitation into a measured quantity and
 establish the ceiling against which any model should be judged, since at
 $\mathrm{AP}_{50} = 0.298$ it is not known how much of the shortfall is model
 error and how much is disagreement a second human would also show.
 
-Use the unannotated images. If further images exist without
+The unannotated images could be put to use. If further images exist without
 annotations, they can be used for self-training or consistency-based
 semi-supervised learning, both well suited to a regime with abundant images and
 scarce labels.
@@ -154,7 +154,8 @@ as the central difficulty.
 
 \subsection{Long-term}
 
-Image at the magnification the measurement needs. Higher magnification
+Images could be acquired at the magnification each measurement needs. Higher
+magnification
 gives better boundaries, while a count is only as good as the number of objects in
 the field, so a mixed protocol, a wide field for density and several high-power
 fields for size, may measure both better than any single setting. Testing it
