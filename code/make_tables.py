@@ -423,7 +423,7 @@ def table_runtime(m: dict) -> str:
         rows.append(
             f"        {METHOD_LABEL[key]:16s} & {folds[0]['batch']} & "
             f"{mean('s_per_step_median'):.3f} & {folds[0]['steps_per_epoch']:.1f} & "
-            f"{mean('s_per_epoch'):.1f} & {mean('epochs'):.1f} & "
+            f"{mean('s_per_epoch'):.1f} & {mean('epochs'):.0f} & "
             f"{mean('train_wall_s') / 60:.1f} \\\\")
     if not rows:
         return ""
@@ -436,9 +436,11 @@ def table_runtime(m: dict) -> str:
     return f"""\\begin{{table}}[htbp]
     \\centering
     \\caption{{Training cost per fold, averaged over the four leave-one-specimen-out
-    folds.{hw} An epoch is one crop-equivalent pass over the fold's eight training
-    images. Step times are medians, measured with the device synchronised,
-    and exclude the first step.}}
+    folds.{hw} Training was fixed at 1500 optimiser steps, not at a
+    number of epochs; an epoch is one crop-equivalent pass over the fold's training
+    images, and the count is derived from the steps and rounded to whole passes.
+    Step times are medians, measured with the device synchronised, and exclude the
+    first step.}}
     \\label{{tab:runtime}}
     \\begin{{tabular}}{{lrrrrrr}}
         \\toprule
